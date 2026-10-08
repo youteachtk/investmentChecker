@@ -12,15 +12,17 @@ def analyze(quote_file, ranking_file, output_file):
     ranking={r["simbolo_actinver"].strip().upper():r for r in csv.DictReader(open(ranking_file,encoding="utf-8-sig",newline=""))}
     rows=[]
     for q in csv.DictReader(open(quote_file,encoding="utf-8-sig",newline="")):
-        sym=q.get("symbol","").strip().upper()
+        sym=q.get("symbol","").strip().upper().removesuffix("*").strip()
         if not sym: continue
+        if q.get("category", "").strip().upper() == "FONDOS":
+            continue  # fund table uses a different schema; not a bid/ask market
         a=number(q.get("ask"));b=number(q.get("bid"));last=number(q.get("last"))
         spread=(a-b)/((a+b)/2)*100 if a and b and a>=b else None
         rank=ranking.get(sym)
         rows.append(dict(category=q.get("category"),symbol=sym,last_mxn=last,bid_mxn=b,ask_mxn=a,
             ask_volume=number(q.get("ask_volume")),spread_pct=round(spread,3) if spread is not None else None,
             historical_score=number(rank["research_score"]) if rank else None,
-            quote_status="review" if not a or not b or a<b else ("wide_spread" if spread>2 else "check_freshness")))
+            quote_status="review_invalid_quote" if not a or not b or a<b else ("thin_depth" if (number(q.get("ask_volume")) or 0)<10 or (number(q.get("bid_volume")) or 0)<10 else ("wide_spread" if spread>2 else "check_freshness"))))
     rows.sort(key=lambda r:(r["spread_pct"] is None,r["spread_pct"] or 999))
     Path(output_file).parent.mkdir(parents=True,exist_ok=True)
     Path(output_file).write_text(json.dumps(rows,ensure_ascii=False,indent=2),encoding="utf-8")
