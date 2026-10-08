@@ -1,17 +1,11 @@
 {
-  "updated_utc": "2026-10-08T03:02:51.294732+00:00",
+  "updated_utc": "2026-10-08T03:48:13.981667+00:00",
   "universe": 226,
   "attempted": 135,
-  "ranked": 134,
-  "failed": 1,
+  "ranked": 135,
+  "failed": 0,
   "excluded_unverified_or_special": 91,
-  "failures": [
-    {
-      "simbolo_actinver": "BRKB",
-      "symbol": "BRKB",
-      "error": "no history returned"
-    }
-  ],
+  "failures": [],
   "unresolved_symbols": [
     "AA1",
     "AC",
