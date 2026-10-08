@@ -4,6 +4,7 @@ Do not treat a stored snapshot as a live executable quote."""
 import csv
 import json
 import math
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -65,7 +66,25 @@ def plan(quotes, ranked):
     return result,round(total,2)
 
 def main():
-    with (ROOT/"data/quotes-snapshot.csv").open(encoding="utf-8-sig",newline="") as h:
+    # A scheduled job must never re-label an old quote snapshot as actionable.
+    quote_path=ROOT/"data/quotes-snapshot.csv"
+    approval=os.environ.get("ALLOW_SNAPSHOT_DRAFTS")=="1"
+    if not approval:
+        warning={
+            "status":"BLOCKED_STALE_QUOTES",
+            "message":"Historical snapshot is not a live Actinver market quote. Import a fresh CSV, verify timestamp, and explicitly approve quote use.",
+            "requires":"ALLOW_SNAPSHOT_DRAFTS=1 after manually updating data/quotes-snapshot.csv",
+        }
+        (OUT/"ordenes-borrador.json").write_text(json.dumps(warning,indent=2,ensure_ascii=False),encoding="utf-8")
+        (OUT/"ordenes-borrador.md").write_text(
+            "# Órdenes bloqueadas: cotizaciones no verificadas\\n\\n"
+            "Las cotizaciones guardadas son antiguas. No hay órdenes ejecutables.\\n\\n"
+            "Actualiza `data/quotes-snapshot.csv` con el monitor de Actinver, "
+            "comprueba la fecha y ejecuta manualmente con aprobación explícita.\\n",
+            encoding="utf-8")
+        print("BLOCKED_STALE_QUOTES: refusing to present stored snapshot as fresh")
+        return
+    with quote_path.open(encoding="utf-8-sig",newline="") as h:
         quotes={q["symbol"].replace("*","").strip().upper():q for q in csv.DictReader(h)}
     with (OUT/"ranking.csv").open(encoding="utf-8-sig",newline="") as h:
         ranks={r["simbolo_actinver"].strip().upper():r for r in csv.DictReader(h)}
