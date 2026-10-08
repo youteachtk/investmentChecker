@@ -34,6 +34,10 @@ jobs:
         run: python scripts/analyze.py
       - name: Produce candidate watchlist
         run: python scripts/candidate_portfolio.py
+      - name: Simulator quote comparison
+        run: python scripts/compare_quotes.py data/quotes-snapshot.csv output/quote-comparison.json
+      - name: Draft position sizes (never trade)
+        run: python scripts/order_drafts.py
       - name: Walk-forward backtest
         run: python scripts/backtest.py
       - name: Save research outputs
