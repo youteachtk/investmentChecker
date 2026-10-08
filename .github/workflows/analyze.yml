@@ -1,0 +1,46 @@
+name: Analyze Actinver universe
+
+on:
+  workflow_dispatch:
+  schedule:
+    # UTC, weekdays; GitHub scheduled execution can be delayed.
+    - cron: "30 13 * * 1-5"
+    - cron: "30 23 * * 1-5"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: actinver-analysis
+  cancel-in-progress: false
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Dependencies
+        run: pip install -r requirements.txt
+      - name: Analyze
+        run: python scripts/analyze.py
+      - name: Save research outputs
+        if: always()
+        run: |
+          if [ ! -f output/status.json ]; then
+            echo "No status report; analysis failed before output" >&2
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add output/
+          if ! git diff --cached --quiet; then
+            git commit -m "Update Actinver research snapshot"
+            git push
+          fi
