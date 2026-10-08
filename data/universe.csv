@@ -1,0 +1,227 @@
+tipo,simbolo_actinver,simbolo_datos,estado_mapeo,riesgo_especial
+ACCIONES,AA1,,unresolved,none
+ACCIONES,AAL,AAL,candidate,none
+ACCIONES,AAPL,AAPL,candidate,none
+ACCIONES,ABBV,ABBV,candidate,none
+ACCIONES,ABNB,ABNB,candidate,none
+ACCIONES,AC,,unresolved,none
+ACCIONES,ACTINVR B,,unresolved,none
+ACCIONES,AFRM,AFRM,candidate,none
+ACCIONES,AGNC,AGNC,candidate,none
+ACCIONES,ALPEK A,ALPEKA.MX,needs_verification,none
+ACCIONES,ALSEA,ALSEA.MX,needs_verification,none
+ACCIONES,AMAT,AMAT,candidate,none
+ACCIONES,AMD,AMD,candidate,none
+ACCIONES,AMX B,AMXB.MX,needs_verification,none
+ACCIONES,AMZN,AMZN,candidate,none
+ACCIONES,ASUR B,ASURB.MX,needs_verification,none
+ACCIONES,AVGO,AVGO,candidate,none
+ACCIONES,AXP,AXP,candidate,none
+ACCIONES,B N,,unresolved,none
+ACCIONES,BA,BA,candidate,none
+ACCIONES,BABA N,BABA,candidate,none
+ACCIONES,BAC,BAC,candidate,none
+ACCIONES,BBAJIO O,BBAJIOO.MX,needs_verification,none
+ACCIONES,BIMBO A,BIMBOA.MX,needs_verification,none
+ACCIONES,BMY,BMY,candidate,none
+ACCIONES,BOLSA A,,unresolved,none
+ACCIONES,BRKB,BRKB,candidate,none
+ACCIONES,BYND,BYND,candidate,none
+ACCIONES,C,C,candidate,none
+ACCIONES,CAT,CAT,candidate,none
+ACCIONES,CCL1 N,,unresolved,none
+ACCIONES,CEMEX CPO,CEMEXCPO.MX,needs_verification,none
+ACCIONES,CHDRAUI B,,unresolved,none
+ACCIONES,CLF,CLF,candidate,none
+ACCIONES,COST,COST,candidate,none
+ACCIONES,CRM,CRM,candidate,none
+ACCIONES,CSCO,CSCO,candidate,none
+ACCIONES,CUERVO,,unresolved,none
+ACCIONES,CVS,CVS,candidate,none
+ACCIONES,CVX,CVX,candidate,none
+ACCIONES,DAL,DAL,candidate,none
+ACCIONES,DIS,DIS,candidate,none
+ACCIONES,DVN,DVN,candidate,none
+ACCIONES,ETSY,ETSY,candidate,none
+ACCIONES,F,F,candidate,none
+ACCIONES,FANG,FANG,candidate,none
+ACCIONES,FCX,FCX,candidate,none
+ACCIONES,FDX,FDX,candidate,none
+ACCIONES,FEMSA UBD,FEMSAUBD.MX,needs_verification,none
+ACCIONES,FIBRAMQ 12,,unresolved,none
+ACCIONES,FIBRAPL 14,,unresolved,none
+ACCIONES,FSLR,FSLR,candidate,none
+ACCIONES,FUBO,FUBO,candidate,none
+ACCIONES,FUNO 11,,unresolved,none
+ACCIONES,GAP B,GAPB.MX,needs_verification,none
+ACCIONES,GCARSO A1,,unresolved,none
+ACCIONES,GCC,,unresolved,none
+ACCIONES,GE,GE,candidate,none
+ACCIONES,GENTERA,GENTERA.MX,needs_verification,none
+ACCIONES,GFINBUR O,GFINBURO.MX,needs_verification,none
+ACCIONES,GFNORTE O,GFNORTEO.MX,needs_verification,none
+ACCIONES,GM,GM,candidate,none
+ACCIONES,GME,GME,candidate,none
+ACCIONES,GMEXICO B,GMEXICOB.MX,needs_verification,none
+ACCIONES,GOOGL,GOOGL,candidate,none
+ACCIONES,GRUMA B,GRUMAB.MX,needs_verification,none
+ACCIONES,HD,HD,candidate,none
+ACCIONES,INTC,INTC,candidate,none
+ACCIONES,JNJ,JNJ,candidate,none
+ACCIONES,JPM,JPM,candidate,none
+ACCIONES,KIMBER A,KIMBERA.MX,needs_verification,none
+ACCIONES,KO,KO,candidate,none
+ACCIONES,KOF UBL,,unresolved,none
+ACCIONES,LAB B,,unresolved,none
+ACCIONES,LASITE B-1,,unresolved,none
+ACCIONES,LCID,LCID,candidate,none
+ACCIONES,LIVEPOL C-1,,unresolved,none
+ACCIONES,LLY,LLY,candidate,none
+ACCIONES,LUV,LUV,candidate,none
+ACCIONES,LVS,LVS,candidate,none
+ACCIONES,MA,MA,candidate,none
+ACCIONES,MARA,MARA,candidate,none
+ACCIONES,MCD,MCD,candidate,none
+ACCIONES,MEGA CPO,,unresolved,none
+ACCIONES,MELI N,MELI,candidate,none
+ACCIONES,META,META,candidate,none
+ACCIONES,MFRISCO A-1,,unresolved,none
+ACCIONES,MRK,MRK,candidate,none
+ACCIONES,MRNA,MRNA,candidate,none
+ACCIONES,MSFT,MSFT,candidate,none
+ACCIONES,MU,MU,candidate,none
+ACCIONES,NCLH N,,unresolved,none
+ACCIONES,NFLX,NFLX,candidate,none
+ACCIONES,NKE,NKE,candidate,none
+ACCIONES,NU N,NU,candidate,none
+ACCIONES,NVAX,NVAX,candidate,none
+ACCIONES,NVDA,NVDA,candidate,none
+ACCIONES,OMA B,,unresolved,none
+ACCIONES,ORBIA,ORBIA.MX,needs_verification,none
+ACCIONES,ORCL,ORCL,candidate,none
+ACCIONES,OXY1,,unresolved,none
+ACCIONES,PE&OLES,,unresolved,none
+ACCIONES,PEP,PEP,candidate,none
+ACCIONES,PFE,PFE,candidate,none
+ACCIONES,PG,PG,candidate,none
+ACCIONES,PINFRA,PINFRA.MX,needs_verification,none
+ACCIONES,PINS,PINS,candidate,none
+ACCIONES,PLTR,PLTR,candidate,none
+ACCIONES,PYPL,PYPL,candidate,none
+ACCIONES,Q,,unresolved,none
+ACCIONES,QCOM,QCOM,candidate,none
+ACCIONES,R A,,unresolved,none
+ACCIONES,RCL,RCL,candidate,none
+ACCIONES,RIOT,RIOT,candidate,none
+ACCIONES,RIVN,RIVN,candidate,none
+ACCIONES,ROKU,ROKU,candidate,none
+ACCIONES,SBUX,SBUX,candidate,none
+ACCIONES,SHOP N,SHOP,candidate,none
+ACCIONES,SIGMAF A,,unresolved,none
+ACCIONES,SITES1 A-1,,unresolved,none
+ACCIONES,SOFI,SOFI,candidate,none
+ACCIONES,SPCE,SPCE,candidate,none
+ACCIONES,T,T,candidate,none
+ACCIONES,TGT,TGT,candidate,none
+ACCIONES,TLEVISA CPO,,unresolved,none
+ACCIONES,TMO,TMO,candidate,none
+ACCIONES,TSLA,TSLA,candidate,none
+ACCIONES,TSM N,TSM,candidate,none
+ACCIONES,TWLO,TWLO,candidate,none
+ACCIONES,TX,,unresolved,none
+ACCIONES,UAL,UAL,candidate,none
+ACCIONES,UBER,UBER,candidate,none
+ACCIONES,UNH,UNH,candidate,none
+ACCIONES,UPST,UPST,candidate,none
+ACCIONES,V,V,candidate,none
+ACCIONES,VESTA,VESTA.MX,needs_verification,none
+ACCIONES,VOLAR A,,unresolved,none
+ACCIONES,VZ,VZ,candidate,none
+ACCIONES,WALMEX,WALMEX.MX,needs_verification,none
+ACCIONES,WFC,WFC,candidate,none
+ACCIONES,WMT,WMT,candidate,none
+ACCIONES,WYNN,WYNN,candidate,none
+ACCIONES,XOM,XOM,candidate,none
+ACCIONES,XYZ,XYZ,candidate,none
+ACCIONES,ZM,ZM,candidate,none
+ETFs,AAXJ,AAXJ,candidate,none
+ETFs,ACWI,ACWI,candidate,none
+ETFs,ANGELD 10,,unresolved,none
+ETFs,BIL,BIL,candidate,none
+ETFs,BOTZ,BOTZ,candidate,none
+ETFs,DIA,DIA,candidate,none
+ETFs,DIABLOI 10,,unresolved,none
+ETFs,EEM,EEM,candidate,none
+ETFs,EWZ,EWZ,candidate,none
+ETFs,FAS,FAS,candidate,leveraged_or_inverse
+ETFs,FAZ,FAZ,candidate,leveraged_or_inverse
+ETFs,GDX,GDX,candidate,none
+ETFs,GLD,GLD,candidate,none
+ETFs,IAU,IAU,candidate,none
+ETFs,ICLN,ICLN,candidate,none
+ETFs,INDA,INDA,candidate,none
+ETFs,IVV,IVV,candidate,none
+ETFs,KWEB,KWEB,candidate,none
+ETFs,LIT,LIT,candidate,none
+ETFs,MCHI,MCHI,candidate,none
+ETFs,NAFTRAC ISHRS,NAFTRACISHRS.MX,needs_verification,none
+ETFs,PSQ,PSQ,candidate,leveraged_or_inverse
+ETFs,QCLN,QCLN,candidate,none
+ETFs,QLD,QLD,candidate,leveraged_or_inverse
+ETFs,QQQ,QQQ,candidate,none
+ETFs,SHV,SHV,candidate,none
+ETFs,SHY,SHY,candidate,none
+ETFs,SLV,SLV,candidate,none
+ETFs,SOXL,SOXL,candidate,leveraged_or_inverse
+ETFs,SOXS,SOXS,candidate,leveraged_or_inverse
+ETFs,SOXX,SOXX,candidate,none
+ETFs,SPXL,SPXL,candidate,leveraged_or_inverse
+ETFs,SPXS,SPXS,candidate,leveraged_or_inverse
+ETFs,SPY,SPY,candidate,none
+ETFs,SPYM,SPYM,candidate,none
+ETFs,SQQQ,SQQQ,candidate,leveraged_or_inverse
+ETFs,TAN,TAN,candidate,none
+ETFs,TECL,TECL,candidate,leveraged_or_inverse
+ETFs,TECS,TECS,candidate,leveraged_or_inverse
+ETFs,TLT,TLT,candidate,none
+ETFs,TNA,TNA,candidate,leveraged_or_inverse
+ETFs,TQQQ,TQQQ,candidate,leveraged_or_inverse
+ETFs,TZA,TZA,candidate,leveraged_or_inverse
+ETFs,USO,USO,candidate,none
+ETFs,VEA,VEA,candidate,none
+ETFs,VGT,VGT,candidate,none
+ETFs,VNQ,VNQ,candidate,none
+ETFs,VOO,VOO,candidate,none
+ETFs,VT,VT,candidate,none
+ETFs,VTI,VTI,candidate,none
+ETFs,VWO,VWO,candidate,none
+ETFs,VYM,VYM,candidate,none
+ETFs,XLE,XLE,candidate,none
+ETFs,XLF,XLF,candidate,none
+ETFs,XLK,XLK,candidate,none
+ETFs,XLV,XLV,candidate,none
+FONDOS,ACTDUAL,,unresolved,none
+FONDOS,ACTI500,,unresolved,none
+FONDOS,ACTIAI,,unresolved,none
+FONDOS,ACTICOB,,unresolved,none
+FONDOS,ACTICRE,,unresolved,none
+FONDOS,ACTIG+,,unresolved,none
+FONDOS,ACTIG+2,,unresolved,none
+FONDOS,ACTIGOB,,unresolved,none
+FONDOS,ACTIMED,,unresolved,none
+FONDOS,ACTIPLU,,unresolved,none
+FONDOS,ACTIREN,,unresolved,none
+FONDOS,ACTIRVT,,unresolved,none
+FONDOS,ACTIVAR,,unresolved,none
+FONDOS,ALTERN,,unresolved,none
+FONDOS,DINAMO,,unresolved,none
+FONDOS,ESCALA,,unresolved,none
+FONDOS,ESFERA,,unresolved,none
+FONDOS,JPMRVUS,,unresolved,none
+FONDOS,MAXIMO,,unresolved,none
+FONDOS,MAYA,,unresolved,none
+FONDOS,OPORT1,,unresolved,none
+FONDOS,PROTEGE,,unresolved,none
+FONDOS,ROBOTIK,,unresolved,none
+FONDOS,SALUD,,unresolved,none
+FONDOS,TEMATIK,,unresolved,none
