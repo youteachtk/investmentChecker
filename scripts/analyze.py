@@ -10,6 +10,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import yfinance as yf
+from scoring import score_universe
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "output"
@@ -101,12 +102,12 @@ def main():
             print(f"Processed {idx}/{len(eligible)}; successes {len(output)}; errors {len(failures)}", flush=True)
         time.sleep(0.15)
 
-    output.sort(key=lambda a: a["heuristic_score"], reverse=True)
+    output = score_universe(output)
     with (OUT / "ranking.csv").open("w", newline="", encoding="utf-8") as f:
         keys = ["tipo", "simbolo_actinver", "simbolo_datos", "last_market_date", "close", "return_20d_pct",
                 "return_60d_pct", "rsi_14", "macd", "macd_signal", "sma_20", "sma_50",
                 "annual_volatility_pct", "trailing_drawdown_pct", "volume_5d_vs_20d",
-                "heuristic_score", "history_days"]
+                "heuristic_score", "research_score", "risk_label", "history_days"]
         writer = csv.DictWriter(f, fieldnames=keys)
         writer.writeheader()
         writer.writerows(output)
@@ -120,13 +121,13 @@ def main():
              f"Generated UTC: {meta['updated_utc']}", "",
              f"Universe: {len(instruments)}. Ranked: {len(output)}. Failed downloads: {len(failures)}.",
              f"Not yet mapped or special-risk: {len(missing)}.", "",
-             "Scores are descriptive heuristics, not investment forecasts. Symbols and currency/market differences require verification.",
+             "Scores are relative cross-sectional ranks, not investment forecasts; compare only the same run. Symbols and currency/market differences require verification.",
              "Leveraged/inverse ETFs are excluded from rankings by default.", "",
              "## Highest-scoring instruments (NOT automatic buys)", "",
-             "| Instrument | Type | Score | 20d % | 60d % | Volatility % |",
-             "|---|---|---:|---:|---:|---:|"]
+             "| Instrument | Type | Relative score | Risk | 20d % | 60d % | Volatility % |",
+             "|---|---|---:|---|---:|---:|---:|"]
     for row in output[:20]:
-        lines.append(f"| {row['simbolo_actinver']} | {row['tipo']} | {row['heuristic_score']} | {row['return_20d_pct']} | {row['return_60d_pct']} | {row['annual_volatility_pct']} |")
+        lines.append(f"| {row['simbolo_actinver']} | {row['tipo']} | {row['research_score']} | {row['risk_label']} | {row['return_20d_pct']} | {row['return_60d_pct']} | {row['annual_volatility_pct']} |")
     lines += ["", "## Important", "", "Validate individual listings, spreads and current Reto Actinver rules before trading.",
               "Source download failures are listed in output/status.json."]
     (OUT / "analisis-diario.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
