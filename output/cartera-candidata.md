@@ -22,4 +22,4 @@ Equal-weight candidate allocation: 20% each. Total 100%; 5 different securities.
 6. Review potential market-moving news and earnings before entering.
 
 The suggested percentages are an initial experimental allocation, not optimized for a 6-week contest.
-Generated (UTC): 2026-10-08T12:11:40.217467+00:00
+Generated (UTC): 2026-10-08T13:05:33.329910+00:00

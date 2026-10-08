@@ -1,6 +1,6 @@
 # Actinver research snapshot
 
-Generated UTC: 2026-10-08T12:11:40.097964+00:00
+Generated UTC: 2026-10-08T13:05:33.189737+00:00
 
 Universe: 226. Ranked: 135. Failed downloads: 0.
 Not yet mapped or special-risk: 91.
@@ -24,8 +24,8 @@ Leveraged/inverse ETFs are excluded from rankings by default.
 | SPYM | ETFs | 74.98 | lower | 2.17904 | 3.62224 | 10.9752 |
 | PFE | ACCIONES | 74.86 | lower | 0.79193 | 17.48383 | 19.05405 |
 | VOO | ETFs | 74.85 | lower | 2.18398 | 3.62854 | 11.02157 |
-| SHV | ETFs | 74.81 | lower | 0.25356 | 0.82641 | 0.19898 |
-| BIL | ETFs | 74.19 | lower | 0.28782 | 0.84042 | 0.18455 |
+| SHV | ETFs | 74.81 | lower | 0.25356 | 0.8264 | 0.19896 |
+| BIL | ETFs | 74.19 | lower | 0.28782 | 0.84041 | 0.18456 |
 | PG | ACCIONES | 74.02 | lower | 3.63153 | 1.94653 | 16.3658 |
 | VTI | ETFs | 73.93 | lower | 1.71253 | 2.91831 | 11.1709 |
 | MSFT | ACCIONES | 73.82 | moderate | 7.75145 | 37.88411 | 39.95574 |
