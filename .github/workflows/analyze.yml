@@ -32,6 +32,8 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Analyze
         run: python scripts/analyze.py
+      - name: Walk-forward backtest
+        run: python scripts/backtest.py
       - name: Save research outputs
         if: always()
         run: |
