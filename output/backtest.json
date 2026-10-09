@@ -20,10 +20,10 @@
     "META"
   ],
   "method": "monthly rebalanced top-5 trend-filtered 63d risk-adjusted momentum, equal-weight, cash if fewer than five qualify",
-  "total_return_pct": 46.59,
-  "annualized_return_pct": 16.57,
+  "total_return_pct": 46.5,
+  "annualized_return_pct": 16.55,
   "max_drawdown_pct": -22.91,
-  "benchmark_spy_pct": 54.9,
+  "benchmark_spy_pct": 54.98,
   "rebalance_count": 30,
   "indicative_cost_bps_per_notional": 11.6,
   "notes": [
