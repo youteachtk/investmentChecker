@@ -8,7 +8,7 @@
     "ask_volume": 405.0,
     "bid_volume": 200.0,
     "spread_pct": 0.162,
-    "historical_score": 79.79,
+    "historical_score": 79.16,
     "quote_status": "review"
   },
   {
@@ -20,7 +20,7 @@
     "ask_volume": 3.0,
     "bid_volume": 1200.0,
     "spread_pct": 0.267,
-    "historical_score": 75.17,
+    "historical_score": 74.93,
     "quote_status": "thin_depth"
   },
   {
@@ -32,7 +32,7 @@
     "ask_volume": 2.0,
     "bid_volume": 950.0,
     "spread_pct": 0.36,
-    "historical_score": 73.7,
+    "historical_score": 73.78,
     "quote_status": "thin_depth"
   },
   {
@@ -44,7 +44,7 @@
     "ask_volume": 2400.0,
     "bid_volume": 9.0,
     "spread_pct": 0.398,
-    "historical_score": 73.76,
+    "historical_score": 73.28,
     "quote_status": "thin_depth"
   },
   {
@@ -56,7 +56,7 @@
     "ask_volume": 300.0,
     "bid_volume": 200.0,
     "spread_pct": 0.446,
-    "historical_score": 61.38,
+    "historical_score": 60.5,
     "quote_status": "review"
   },
   {
@@ -68,7 +68,7 @@
     "ask_volume": 36000.0,
     "bid_volume": 14400.0,
     "spread_pct": 0.592,
-    "historical_score": 72.93,
+    "historical_score": 73.69,
     "quote_status": "review"
   },
   {
@@ -80,7 +80,7 @@
     "ask_volume": 600.0,
     "bid_volume": 400.0,
     "spread_pct": 0.635,
-    "historical_score": 68.59,
+    "historical_score": 69.29,
     "quote_status": "review"
   },
   {
@@ -92,7 +92,7 @@
     "ask_volume": 6000.0,
     "bid_volume": 6000.0,
     "spread_pct": 1.197,
-    "historical_score": 82.99,
+    "historical_score": 82.18,
     "quote_status": "review"
   },
   {
@@ -104,7 +104,7 @@
     "ask_volume": 23000.0,
     "bid_volume": 1.0,
     "spread_pct": 1.421,
-    "historical_score": 84.3,
+    "historical_score": 84.09,
     "quote_status": "thin_depth"
   },
   {
@@ -116,7 +116,7 @@
     "ask_volume": 2.0,
     "bid_volume": 1800.0,
     "spread_pct": 1.598,
-    "historical_score": 79.5,
+    "historical_score": 78.72,
     "quote_status": "thin_depth"
   },
   {
@@ -128,7 +128,7 @@
     "ask_volume": 100.0,
     "bid_volume": 500.0,
     "spread_pct": 5.599,
-    "historical_score": 83.3,
+    "historical_score": 83.58,
     "quote_status": "wide_spread"
   }
 ]
