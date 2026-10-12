@@ -1,6 +1,6 @@
 {
-  "start": "2024-04-11",
-  "end": "2026-10-09",
+  "start": "2024-04-16",
+  "end": "2026-10-12",
   "universe": [
     "SPY",
     "QQQ",
@@ -20,10 +20,10 @@
     "META"
   ],
   "method": "monthly rebalanced top-5 trend-filtered 63d risk-adjusted momentum, equal-weight, cash if fewer than five qualify",
-  "total_return_pct": 35.58,
-  "annualized_return_pct": 12.98,
-  "max_drawdown_pct": -25.85,
-  "benchmark_spy_pct": 54.74,
+  "total_return_pct": 27.34,
+  "annualized_return_pct": 10.2,
+  "max_drawdown_pct": -27.88,
+  "benchmark_spy_pct": 59.09,
   "rebalance_count": 30,
   "indicative_cost_bps_per_notional": 11.6,
   "notes": [
@@ -35,51 +35,51 @@
   ],
   "rebalance_log": [
     {
-      "date": "2025-10-14",
+      "date": "2025-10-17",
       "symbols": [
         "ABBV",
         "AAPL",
-        "TSM",
-        "SPY",
-        "VGT"
-      ],
-      "turnover": 1.2
-    },
-    {
-      "date": "2025-11-12",
-      "symbols": [
-        "EWZ",
-        "AAPL",
-        "XOM",
         "AMD",
-        "ABBV"
+        "TSM",
+        "SPY"
       ],
       "turnover": 1.2
     },
     {
-      "date": "2025-12-12",
+      "date": "2025-11-17",
       "symbols": [
-        "AAPL",
         "EWZ",
-        "XOM",
-        "PFE",
-        "SPY"
+        "AAPL",
+        "AMD",
+        "ABBV",
+        "XOM"
       ],
       "turnover": 0.8
     },
     {
-      "date": "2026-01-14",
+      "date": "2025-12-17",
       "symbols": [
-        "EWZ",
+        "AAPL",
         "XOM",
-        "SPY",
-        "TSM",
-        "PFE"
+        "PFE",
+        "EWZ",
+        "PG"
       ],
-      "turnover": 0.4
+      "turnover": 0.8
     },
     {
-      "date": "2026-02-13",
+      "date": "2026-01-20",
+      "symbols": [
+        "XOM",
+        "EWZ",
+        "TSM",
+        "PFE",
+        "AMD"
+      ],
+      "turnover": 0.8
+    },
+    {
+      "date": "2026-02-19",
       "symbols": [
         "XOM",
         "TSM",
@@ -90,39 +90,37 @@
       "turnover": 0.4
     },
     {
-      "date": "2026-03-17",
+      "date": "2026-03-20",
       "symbols": [
         "XOM",
-        "TSM",
-        "EWZ",
         "PFE"
-      ],
-      "turnover": 0.2
-    },
-    {
-      "date": "2026-04-16",
-      "symbols": [
-        "EWZ",
-        "AMD",
-        "PFE",
-        "TSM",
-        "META"
       ],
       "turnover": 0.6
     },
     {
-      "date": "2026-05-15",
+      "date": "2026-04-21",
+      "symbols": [
+        "EWZ",
+        "VGT",
+        "PFE",
+        "XLK",
+        "AMD"
+      ],
+      "turnover": 1.0
+    },
+    {
+      "date": "2026-05-20",
       "symbols": [
         "AMD",
-        "AMZN",
         "XLK",
+        "AMZN",
         "VGT",
         "QQQ"
       ],
-      "turnover": 1.6
+      "turnover": 0.8
     },
     {
-      "date": "2026-06-16",
+      "date": "2026-06-22",
       "symbols": [
         "AMD",
         "XLK",
@@ -133,37 +131,37 @@
       "turnover": 0.4
     },
     {
-      "date": "2026-07-17",
+      "date": "2026-07-22",
       "symbols": [
-        "AAPL",
+        "AMD",
         "ABBV",
+        "AAPL",
         "SPY",
-        "PG",
-        "XOM"
+        "PG"
       ],
-      "turnover": 1.6
+      "turnover": 1.2
     },
     {
-      "date": "2026-08-17",
+      "date": "2026-08-20",
       "symbols": [
         "ABBV",
         "PFE",
-        "SPY",
         "MSFT",
-        "VGT"
+        "XOM",
+        "SPY"
       ],
       "turnover": 1.2
     },
     {
-      "date": "2026-09-16",
+      "date": "2026-09-21",
       "symbols": [
-        "ABBV",
-        "XOM",
         "MSFT",
-        "EWZ",
-        "AAPL"
+        "META",
+        "ABBV",
+        "PFE",
+        "XOM"
       ],
-      "turnover": 1.2
+      "turnover": 0.4
     }
   ]
 }
