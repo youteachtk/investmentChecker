@@ -1,6 +1,6 @@
 {
   "start": "2024-04-16",
-  "end": "2026-10-12",
+  "end": "2026-10-13",
   "universe": [
     "SPY",
     "QQQ",
@@ -20,10 +20,10 @@
     "META"
   ],
   "method": "monthly rebalanced top-5 trend-filtered 63d risk-adjusted momentum, equal-weight, cash if fewer than five qualify",
-  "total_return_pct": 27.34,
-  "annualized_return_pct": 10.2,
+  "total_return_pct": 27.77,
+  "annualized_return_pct": 10.34,
   "max_drawdown_pct": -27.88,
-  "benchmark_spy_pct": 59.09,
+  "benchmark_spy_pct": 59.02,
   "rebalance_count": 30,
   "indicative_cost_bps_per_notional": 11.6,
   "notes": [
