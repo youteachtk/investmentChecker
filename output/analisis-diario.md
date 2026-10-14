@@ -1,6 +1,6 @@
 # Actinver research snapshot
 
-Generated UTC: 2026-10-13T19:57:18.504876+00:00
+Generated UTC: 2026-10-14T02:05:05.356754+00:00
 
 Universe: 226. Ranked: 135. Failed downloads: 0.
 Not yet mapped or special-risk: 91.
@@ -12,26 +12,26 @@ Leveraged/inverse ETFs are excluded from rankings by default.
 
 | Instrument | Type | Relative score | Risk | 20d % | 60d % | Volatility % |
 |---|---|---:|---|---:|---:|---:|
-| SPYM | ETFs | 82.27 | lower | 2.94647 | 5.06627 | 10.76247 |
-| EWZ | ETFs | 81.7 | lower | 13.3801 | 20.72999 | 34.19635 |
-| ABBV | ACCIONES | 79.39 | lower | 4.22559 | 8.19914 | 21.06673 |
-| XLE | ETFs | 78.31 | lower | 2.50162 | 16.63673 | 21.25484 |
-| XLV | ETFs | 77.39 | lower | 1.53227 | 6.8942 | 16.42065 |
-| SPY | ETFs | 76.17 | lower | 2.94846 | 5.071 | 10.84763 |
-| VTI | ETFs | 75.79 | lower | 2.51372 | 4.35827 | 10.98905 |
-| VOO | ETFs | 75.76 | lower | 2.95293 | 5.06417 | 10.80321 |
-| IVV | ETFs | 75.39 | lower | 2.94184 | 5.11199 | 10.82449 |
-| QQQ | ETFs | 75.21 | lower | 5.61211 | 6.89876 | 18.02043 |
-| MA | ACCIONES | 74.78 | lower | 5.70713 | 10.69473 | 19.53031 |
-| PFE | ACCIONES | 74.55 | lower | 2.97641 | 16.63152 | 18.4847 |
-| XLK | ETFs | 74.37 | lower | 6.84599 | 11.72889 | 24.87972 |
-| XOM | ACCIONES | 73.93 | lower | 2.81714 | 18.10276 | 24.06849 |
-| GME | ACCIONES | 73.83 | moderate | 27.42537 | 25.55147 | 43.41884 |
-| VGT | ETFs | 73.74 | lower | 6.52171 | 11.75232 | 22.83294 |
-| PG | ACCIONES | 73.44 | lower | 4.22717 | 3.2731 | 15.9342 |
-| PLTR | ACCIONES | 73.44 | high | 20.81016 | 54.59399 | 76.99048 |
-| NVAX | ACCIONES | 73.03 | high | 38.46154 | 62.18274 | 72.61929 |
-| MSFT | ACCIONES | 72.96 | moderate | 9.30762 | 35.32848 | 39.60764 |
+| EWZ | ETFs | 81.96 | lower | 13.47274 | 20.82863 | 34.17711 |
+| SPYM | ETFs | 81.61 | lower | 2.95772 | 5.07775 | 10.76193 |
+| ABBV | ACCIONES | 79.65 | lower | 4.30352 | 8.28005 | 21.02853 |
+| XLV | ETFs | 77.66 | lower | 1.58017 | 6.94462 | 16.40255 |
+| XLE | ETFs | 77.64 | lower | 2.53213 | 16.67145 | 21.2641 |
+| VOO | ETFs | 76.15 | lower | 2.99325 | 5.10532 | 10.80175 |
+| IVV | ETFs | 76.03 | lower | 2.98598 | 5.15706 | 10.8229 |
+| SPY | ETFs | 75.75 | lower | 2.97759 | 5.10072 | 10.8464 |
+| VTI | ETFs | 75.22 | lower | 2.53255 | 4.37743 | 10.988 |
+| QQQ | ETFs | 74.84 | lower | 5.64977 | 6.93688 | 18.0165 |
+| MA | ACCIONES | 74.7 | lower | 5.65995 | 10.64533 | 19.51564 |
+| XLK | ETFs | 74.15 | lower | 6.94952 | 11.83715 | 24.87496 |
+| XOM | ACCIONES | 74.13 | lower | 2.81124 | 18.09598 | 24.06763 |
+| PFE | ACCIONES | 74.11 | lower | 2.97641 | 16.63152 | 18.4847 |
+| GME | ACCIONES | 73.83 | moderate | 26.95895 | 25.09191 | 43.42852 |
+| PG | ACCIONES | 73.54 | lower | 4.34308 | 3.38794 | 15.92767 |
+| V | ACCIONES | 73.42 | lower | 5.44167 | 10.04681 | 18.54555 |
+| PLTR | ACCIONES | 73.39 | high | 20.92606 | 54.7423 | 76.98496 |
+| VGT | ETFs | 73.24 | lower | 6.59757 | 11.8319 | 22.82955 |
+| MSFT | ACCIONES | 73.16 | moderate | 9.31968 | 35.34342 | 39.60751 |
 
 ## Important
 
