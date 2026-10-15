@@ -1,6 +1,6 @@
 # Actinver research snapshot
 
-Generated UTC: 2026-10-14T18:09:08.879569+00:00
+Generated UTC: 2026-10-15T01:40:51.924542+00:00
 
 Universe: 226. Ranked: 135. Failed downloads: 0.
 Not yet mapped or special-risk: 91.
@@ -12,26 +12,26 @@ Leveraged/inverse ETFs are excluded from rankings by default.
 
 | Instrument | Type | Relative score | Risk | 20d % | 60d % | Volatility % |
 |---|---|---:|---|---:|---:|---:|
-| PFE | ACCIONES | 84.67 | lower | 6.97378 | 19.84316 | 19.64626 |
-| ABBV | ACCIONES | 84.3 | lower | 8.61109 | 11.32955 | 22.33602 |
-| XLE | ETFs | 83.53 | lower | 6.16377 | 16.19943 | 21.22307 |
-| XLV | ETFs | 83.07 | lower | 3.91289 | 8.78918 | 17.00788 |
-| EWZ | ETFs | 82.71 | lower | 13.76734 | 19.70803 | 34.22372 |
-| V | ACCIONES | 81.08 | lower | 5.83129 | 10.5304 | 18.41822 |
-| XOM | ACCIONES | 80.39 | lower | 8.55988 | 17.62444 | 23.93915 |
-| PG | ACCIONES | 79.88 | lower | 5.86655 | 5.87906 | 16.19828 |
-| KO | ACCIONES | 78.29 | lower | 4.50666 | 12.69728 | 18.15672 |
-| CVX | ACCIONES | 77.94 | lower | 4.81942 | 17.06187 | 23.43437 |
-| MA | ACCIONES | 77.75 | lower | 6.42353 | 12.24589 | 19.15543 |
-| SPYM | ETFs | 77.28 | lower | 2.0671 | 2.86413 | 11.01602 |
-| COST | ACCIONES | 74.15 | lower | 9.37969 | 5.37056 | 17.78143 |
-| GME | ACCIONES | 73.92 | moderate | 26.11465 | 27.21431 | 43.52225 |
-| MSFT | ACCIONES | 73.36 | moderate | 9.02305 | 34.64394 | 39.71285 |
-| PLTR | ACCIONES | 73.32 | high | 15.59023 | 51.90713 | 77.31869 |
-| AAPL | ACCIONES | 73.0 | lower | 3.05947 | 4.61813 | 25.67473 |
-| NVAX | ACCIONES | 72.65 | high | 40.21389 | 62.25247 | 72.59875 |
-| BIL | ETFs | 72.37 | lower | 0.30973 | 0.8625 | 0.19896 |
-| BRKB | ACCIONES | 72.34 | lower | 0.90516 | 7.11835 | 13.59487 |
+| ABBV | ACCIONES | 83.79 | lower | 7.98827 | 10.69114 | 21.94071 |
+| XLV | ETFs | 83.73 | lower | 4.08641 | 8.97084 | 17.10639 |
+| PFE | ACCIONES | 83.7 | lower | 6.37291 | 19.16999 | 19.27004 |
+| XLE | ETFs | 82.93 | lower | 6.25018 | 16.29401 | 21.22865 |
+| EWZ | ETFs | 82.72 | lower | 13.66062 | 19.59573 | 34.23425 |
+| PG | ACCIONES | 81.9 | lower | 6.4685 | 6.48109 | 16.48337 |
+| V | ACCIONES | 81.04 | lower | 5.52665 | 10.21223 | 18.49729 |
+| XOM | ACCIONES | 80.78 | lower | 8.38231 | 17.43205 | 23.89495 |
+| KO | ACCIONES | 77.52 | lower | 4.44975 | 12.63591 | 18.13484 |
+| CVX | ACCIONES | 77.44 | lower | 4.9636 | 17.22289 | 23.47607 |
+| MA | ACCIONES | 77.38 | lower | 6.41206 | 12.23379 | 19.15652 |
+| SPYM | ETFs | 76.89 | lower | 2.3156 | 3.11458 | 10.9007 |
+| COST | ACCIONES | 74.93 | lower | 9.87536 | 5.84806 | 18.0621 |
+| GME | ACCIONES | 73.92 | moderate | 23.52138 | 24.59843 | 43.4467 |
+| AAPL | ACCIONES | 73.72 | lower | 3.17379 | 4.73417 | 25.68122 |
+| MSFT | ACCIONES | 73.34 | moderate | 8.84969 | 34.42984 | 39.75055 |
+| PLTR | ACCIONES | 73.27 | high | 15.27475 | 51.49253 | 77.38216 |
+| BRKB | ACCIONES | 72.53 | lower | 1.2601 | 7.49515 | 13.68454 |
+| NVAX | ACCIONES | 72.39 | high | 35.18716 | 56.43565 | 72.69521 |
+| MRNA | ACCIONES | 71.84 | high | 55.40448 | 279.31613 | 373.38401 |
 
 ## Important
 
