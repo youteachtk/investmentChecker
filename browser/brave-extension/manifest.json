@@ -1,10 +1,23 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Sincroniza cotizaciones públicas de Actinver con investmentChecker. No realiza operaciones.",
-  "permissions": ["storage","scripting","alarms","activeTab"],
-  "host_permissions": ["https://retoactinver.com/*","https://api.github.com/*"],
-  "action": {"default_title":"investmentChecker","default_popup":"popup.html"},
-  "background": {"service_worker":"background.js"}
+  "permissions": [
+    "storage",
+    "scripting",
+    "alarms",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://retoactinver.com/*",
+    "https://api.github.com/*"
+  ],
+  "action": {
+    "default_title": "investmentChecker",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
 }
