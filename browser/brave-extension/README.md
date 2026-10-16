@@ -1,3 +1,7 @@
+## Update 2026-10-16 — Brave v1.1.0
+
+If v1.0.0 seemed unresponsive, overwrite the files in the SAME installed extension folder and click **Reload** in `brave://extensions`. Version 1.1.0 displays the token state, acknowledges sync immediately, reports progress and errors, and strips Actinver's info icon from symbols. Keep the same extension folder to preserve the locally stored GitHub token. Download the versioned ZIP from the ChatGPT conversation.
+
 # Brave native extension — investmentChecker
 
 Direct Manifest V3 extension for Brave; it does **not** use Tampermonkey or Work.
