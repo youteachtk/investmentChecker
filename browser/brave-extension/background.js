@@ -12,12 +12,15 @@ async function startSync(tabId = null) {
   if (!s.githubToken) return {ok:false,error:'Primero guarda el token de GitHub en esta extensión.'};
   if (s.syncRunning && s.syncStartedAt && Date.now()-s.syncStartedAt < MAX_RUN_AGE_MS)
     return {ok:false,error:'Ya hay una sincronización en curso. Consulta el estado debajo del botón.'};
+  // Brave may count the extension popup as currentWindow. Find Actinver
+  // directly among permitted site tabs in every window instead.
   const tabs = tabId === null
-    ? await chrome.tabs.query({active:true,currentWindow:true})
+    ? await chrome.tabs.query({url:'https://retoactinver.com/*'})
     : [await chrome.tabs.get(tabId)];
-  const tab = tabs[0];
-  if (!tab?.id || !ACTINVER.test(tab.url || ''))
-    return {ok:false,error:'Abre Reto Actinver → Monitores en esta ventana antes de sincronizar.'};
+  const candidates = tabs.filter(t => t?.id && ACTINVER.test(t.url || t.pendingUrl || ''));
+  const tab = candidates.find(t => t.active) || candidates[0];
+  if (!tab)
+    return {ok:false,version:'1.2.0',error:'No encuentro ninguna pestaña de Actinver. Abre Monitores en Brave y prueba otra vez.'};
   await chrome.storage.local.set({syncTabId:tab.id,syncStartedAt:Date.now(),syncRunning:true,
     syncStatus:'Conectado a Actinver. Leyendo las tablas…'});
   // Reply immediately instead of making the popup wait for the full capture.
@@ -80,7 +83,7 @@ async function route(msg,sender) {
   return {ok:false,error:'Comando no reconocido'};
 }
 chrome.runtime.onMessage.addListener((msg,sender,reply)=>{
-  route(msg,sender).then(reply).catch(async err=>{
+  route(msg,sender).then(result=>reply({...result,version:'1.2.0'})).catch(async err=>{
     await setStatus('Error: '+err.message,false);
     reply({ok:false,error:err.message});
   });
