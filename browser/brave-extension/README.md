@@ -1,3 +1,7 @@
+## v1.2.0 — Brave tab discovery fix
+
+Earlier code incorrectly used `currentWindow`, which Brave can resolve to the extension popup instead of the Actinver window. Now the background process queries the permitted Actinver tab across windows. The popup displays its version and detects mixed/stale versions. Update files inside the same unpacked-extension directory and click **Reload** in `brave://extensions`. The existing token stays in the same extension storage. The installation ZIP is available in the associated ChatGPT conversation.
+
 ## Update 2026-10-16 — Brave v1.1.0
 
 If v1.0.0 seemed unresponsive, overwrite the files in the SAME installed extension folder and click **Reload** in `brave://extensions`. Version 1.1.0 displays the token state, acknowledges sync immediately, reports progress and errors, and strips Actinver's info icon from symbols. Keep the same extension folder to preserve the locally stored GitHub token. Download the versioned ZIP from the ChatGPT conversation.
