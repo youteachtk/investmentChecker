@@ -11,7 +11,7 @@
     .map(tr=>[...tr.querySelectorAll('td')].map(text))
     .filter(r=>r.length>=9);
   const signature=()=>JSON.stringify(rows());
-  const symbol=r=>(r?.[2]||'').replace(/\*/g,'').trim().toUpperCase();
+  const symbol=r=>(r?.[2]||'').replace(/[\*?ⓘℹ]/g,'').trim().toUpperCase().replace(/\s+/g,' ');
   const progress=async s=>{console.log('[investmentChecker]',s);await chrome.runtime.sendMessage({type:'PROGRESS',status:s});};
   const wait=async (test,why)=>{
     const stop=Date.now()+14000;
@@ -30,7 +30,7 @@
   const page=()=>{
     const current=[...pager().querySelectorAll('button')].find(b=>
       /^\d+$/.test(text(b)) &&
-      (b.classList.contains('active') || b.getAttribute('aria-current')==='page' || b.getAttribute('aria-selected')==='true'));
+      (b.classList.contains('active') || b.parentElement?.classList.contains('active') || b.getAttribute('aria-current')==='page' || b.getAttribute('aria-selected')==='true'));
     return current ? Number(text(current)) : null;
   };
   const pageButton=label=>[...pager().querySelectorAll('button')].find(b=>text(b)===String(label));
