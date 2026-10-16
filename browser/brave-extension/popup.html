@@ -9,13 +9,14 @@ input{box-sizing:border-box;width:100%;padding:11px;border:1px solid #6b7280;bor
 button{width:100%;padding:11px;margin-top:10px;border-radius:8px;border:0;background:#22c55e;color:#06140a;font-weight:700;cursor:pointer}
 button:disabled{opacity:.55;cursor:wait}button.secondary{background:#374151;color:#fff}
 .status{margin-top:12px;padding:10px;border-radius:7px;border:1px solid #475569;white-space:pre-wrap;line-height:1.4}
-small{color:#9ca3af}a{color:#7dd3fc}
+small{color:#9ca3af}.saved{padding-top:8px;color:#bef264}a{color:#7dd3fc}
 </style></head>
 <body>
 <h2>investmentChecker</h2>
 <p>Conexión Brave → GitHub. Recoge únicamente precios y volúmenes públicos de Monitores. <b>Nunca compra ni vende.</b></p>
 <label for="token">Token GitHub (Actions, solo investmentChecker)</label>
 <input id="token" type="password" placeholder="github_pat_..." autocomplete="off" spellcheck="false" />
+<div id="saved" class="saved">Comprobando token…</div>
 <button id="save" class="secondary">Guardar token en esta extensión</button>
 <button id="run">Sincronizar las 226 cotizaciones</button>
 <button id="auto" class="secondary">Activar sincronización automática</button>
