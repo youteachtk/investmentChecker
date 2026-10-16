@@ -24,6 +24,8 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
+      - name: Test ingestion safeguards
+        run: python -m unittest discover -s tests -p 'test_ingest_dispatch.py' -v
       - name: Validate all 226 public quotes and score liquidity
         env:
           ACTINVER_PAYLOAD: ${{ inputs.payload }}
