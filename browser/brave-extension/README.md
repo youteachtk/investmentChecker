@@ -1,3 +1,7 @@
+## v1.4.0 — solución a «Comando no reconocido»
+
+Tras actualizar una extensión unpacked, Brave puede ejecutar un `popup.js` nuevo mientras mantiene el service worker anterior. El ZIP 1.3.0 contenía DIAGNOSE, pero la captura del usuario muestra que el worker estaba desactualizado. En esta versión los botones de diagnóstico e inicio de sincronización consultan pestañas e inyectan el recolector **directamente desde el popup** (sin mensajes START_SYNC/DIAGNOSE al worker); el worker sigue recibiendo PROGRESS/COLLECT_DONE y publicando las cotizaciones en GitHub. Pruebas unitarias locales pasaron con y sin pestaña Actinver, y con worker simulado que responde «Comando no reconocido». La extensión no está validada todavía con la sesión real del usuario. Conservar carpeta para mantener token, extraer el ZIP actualizado y pulsar Recargar en `brave://extensions`.
+
 ## v1.3.0 — permiso de pestañas y diagnóstico
 
 En Brave la versión 1.2.0 podía informar cero pestañas de Actinver porque no declaraba el permiso `tabs`. La versión 1.3.0 lo declara explícitamente, busca entre las pestañas sin filtrar por URL previamente y añade el botón **Diagnosticar pestaña de Actinver** que muestra cantidad de pestañas, cuántas corresponden a Actinver y el permiso del sitio, sin mostrar URL privadas de otras pestañas. Descarga el ZIP v1.3.0 desde la conversación, extrae sobre la misma carpeta, recarga la extensión y conserva el token ya guardado. Si el fallo continúa, comparte únicamente el diagnóstico; no compartas el token.
