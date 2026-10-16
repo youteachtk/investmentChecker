@@ -40,29 +40,53 @@ $('save').addEventListener('click', async () => {
     await refresh();
   } catch (err) { showingLocalError = true; show('No pude guardar el token: ' + err.message); }
 });
-$('run').addEventListener('click', async () => {
-  showingLocalError = false;
-  show('Comprobando token y página de Actinver…');
-  $('run').disabled = true;
-  const reply = await ask({type:'START_SYNC'});
-  if (!reply) { $('run').disabled = false; return; }
-  if (reply.version !== POPUP_VERSION) {
-    showingLocalError = true;
-    show('Se mezclaron dos versiones de la extensión. Abre brave://extensions y pulsa Recargar en investmentChecker.');
-    $('run').disabled = false;
-    return;
-  }
-  if (!reply.ok) {
-    showingLocalError = true;
-    show('No se inició: ' + (reply.error || 'error desconocido'));
-    $('run').disabled = false;
-  } else { await refresh(); }
+// Diagnostics and manual sync run in the popup, independently of stale background commands.
+const ACTINVER_URL = /^https:\/\/(?:www\.)?retoactinver\.com(?:[\/:#?]|$)/i;
+async function getActinverTabs(){
+  const all=await chrome.tabs.query({});
+  return {allCount:all.length,matches:all.filter(t=>t?.id && ACTINVER_URL.test(t.url||t.pendingUrl||''))};
+}
+async function getDiagnostic(){
+  const {allCount,matches}=await getActinverTabs();
+  let allowed='no comprobado';
+  try{
+    allowed=(await chrome.permissions.contains({origins:['https://retoactinver.com/*']}))?'concedido':'no concedido';
+  }catch(_){}
+  return {matches,message:'Brave detecta '+allCount+' pestaña(s). Actinver: '+matches.length+'. Permiso del sitio: '+allowed+'.'};
+}
+$('diagnose').addEventListener('click',async()=>{
+  showingLocalError=true;
+  show('Diagnosticando directamente desde el panel…');
+  try{const d=await getDiagnostic();show(d.message);}
+  catch(err){show('Error de diagnóstico en Brave: '+err.message);}
 });
-$('diagnose').addEventListener('click', async () => {
-  showingLocalError = true;
-  show('Buscando pestañas en Brave…');
-  const reply = await ask({type:'DIAGNOSE'});
-  if (reply) show(reply.diagnostic || ('Error: ' + (reply.error || 'sin respuesta')));
+$('run').addEventListener('click',async()=>{
+  showingLocalError=true;
+  $('run').disabled=true;
+  show('Buscando Actinver directamente desde este panel…');
+  try{
+    const state=await chrome.storage.local.get(['githubToken','syncRunning','syncStartedAt']);
+    if(!state.githubToken)throw Error('El token no está guardado. Pégalo en esta extensión.');
+    if(state.syncRunning && state.syncStartedAt && Date.now()-state.syncStartedAt<7*60*1000)
+      throw Error('Ya hay una sincronización en curso. Espera a que termine.');
+    const d=await getDiagnostic();
+    const tab=d.matches.find(t=>t.active)||d.matches[0];
+    if(!tab)throw Error('No detecto la pestaña de Actinver. '+d.message);
+    await chrome.storage.local.set({
+      syncTabId:tab.id,syncStartedAt:Date.now(),syncRunning:true,
+      syncStatus:'Pestaña de Actinver localizada. Extrayendo cotizaciones…'
+    });
+    showingLocalError=false;
+    await refresh();
+    void chrome.scripting.executeScript({target:{tabId:tab.id},files:['collector.js'],world:'ISOLATED'})
+      .catch(async err=>{
+        await chrome.storage.local.set({syncStatus:'Brave impidió extraer los datos: '+err.message,syncRunning:false});
+      });
+  }catch(err){
+    showingLocalError=true;
+    $('run').disabled=false;
+    show('No se inició: '+err.message);
+  }
 });
 $('auto').addEventListener('click', async () => {
   showingLocalError = false;
