@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>investmentChecker</title>
+<style>
+body{font-family:system-ui,Arial,sans-serif;width:335px;margin:0;padding:18px;background:#111827;color:#f9fafb;font-size:13px}
+h2{margin:0 0 8px;font-size:20px}p{line-height:1.45;color:#d1d5db}
+label{display:block;font-weight:600;margin:14px 0 6px}
+input{box-sizing:border-box;width:100%;padding:11px;border:1px solid #6b7280;border-radius:7px;background:#020617;color:#fff;font-size:13px}
+button{width:100%;padding:11px;margin-top:10px;border-radius:8px;border:0;background:#22c55e;color:#06140a;font-weight:700;cursor:pointer}
+button:disabled{opacity:.55;cursor:wait}button.secondary{background:#374151;color:#fff}
+.status{margin-top:12px;padding:10px;border-radius:7px;border:1px solid #475569;white-space:pre-wrap;line-height:1.4}
+small{color:#9ca3af}a{color:#7dd3fc}
+</style></head>
+<body>
+<h2>investmentChecker</h2>
+<p>Conexión Brave → GitHub. Recoge únicamente precios y volúmenes públicos de Monitores. <b>Nunca compra ni vende.</b></p>
+<label for="token">Token GitHub (Actions, solo investmentChecker)</label>
+<input id="token" type="password" placeholder="github_pat_..." autocomplete="off" spellcheck="false" />
+<button id="save" class="secondary">Guardar token en esta extensión</button>
+<button id="run">Sincronizar las 226 cotizaciones</button>
+<button id="auto" class="secondary">Activar sincronización automática</button>
+<div class="status" id="status" role="status">Abre Actinver → Monitores y pulsa sincronizar.</div>
+<p><small>Para sincronizar, mantén Actinver abierto. Las cotizaciones se publican en tu repositorio público; no enviamos saldos, órdenes ni credenciales de Actinver.</small></p>
+<a href="https://github.com/youteachtk/investmentChecker/actions/workflows/ingest_quotes.yml" target="_blank" rel="noopener noreferrer">Ver comprobación en GitHub Actions</a>
+<script src="popup.js"></script>
+</body></html>
