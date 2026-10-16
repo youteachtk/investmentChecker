@@ -1,26 +1,43 @@
 'use strict';
 const WORKFLOW_URL = 'https://api.github.com/repos/youteachtk/investmentChecker/actions/workflows/ingest_quotes.yml/dispatches';
-const ACTINVER = /^https:\/\/retoactinver\.com\/RetoActinver\//i;
+const ACTINVER = /^https:\/\/(?:www\.)?retoactinver\.com(?:[\/:#?]|$)/i;
 const stamp = () => new Date().toLocaleString('es-MX');
 const MAX_RUN_AGE_MS = 7 * 60 * 1000;
 
 async function setStatus(message, running) {
   await chrome.storage.local.set({syncStatus:message, syncRunning:running});
 }
+
+// Access only tab URL metadata; never store or upload other tabs' URLs.
+async function getActinverTabs(){
+  const all=await chrome.tabs.query({});
+  return {allCount:all.length,matches:all.filter(t=>t?.id && ACTINVER.test(t.url||t.pendingUrl||''))};
+}
+async function getTabDiagnostics(){
+  const {allCount,matches}=await getActinverTabs();
+  let sitePermission='no se pudo determinar';
+  try {
+    const granted=await chrome.permissions.contains({origins:['https://retoactinver.com/*']});
+    sitePermission=granted?'concedido':'no concedido';
+  }catch(_){}
+  let diagnostic='Brave detecta '+allCount+' pestaña(s). Actinver: '+matches.length+'. Permiso del sitio: '+sitePermission+'.';
+  if(!matches.length) diagnostic+=' Si Actinver sigue abierto en esta misma instalación de Brave, revisa el Acceso al sitio en Detalles de esta extensión.';
+  return {allCount,matchCount:matches.length,sitePermission,diagnostic};
+}
+
 async function startSync(tabId = null) {
   const s = await chrome.storage.local.get(['githubToken','syncRunning','syncStartedAt']);
   if (!s.githubToken) return {ok:false,error:'Primero guarda el token de GitHub en esta extensión.'};
   if (s.syncRunning && s.syncStartedAt && Date.now()-s.syncStartedAt < MAX_RUN_AGE_MS)
     return {ok:false,error:'Ya hay una sincronización en curso. Consulta el estado debajo del botón.'};
-  // Brave may count the extension popup as currentWindow. Find Actinver
-  // directly among permitted site tabs in every window instead.
-  const tabs = tabId === null
-    ? await chrome.tabs.query({url:'https://retoactinver.com/*'})
-    : [await chrome.tabs.get(tabId)];
-  const candidates = tabs.filter(t => t?.id && ACTINVER.test(t.url || t.pendingUrl || ''));
-  const tab = candidates.find(t => t.active) || candidates[0];
-  if (!tab)
-    return {ok:false,version:'1.2.0',error:'No encuentro ninguna pestaña de Actinver. Abre Monitores en Brave y prueba otra vez.'};
+  const found=await getActinverTabs();
+  const tab=tabId!==null
+    ? found.matches.find(t=>t.id===tabId)
+    : found.matches.find(t=>t.active)||found.matches[0];
+  if(!tab) {
+    const diag=await getTabDiagnostics();
+    return {ok:false,error:'No encuentro Actinver. '+diag.diagnostic};
+  }
   await chrome.storage.local.set({syncTabId:tab.id,syncStartedAt:Date.now(),syncRunning:true,
     syncStatus:'Conectado a Actinver. Leyendo las tablas…'});
   // Reply immediately instead of making the popup wait for the full capture.
@@ -50,6 +67,7 @@ async function upload(payload) {
 }
 async function route(msg,sender) {
   if (msg?.type==='START_SYNC') return await startSync();
+  if (msg?.type==='DIAGNOSE') return {ok:true,...await getTabDiagnostics()};
   if (msg?.type==='TOGGLE_AUTO') {
     const {autoSync}=await chrome.storage.local.get('autoSync');
     const enabled=!autoSync;
@@ -83,7 +101,7 @@ async function route(msg,sender) {
   return {ok:false,error:'Comando no reconocido'};
 }
 chrome.runtime.onMessage.addListener((msg,sender,reply)=>{
-  route(msg,sender).then(result=>reply({...result,version:'1.2.0'})).catch(async err=>{
+  route(msg,sender).then(result=>reply({...result,version:'1.3.0'})).catch(async err=>{
     await setStatus('Error: '+err.message,false);
     reply({ok:false,error:err.message});
   });
@@ -93,8 +111,8 @@ chrome.alarms.onAlarm.addListener(async alarm=>{
   if(alarm.name!=='quote_sync') return;
   const s=await chrome.storage.local.get(['autoSync','lastSync']);
   if(!s.autoSync || Date.now()-(s.lastSync||0)<28*60000) return;
-  const tabs=await chrome.tabs.query({url:'https://retoactinver.com/RetoActinver/*'});
-  const tab=tabs.find(t=>t.active && ACTINVER.test(t.url||''));
+  const tabs=await getActinverTabs();
+  const tab=tabs.matches.find(t=>t.active);
   if(tab) await startSync(tab.id);
 });
 chrome.runtime.onInstalled.addListener(async()=>{
