@@ -1,35 +1,66 @@
+'use strict';
 const $ = id => document.getElementById(id);
-const status = s => {$('status').textContent = s;};
-
+let showingLocalError = false;
+function show(text) { $('status').textContent = String(text); }
 async function refresh() {
-  const v = await chrome.storage.local.get(['githubToken','autoSync','syncStatus','syncRunning','lastSync']);
-  $('token').placeholder = v.githubToken ? 'Token guardado (escribe para sustituir)' : 'github_pat_...';
-  $('auto').textContent = v.autoSync ? 'Desactivar sincronización automática' : 'Activar sincronización automática';
-  $('run').disabled = !!v.syncRunning;
-  status(v.syncStatus || 'Abre Actinver → Monitores y pulsa sincronizar.');
+  try {
+    const s = await chrome.storage.local.get(['githubToken','autoSync','syncStatus','syncRunning']);
+    $('token').placeholder = s.githubToken ? 'Token ya guardado (escribe solo para cambiarlo)' : 'github_pat_...';
+    $('run').disabled = !!s.syncRunning;
+    $('run').textContent = s.syncRunning ? 'Sincronización en curso…' : 'Sincronizar las 226 cotizaciones';
+    $('auto').textContent = s.autoSync ? 'Desactivar sincronización automática' : 'Activar sincronización automática';
+    $('saved').textContent = s.githubToken ? '✓ Token de GitHub guardado' : '⚠ Aún no hay token de GitHub';
+    if (!showingLocalError) show(s.syncStatus || 'Abre Actinver → Monitores y pulsa sincronizar.');
+  } catch (err) {
+    show('Error al leer el estado de la extensión: ' + err.message);
+  }
+}
+async function ask(message) {
+  try { return await chrome.runtime.sendMessage(message); }
+  catch (err) {
+    showingLocalError = true;
+    show('No se pudo comunicar con Brave: ' + err.message + '. Abre brave://extensions y pulsa Recargar en investmentChecker.');
+    return null;
+  }
 }
 $('save').addEventListener('click', async () => {
-  const token=$('token').value.trim();
+  const token = $('token').value.trim();
   if (!/^github_pat_[A-Za-z0-9_]+$/.test(token)) {
-    status('Pega un token fine-grained válido de GitHub. No compartas el token en el chat.');return;
+    showingLocalError = true;
+    show('El token debe empezar por github_pat_. No lo compartas en el chat.');
+    return;
   }
-  await chrome.storage.local.set({githubToken:token});
-  $('token').value='';
-  status('Token guardado solo en el almacenamiento de esta extensión.');
-  refresh();
+  try {
+    await chrome.storage.local.set({githubToken: token});
+    $('token').value = '';
+    showingLocalError = false;
+    await chrome.storage.local.set({syncStatus:'Token guardado correctamente. Ya puedes pulsar Sincronizar.'});
+    await refresh();
+  } catch (err) { showingLocalError = true; show('No pude guardar el token: ' + err.message); }
 });
 $('run').addEventListener('click', async () => {
-  const r=await chrome.runtime.sendMessage({type:'START_SYNC'});
-  if (!r?.ok) status(r?.error || 'No se pudo empezar. Abre Actinver → Monitores.');
-  else status('Extrayendo cotizaciones en Actinver. No navegues por sus pestañas mientras termina.');
-  refresh();
+  showingLocalError = false;
+  show('Comprobando token y página de Actinver…');
+  $('run').disabled = true;
+  const reply = await ask({type:'START_SYNC'});
+  if (!reply) { $('run').disabled = false; return; }
+  if (!reply.ok) {
+    showingLocalError = true;
+    show('No se inició: ' + (reply.error || 'error desconocido'));
+    $('run').disabled = false;
+  } else { await refresh(); }
 });
 $('auto').addEventListener('click', async () => {
-  const r=await chrome.runtime.sendMessage({type:'TOGGLE_AUTO'});
-  if (!r?.ok) status(r?.error || 'No se pudo cambiar la sincronización.');
-  refresh();
+  showingLocalError = false;
+  show('Actualizando sincronización automática…');
+  const r = await ask({type:'TOGGLE_AUTO'});
+  if (r && !r.ok) { showingLocalError = true; show('No se pudo cambiar: ' + r.error); }
+  else if (r) await refresh();
 });
-chrome.storage.onChanged.addListener(changes => {
-  if (changes.syncStatus || changes.syncRunning || changes.autoSync) refresh();
+chrome.storage.onChanged.addListener((changes,area) => {
+  if (area==='local' && (changes.syncStatus || changes.syncRunning || changes.autoSync || changes.githubToken)) {
+    showingLocalError = false;
+    void refresh();
+  }
 });
-refresh();
+void refresh();
