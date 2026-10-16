@@ -1,5 +1,7 @@
 'use strict';
 const $ = id => document.getElementById(id);
+const POPUP_VERSION = chrome.runtime.getManifest().version;
+$('version').textContent = 'v'+POPUP_VERSION;
 let showingLocalError = false;
 function show(text) { $('status').textContent = String(text); }
 async function refresh() {
@@ -44,6 +46,12 @@ $('run').addEventListener('click', async () => {
   $('run').disabled = true;
   const reply = await ask({type:'START_SYNC'});
   if (!reply) { $('run').disabled = false; return; }
+  if (reply.version !== POPUP_VERSION) {
+    showingLocalError = true;
+    show('Se mezclaron dos versiones de la extensión. Abre brave://extensions y pulsa Recargar en investmentChecker.');
+    $('run').disabled = false;
+    return;
+  }
   if (!reply.ok) {
     showingLocalError = true;
     show('No se inició: ' + (reply.error || 'error desconocido'));
