@@ -1,0 +1,43 @@
+name: Receive Actinver quotes from Brave
+
+on:
+  workflow_dispatch:
+    inputs:
+      payload:
+        description: "Snapshot JSON containing public market quotes only; no account data."
+        type: string
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: actinver-public-quote-ingest
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Validate all 226 public quotes and score liquidity
+        env:
+          ACTINVER_PAYLOAD: ${{ inputs.payload }}
+        run: python scripts/ingest_dispatch.py
+      - name: Save validated public market snapshot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add output/actinver_quotes.json output/actinver_quote_opportunities.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Update validated Actinver public quote snapshot"
+            for attempt in 1 2 3; do
+              git pull --rebase origin main && git push && exit 0
+              sleep 4
+            done
+            exit 1
+          fi
