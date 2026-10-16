@@ -1,3 +1,7 @@
+## v1.3.0 — permiso de pestañas y diagnóstico
+
+En Brave la versión 1.2.0 podía informar cero pestañas de Actinver porque no declaraba el permiso `tabs`. La versión 1.3.0 lo declara explícitamente, busca entre las pestañas sin filtrar por URL previamente y añade el botón **Diagnosticar pestaña de Actinver** que muestra cantidad de pestañas, cuántas corresponden a Actinver y el permiso del sitio, sin mostrar URL privadas de otras pestañas. Descarga el ZIP v1.3.0 desde la conversación, extrae sobre la misma carpeta, recarga la extensión y conserva el token ya guardado. Si el fallo continúa, comparte únicamente el diagnóstico; no compartas el token.
+
 ## v1.2.0 — Brave tab discovery fix
 
 Earlier code incorrectly used `currentWindow`, which Brave can resolve to the extension popup instead of the Actinver window. Now the background process queries the permitted Actinver tab across windows. The popup displays its version and detects mixed/stale versions. Update files inside the same unpacked-extension directory and click **Reload** in `brave://extensions`. The existing token stays in the same extension storage. The installation ZIP is available in the associated ChatGPT conversation.
