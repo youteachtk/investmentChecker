@@ -58,6 +58,12 @@ $('run').addEventListener('click', async () => {
     $('run').disabled = false;
   } else { await refresh(); }
 });
+$('diagnose').addEventListener('click', async () => {
+  showingLocalError = true;
+  show('Buscando pestañas en Brave…');
+  const reply = await ask({type:'DIAGNOSE'});
+  if (reply) show(reply.diagnostic || ('Error: ' + (reply.error || 'sin respuesta')));
+});
 $('auto').addEventListener('click', async () => {
   showingLocalError = false;
   show('Actualizando sincronización automática…');
