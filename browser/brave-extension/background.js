@@ -101,7 +101,7 @@ async function route(msg,sender) {
   return {ok:false,error:'Comando no reconocido'};
 }
 chrome.runtime.onMessage.addListener((msg,sender,reply)=>{
-  route(msg,sender).then(result=>reply({...result,version:'1.4.0'})).catch(async err=>{
+  route(msg,sender).then(result=>reply({...result,version:'1.5.0'})).catch(async err=>{
     await setStatus('Error: '+err.message,false);
     reply({ok:false,error:err.message});
   });
