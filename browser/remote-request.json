@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "action": "none",
-  "id": "bootstrap-inactive",
-  "issued_at": "1970-01-01T00:00:00Z"
+  "action": "capture_public_quotes",
+  "id": "chat-20261017T001906Z",
+  "issued_at": "2026-10-17T00:19:06Z"
 }
