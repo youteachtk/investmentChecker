@@ -101,7 +101,7 @@ async function route(msg,sender) {
   return {ok:false,error:'Comando no reconocido'};
 }
 chrome.runtime.onMessage.addListener((msg,sender,reply)=>{
-  route(msg,sender).then(result=>reply({...result,version:'1.5.0'})).catch(async err=>{
+  route(msg,sender).then(result=>reply({...result,version:'2.0.0'})).catch(async err=>{
     await setStatus('Error: '+err.message,false);
     reply({ok:false,error:err.message});
   });
@@ -119,3 +119,6 @@ chrome.runtime.onInstalled.addListener(async()=>{
   const {autoSync}=await chrome.storage.local.get('autoSync');
   if(autoSync) await chrome.alarms.create('quote_sync',{periodInMinutes:30});
 });
+
+// Remote read-only quote capture requests initiated from ChatGPT via GitHub.
+importScripts('remote.js');
