@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "1.5.0",
+  "version": "2.0.0",
   "description": "Sincroniza cotizaciones públicas de Actinver con investmentChecker. No realiza operaciones.",
   "permissions": [
     "storage",
@@ -12,7 +12,8 @@
   ],
   "host_permissions": [
     "https://retoactinver.com/*",
-    "https://api.github.com/*"
+    "https://api.github.com/*",
+    "https://raw.githubusercontent.com/*"
   ],
   "action": {
     "default_title": "investmentChecker",
