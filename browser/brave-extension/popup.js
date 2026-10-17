@@ -6,10 +6,11 @@ let showingLocalError = false;
 function show(text) { $('status').textContent = String(text); }
 async function refresh() {
   try {
-    const s = await chrome.storage.local.get(['githubToken','autoSync','syncStatus','syncRunning']);
+    const s = await chrome.storage.local.get(['githubToken','autoSync','remoteControlEnabled','syncStatus','syncRunning']);
     $('token').placeholder = s.githubToken ? 'Token ya guardado (escribe solo para cambiarlo)' : 'github_pat_...';
     $('run').disabled = !!s.syncRunning;
     $('run').textContent = s.syncRunning ? 'Sincronización en curso…' : 'Sincronizar las 226 cotizaciones';
+    $('remote').textContent = s.remoteControlEnabled === false ? 'Activar solicitudes desde ChatGPT' : 'Desactivar solicitudes desde ChatGPT';
     $('auto').textContent = s.autoSync ? 'Desactivar sincronización automática' : 'Activar sincronización automática';
     $('saved').textContent = s.githubToken ? '✓ Token de GitHub guardado' : '⚠ Aún no hay token de GitHub';
     if (!showingLocalError) show(s.syncStatus || 'Abre Actinver → Monitores y pulsa sincronizar.');
@@ -88,6 +89,16 @@ $('run').addEventListener('click',async()=>{
     show('No se inició: '+err.message);
   }
 });
+$('remote').addEventListener('click', async () => {
+  try {
+    const s = await chrome.storage.local.get('remoteControlEnabled');
+    const enabled = s.remoteControlEnabled === false;
+    await chrome.storage.local.set({remoteControlEnabled: enabled});
+    showingLocalError = false;
+    show(enabled ? 'Solicitudes desde ChatGPT activadas. Brave comprobará GitHub aproximadamente cada 30 segundos.' : 'Solicitudes desde ChatGPT desactivadas. Puedes seguir sincronizando manualmente.');
+    await refresh();
+  } catch (err) { show('No se pudo cambiar la configuración remota: '+err.message); }
+});
 $('auto').addEventListener('click', async () => {
   showingLocalError = false;
   show('Actualizando sincronización automática…');
@@ -96,7 +107,7 @@ $('auto').addEventListener('click', async () => {
   else if (r) await refresh();
 });
 chrome.storage.onChanged.addListener((changes,area) => {
-  if (area==='local' && (changes.syncStatus || changes.syncRunning || changes.autoSync || changes.githubToken)) {
+  if (area==='local' && (changes.syncStatus || changes.syncRunning || changes.autoSync || changes.githubToken || changes.remoteControlEnabled)) {
     showingLocalError = false;
     void refresh();
   }
