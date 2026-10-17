@@ -13,10 +13,19 @@
   const signature=()=>JSON.stringify(rows());
   const symbol=r=>(r?.[2]||'').replace(/[\*?ⓘℹ]/g,'').trim().toUpperCase().replace(/\s+/g,' ');
   const progress=async s=>{console.log('[investmentChecker]',s);await chrome.runtime.sendMessage({type:'PROGRESS',status:s});};
+  // React can update prices, page state, and the actual category rows separately.
+  // Treat a condition as confirmed only after repeated matching observations.
   const wait=async (test,why)=>{
-    const stop=Date.now()+14000;
-    while(Date.now()<stop){await sleep(200);if(test()){await sleep(450);return;}}
-    throw Error('Actinver no actualizó '+why+' (espera agotada)');
+    const stop=Date.now()+18000;
+    let stable=0;
+    while(Date.now()<stop){
+      await sleep(220);
+      if(test()) {
+        stable++;
+        if(stable>=3) return;
+      } else stable=0;
+    }
+    throw Error('Actinver no terminó de cargar '+why+' (18 segundos).');
   };
   const findTab=name=>buttons().find(b=>text(b).toUpperCase()===name.toUpperCase());
   const pager=()=>{
@@ -42,15 +51,17 @@
     const all=[];
     for(const [category,count,first] of EXPECTED){
       const tab=findTab(category);
-      const before=signature();
+      await progress('Abriendo '+category+'; esperando que aparezca '+first+'…');
       tab.click();
-      await wait(()=>firstSymbol()===first || (signature()!==before && rows().length>0),category+' (cambio de pestaña)');
+      // A quote update on the PREVIOUS tab is not a category change.
+      // Wait for the actual first ticker of the target catalog.
+      await wait(()=>firstSymbol()===first,category+' (primera emisora '+first+')');
       let current=page();
       if(current!==1){
         const toFirst=pageButton('Primera');
         if(!toFirst) throw Error('No encuentro Primera en '+category);
-        const prior=signature();toFirst.click();
-        await wait(()=>page()===1 && signature()!==prior,'primera página de '+category);
+        toFirst.click();
+        await wait(()=>page()===1 && firstSymbol()===first,'primera página de '+category);
       }
       if(firstSymbol()!==first) throw Error('La pestaña '+category+' no coincide con el catálogo (esperaba '+first+', aparece '+firstSymbol()+')');
       const known=new Set(), visited=new Set();
@@ -74,8 +85,9 @@
         if(known.size>count) throw Error('Demasiadas filas en '+category);
         const next=pageButton(current+1);
         if(!next || next.disabled) throw Error('No hay página '+(current+1)+'; solo '+known.size+'/'+count+' '+category);
-        const beforePage=signature();next.click();
-        await wait(()=>page()===current+1 && signature()!==beforePage,category+' página '+(current+1));
+        const beforeFirst=firstSymbol();next.click();
+        // Page-number changes can precede table rendering; require new rows.
+        await wait(()=>page()===current+1 && firstSymbol()!==beforeFirst,category+' página '+(current+1));
       }
       if(known.size!==count) throw Error('Se capturaron solo '+known.size+'/'+count+' en '+category);
     }
