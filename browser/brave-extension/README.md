@@ -1,3 +1,9 @@
+## v1.5.0 — confirmar la categoría antes de leerla
+
+Corrige un error reproducido en el monitor: al hacer clic en ETFs, Actinver podía actualizar un precio de ACCIONES antes de cargar realmente la tabla de ETFs; el recolector anterior aceptaba cualquier cambio de tabla y fallaba con `esperaba AAXJ, aparece AA1`. Ahora espera a que la primera emisora sea exactamente la esperada, la verifica durante varias observaciones y comprueba que la paginación haya cambiado los datos, no solo su indicador. Una prueba con tablas simuladas y cambios de precios previos capturó los 226 instrumentos sin error. Este ZIP no se ha validado aún con el monitor real del usuario.
+
+**Actualizar**: extrae los cinco archivos directamente en la carpeta cargada por Brave y reemplázalos; no crees una carpeta anidada. En `brave://extensions` pulsa Recargar. La ficha y el popup deben mostrar **v1.5.0**; versiones mezcladas significan que se actualizó una carpeta distinta. Conserva la carpeta cargada para preservar el token.
+
 ## v1.4.0 — solución a «Comando no reconocido»
 
 Tras actualizar una extensión unpacked, Brave puede ejecutar un `popup.js` nuevo mientras mantiene el service worker anterior. El ZIP 1.3.0 contenía DIAGNOSE, pero la captura del usuario muestra que el worker estaba desactualizado. En esta versión los botones de diagnóstico e inicio de sincronización consultan pestañas e inyectan el recolector **directamente desde el popup** (sin mensajes START_SYNC/DIAGNOSE al worker); el worker sigue recibiendo PROGRESS/COLLECT_DONE y publicando las cotizaciones en GitHub. Pruebas unitarias locales pasaron con y sin pestaña Actinver, y con worker simulado que responde «Comando no reconocido». La extensión no está validada todavía con la sesión real del usuario. Conservar carpeta para mantener token, extraer el ZIP actualizado y pulsar Recargar en `brave://extensions`.
