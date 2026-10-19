@@ -1,0 +1,50 @@
+name: Package Brave investmentChecker extension
+
+on:
+  push:
+    paths:
+      - 'browser/brave-extension/**'
+      - '.github/workflows/package-extension.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: investmentchecker-extension-package
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check JavaScript syntax and manifest
+        run: |
+          node --check browser/brave-extension/background.js
+          node --check browser/brave-extension/popup.js
+          node --check browser/brave-extension/collector.js
+          node --check browser/brave-extension/portfolio-collector.js
+          node --check browser/brave-extension/private-sync.js
+          node --check browser/brave-extension/remote.js
+          python -m json.tool browser/brave-extension/manifest.json >/dev/null
+      - name: Create ready-to-install ZIP
+        run: |
+          mkdir -p /tmp/investmentChecker-v2.1.0
+          cp browser/brave-extension/{manifest.json,background.js,popup.html,popup.js,collector.js,remote.js,private-sync.js,portfolio-collector.js,README.md} /tmp/investmentChecker-v2.1.0/
+          cd /tmp/investmentChecker-v2.1.0
+          zip -q -r "${GITHUB_WORKSPACE}/browser/investmentChecker-brave-v2.1.0.zip" .
+      - name: Publish ZIP in repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add browser/investmentChecker-brave-v2.1.0.zip
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish Brave extension v2.1.0 installer ZIP"
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && exit 0
+              sleep 4
+            done
+            exit 1
+          fi
