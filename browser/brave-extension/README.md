@@ -1,3 +1,15 @@
+## v2.2.0 — Una sola sincronización, instalación estable (19/oct/2026)
+
+**Ya no hay dos paneles ni dos botones de captura.** La ventana tiene un único botón **Sincronizar todo ahora** y un solo estado. Tokens y diagnóstico permanecen dentro de **Configuración y diagnóstico** (plegado). Conserva las llaves `githubToken`, `privateToken`, `privateRepo` y `privateEnabled` guardadas por v2.1: **no las pide otra vez**.
+
+**Automático:** al abrir Actinver en Brave con la sesión activa, y aproximadamente cada 30 minutos mientras continúe abierto, InvestmentChecker intenta sincronizar las 226 cotizaciones públicas y la cartera privada. Las solicitudes de ChatGPT a GitHub activan el mismo proceso unido. Si no hay una pestaña de Monitores, abre una temporal en segundo plano. Tras enviar cotizaciones, intenta leer saldo y localizar las posiciones usando un segundo tab temporal, navegando únicamente por controles de inversión/portafolio; al terminar lo cierra. Nunca opera, compra ni vende ni accede a contraseñas o números de cuenta.
+
+**Instalación consistente:** descarga `browser/investmentChecker-brave-v2.2.0.zip` y extráelo. Dentro hay siempre **`investmentChecker/`**, **`ACTUALIZAR.cmd`** y **`ACTUALIZAR.ps1`**. Ejecuta `ACTUALIZAR.cmd` en Windows; intenta localizar la carpeta de extensión instalada en las Preferencias de Brave o, si no es posible, solicita que la selecciones una única vez. Copia automáticamente los archivos verificados SIN eliminar la extensión y SIN modificar sus tokens. Por seguridad Brave requiere recargar la extensión una vez en `brave://extensions`; GitHub por sí solo no actualiza extensiones desempaquetadas.
+
+**Privacidad:** 226 cotizaciones al repositorio GitHub público ya existente. Saldos y posiciones solamente a `youteachtk/investmentChecker-private`, que debe permanecer `private:true`. Se verifica privacidad con token local antes de subir cualquier dato. Si no hay un token privado validado o no puede leerse con certeza la tabla de posiciones, NO publica datos privados ni inventa posiciones.
+
+**Validación pendiente:** los cambios de React y la navegación por el menú «Tu inversión» deben probarse en la sesión real: una comprobación estática no demuestra que la extracción de posiciones vaya a funcionar en todas las pantallas. En ese caso la extensión informa cartera pendiente, pero las cotizaciones públicas siguen funcionando.
+
 ## v2.1.0 — cartera privada separada de cotizaciones públicas (19/oct/2026)
 
 El repositorio `youteachtk/investmentChecker` es PÚBLICO y sigue conteniendo solamente cotizaciones públicas de 226 instrumentos. No se almacena aquí información de cuenta.
