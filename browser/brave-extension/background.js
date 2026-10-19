@@ -151,14 +151,28 @@ chrome.alarms.onAlarm.addListener(async alarm=>{
   const tab=tabs.matches.find(t=>t.active);
   if(tab) await startSync(tab.id);
 });
+async function maybeAutoStart(){
+  const s=await chrome.storage.local.get(['autoSync','lastSync','syncRunning','lastAutoAttempt']);
+  if(!s.autoSync || s.syncRunning || Date.now()-(s.lastSync||0)<28*60000 ||
+     Date.now()-(s.lastAutoAttempt||0)<3*60000)return;
+  const tabs=await getActinverTabs();
+  if(!tabs.matches.length)return;
+  await chrome.storage.local.set({lastAutoAttempt:Date.now()});
+  const result=await startSync();
+  if(!result.ok)await setStatus('Esperando a Actinver: '+result.error,false);
+}
 async function ensureAutoSync(){
   const {autoSync}=await chrome.storage.local.get('autoSync');
   if(autoSync===false){await chrome.alarms.clear('quote_sync');return;}
   if(autoSync!==true)await chrome.storage.local.set({autoSync:true});
   await chrome.alarms.create('quote_sync',{periodInMinutes:30});
+  await maybeAutoStart();
 }
 chrome.runtime.onInstalled.addListener(()=>{void ensureAutoSync();});
 chrome.runtime.onStartup.addListener(()=>{void ensureAutoSync();});
+chrome.tabs.onUpdated.addListener((tabId,info,tab)=>{
+  if(info.status==='complete' && ACTINVER.test(tab.url||''))void maybeAutoStart();
+});
 
 // Remote read-only quote capture requests initiated from ChatGPT via GitHub.
 importScripts('remote.js');
