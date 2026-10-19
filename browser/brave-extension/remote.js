@@ -29,14 +29,14 @@ async function checkRemoteRequest() {
     // Don't lose a new request while another capture is still in progress.
     if (state.syncRunning && Date.now()-(state.syncStartedAt||0)<7*60*1000) return;
     const tabs = await getActinverTabs();
-    const eligible = tabs.matches.filter(t=>/\/#\/capitales(?:[/?#]|$)/i.test(t.url||''));
+    const eligible = tabs.matches;
     const tab = eligible.find(t=>t.active) || eligible[0];
     if (!tab) {
       await chrome.storage.local.set({remotePendingRequestId:request.id,
         syncStatus:'Solicitud desde ChatGPT recibida. Abre Actinver → Monitores e inicia sesión para continuar.'});
       return;
     }
-    // Consume each signed-in session request once; only quote capture is possible.
+    // One read-only request now starts both public quotes and private portfolio capture.
     await chrome.storage.local.set({lastRemoteRequestId:request.id,remotePendingRequestId:null});
     const result = await startSync(tab.id);
     if (!result.ok) {
