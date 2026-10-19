@@ -24,6 +24,27 @@ async function verifyPrivateRepo(repository, token) {
     throw Error('El token no tiene acceso de escritura al repositorio privado.');
   return true;
 }
+// Recover a private-only token accidentally saved in the public token field.
+// It is tested against the exact existing PRIVATE repo; no secret leaves Brave
+// except as an Authorization header to api.github.com.
+async function recoverMisplacedPrivateToken() {
+  const state=await chrome.storage.local.get(['githubToken','privateToken','privateRepo','privateEnabled']);
+  if(state.privateEnabled && state.privateToken) return {configured:true,recovered:false};
+  const candidate=state.privateToken || state.githubToken;
+  if(!candidate) return {configured:false,recovered:false};
+  const repository=state.privateRepo || 'youteachtk/investmentChecker-private';
+  try {
+    await verifyPrivateRepo(repository,candidate);
+    await chrome.storage.local.set({
+      privateRepo:repository,privateToken:candidate,privateEnabled:true,
+      privateSyncStatus:'Cartera privada conectada y token verificado. Sincronización automática activa.'
+    });
+    return {configured:true,recovered:true};
+  }catch(error) {
+    return {configured:false,recovered:false};
+  }
+}
+
 async function configurePrivatePortfolio(msg) {
   const repository=String(msg.repository||'').trim();
   const token=String(msg.token||'').trim();
@@ -34,14 +55,25 @@ async function configurePrivatePortfolio(msg) {
   return {ok:true};
 }
 async function capturePrivatePortfolio(tabId=null) {
+  await recoverMisplacedPrivateToken();
   const s=await chrome.storage.local.get(['privateEnabled','privateRepo','privateToken']);
   if (!s.privateEnabled || !s.privateRepo || !s.privateToken)
-    return {ok:false,error:'Primero configura un repositorio PRIVADO para la cartera.'};
+    return {ok:false,error:'Cartera privada aún sin token verificado.'};
   const all=await chrome.tabs.query({});
-  const tab=tabId!==null?all.find(t=>t.id===tabId):all.find(t=>t.active&&privateSitePattern.test(t.url||''))||all.find(t=>privateSitePattern.test(t.url||''));
-  if (!tab || !privateSitePattern.test(tab.url||'')) return {ok:false,error:'Abre Actinver en Brave.'};
-  await chrome.scripting.executeScript({target:{tabId:tab.id},files:['portfolio-collector.js'],world:'ISOLATED'});
-  return {ok:true,message:'Captura local iniciada. El resumen y las posiciones deben estar accesibles en Actinver.'};
+  const actinver=all.filter(t=>Number.isInteger(t.id) && privateSitePattern.test(t.url||t.pendingUrl||''));
+  const selected=actinver.find(t=>t.id===tabId) || actinver.find(t=>t.active) || actinver[0];
+  if(!selected)return {ok:false,error:'La sesión de Actinver no está abierta.'};
+  try{
+    await chrome.scripting.executeScript({target:{tabId:selected.id},files:['portfolio-collector.js'],world:'ISOLATED'});
+    return {ok:true};
+  }catch(error){
+    if(!/No tab with id|tab was closed|No frame with id/i.test(String(error.message||'')))throw error;
+    const refreshed=await chrome.tabs.query({});
+    const fallback=refreshed.find(t=>t.id!==selected.id && privateSitePattern.test(t.url||''));
+    if(!fallback)return {ok:false,error:'La pestaña de Actinver cambió. Se reintentará al abrirla.'};
+    await chrome.scripting.executeScript({target:{tabId:fallback.id},files:['portfolio-collector.js'],world:'ISOLATED'});
+    return {ok:true,recoveredTab:true};
+  }
 }
 function sanitizePrivateCapture(raw) {
   if (!raw || typeof raw!=='object') throw Error('Captura privada vacía.');
@@ -129,6 +161,7 @@ async function uploadPrivatePortfolio(payload) {
 // inactive temporary tab; Actinver's trading UI is never interacted with.
 let privateDiscoveryBusy=false;
 async function runPortfolioSync(marketTabId) {
+  await recoverMisplacedPrivateToken();
   const settings=await chrome.storage.local.get(['privateEnabled','privateRepo','privateToken']);
   if(!settings.privateEnabled || !settings.privateRepo || !settings.privateToken)
     return {message:'Mercado actualizado; cartera privada no configurada.'};
