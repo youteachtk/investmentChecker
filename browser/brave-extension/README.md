@@ -1,3 +1,20 @@
+## v2.1.0 — cartera privada separada de cotizaciones públicas (19/oct/2026)
+
+El repositorio `youteachtk/investmentChecker` es PÚBLICO y sigue conteniendo solamente cotizaciones públicas de 226 instrumentos. No se almacena aquí información de cuenta.
+
+**Instalación:** descarga `browser/investmentChecker-brave-v2.1.0.zip` (se empaqueta automáticamente en Actions). Descomprime los archivos directamente sobre la MISMA carpeta ya cargada en Brave; no anides subcarpetas. Abre `brave://extensions`, pulsa **Recargar** y comprueba que la versión sea 2.1.0. Reutilizar la carpeta conserva el token público. La extensión instalada no se actualiza automáticamente con un commit de GitHub.
+
+**Configuración privada (una vez):**
+1. Crea en GitHub un segundo repositorio **Private**, por ejemplo `youteachtk/investmentChecker-private`. Inicialízalo con README para que tenga rama `main`. No cambies su visibilidad a Public.
+2. En GitHub crea un **segundo** fine-grained PAT con acceso únicamente a ese repositorio privado y permiso **Contents: Read and write**. Es diferente del token público de Actions. Nunca lo pegues en ChatGPT, en capturas, en GitHub público ni en las herramientas de desarrollo.
+3. En el popup de InvestmentChecker, introduce `owner/repo` y ese token en **Cartera privada → Verificar y activar**. La extensión consulta la API GitHub para confirmar `private:true` y verifica otra vez esa condición **antes de cada envío**. Un repo público queda bloqueado.
+4. Abre **Monitores** (para el resumen) y **Tu inversión** / la pantalla donde Actinver muestra la tabla de posiciones (para las emisoras y cantidades). En cada vista la extensión intenta capturar los datos automáticamente al cargar o cambiar de página. Puedes pulsar **Capturar la cartera de esta pestaña** para forzarla. Se necesitan ambas partes con antigüedad menor a 30 minutos; de otro modo no se sube nada.
+5. Verifica en el repositorio PRIVADO el archivo `actinver/portfolio-latest.json`. Para que ChatGPT pueda consultarlo necesitarás autorizar al conector GitHub para ese repositorio privado.
+
+**Campos permitidos:** `total_value`, `investments`, `buying_power`, `unsettled`, `change_mxn`, `change_pct`, y tabla de símbolos, cantidades, costo/valuación/precio si la página ofrece esas columnas. Se descartan contraseñas, cookies, nombre del titular, números de cuenta, órdenes y folios. La copia parcial se mantiene solamente en `chrome.storage.local` hasta completar ambas partes.
+
+**Limitación todavía por validar:** el DOM de la vista «Tu inversión» puede variar. Si no hay tabla con cabeceras reconocibles (emisora/símbolo y títulos/cantidad), la extensión NO inventa posiciones y NO sube el snapshot. Hará falta adaptar el parser usando un diagnóstico de cabeceras no sensible. No se ejecutan compras ni ventas.
+
 ## v2.0.0 — Sincronización a petición desde ChatGPT
 
 Esta versión permite iniciar una **captura de cotizaciones públicas** con una orden desde ChatGPT: el asistente escribe un comando corto y con vencimiento de cinco minutos en `browser/remote-request.json` del repositorio. Brave comprueba ese archivo aproximadamente cada 30 segundos usando `remote.js` y, si Actinver → Monitores está abierto y la sesión sigue iniciada, captura 226 instrumentos y envía los datos mediante GitHub Actions. El asistente comprueba el resultado validado y propone compras o ventas para aprobación del usuario; no ejecuta operaciones. No funciona con Brave cerrado. El tiempo total incluye polling, extracción y GitHub Actions; no es instantáneo al segundo.
