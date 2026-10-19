@@ -25,25 +25,51 @@ async function getTabDiagnostics(){
   return {allCount,matchCount:matches.length,sitePermission,diagnostic};
 }
 
+const MONITOR_URL = 'https://retoactinver.com/RetoActinver/#/capitales';
+const isMonitorTab = t => /\/#\/capitales(?:[/?#]|$)/i.test(t?.url || '');
+async function waitForPage(tabId, maxMs=25000) {
+  const until=Date.now()+maxMs;
+  while(Date.now()<until) {
+    try {
+      const tab=await chrome.tabs.get(tabId);
+      if(tab.status==='complete') {await new Promise(r=>setTimeout(r,1100));return true;}
+    }catch{return false;}
+    await new Promise(r=>setTimeout(r,350));
+  }
+  return false;
+}
+async function cleanupTemporarySyncTab() {
+  const s=await chrome.storage.local.get('syncTemporaryTabId');
+  if(s.syncTemporaryTabId) {
+    try {await chrome.tabs.remove(s.syncTemporaryTabId);}catch(_){}
+    await chrome.storage.local.remove('syncTemporaryTabId');
+  }
+}
+
 async function startSync(tabId = null) {
-  const s = await chrome.storage.local.get(['githubToken','syncRunning','syncStartedAt']);
-  if (!s.githubToken) return {ok:false,error:'Primero guarda el token de GitHub en esta extensión.'};
-  if (s.syncRunning && s.syncStartedAt && Date.now()-s.syncStartedAt < MAX_RUN_AGE_MS)
-    return {ok:false,error:'Ya hay una sincronización en curso. Consulta el estado debajo del botón.'};
+  const s=await chrome.storage.local.get(['githubToken','syncRunning','syncStartedAt']);
+  if(!s.githubToken)return {ok:false,error:'Aún no hay token público de GitHub.'};
+  if(s.syncRunning && s.syncStartedAt && Date.now()-s.syncStartedAt<MAX_RUN_AGE_MS)
+    return {ok:false,error:'Ya hay una sincronización en curso.'};
   const found=await getActinverTabs();
-  const tab=tabId!==null
-    ? found.matches.find(t=>t.id===tabId)
-    : found.matches.find(t=>t.active)||found.matches[0];
+  if(!found.matches.length) return {ok:false,error:'Abre Actinver e inicia sesión en Brave. La extensión hará el resto.'};
+  let tab=(tabId!==null ? found.matches.find(t=>t.id===tabId && isMonitorTab(t)):null)
+    ||found.matches.find(t=>isMonitorTab(t)&&t.active)
+    ||found.matches.find(isMonitorTab);
   if(!tab) {
-    const diag=await getTabDiagnostics();
-    return {ok:false,error:'No encuentro Actinver. '+diag.diagnostic};
+    tab=await chrome.tabs.create({url:MONITOR_URL,active:false});
+    await chrome.storage.local.set({syncTemporaryTabId:tab.id});
+    if(!(await waitForPage(tab.id))) {
+      await cleanupTemporarySyncTab();
+      return {ok:false,error:'No se pudo abrir Monitores en segundo plano.'};
+    }
   }
   await chrome.storage.local.set({syncTabId:tab.id,syncStartedAt:Date.now(),syncRunning:true,
-    syncStatus:'Conectado a Actinver. Leyendo las tablas…'});
-  // Reply immediately instead of making the popup wait for the full capture.
+    syncStatus:'Sincronizando mercado y cartera…'});
   void chrome.scripting.executeScript({target:{tabId:tab.id},files:['collector.js'],world:'ISOLATED'})
-    .catch(async err => {
-      await setStatus('Brave no permitió ejecutar el recolector: ' + err.message, false);
+    .catch(async err=>{
+      await setStatus('No se pudo leer Monitores: '+err.message,false);
+      await cleanupTemporarySyncTab();
     });
   return {ok:true};
 }
@@ -87,24 +113,31 @@ async function route(msg,sender) {
       return {ok:true};
     }
     if (msg.type==='COLLECT_FAILED') {
-      await setStatus('No se enviaron datos: ' + (msg.reason||'error de lectura'),false);
+      await setStatus('Error de cotizaciones: '+(msg.reason||'lectura incompleta'),false);
+      await cleanupTemporarySyncTab();
       return {ok:true};
     }
     try {
-      await setStatus('226 cotizaciones capturadas. Enviando a GitHub…',true);
+      await setStatus('226 cotizaciones capturadas. Guardando y comprobando cartera…',true);
       await upload(msg.payload);
       await chrome.storage.local.set({lastSync:Date.now()});
-      await setStatus('Enviado a GitHub · '+stamp()+'. Confirma una ejecución verde en Actions.',false);
+      // One workflow: market capture AND private portfolio capture.
+      const task=runPortfolioSync(syncTabId)
+        .then(result=>setStatus(result?.message||'Cotizaciones enviadas a GitHub; cartera procesada · '+stamp(),false))
+        .catch(err=>setStatus('Mercado sincronizado; cartera pendiente: '+err.message,false))
+        .finally(()=>cleanupTemporarySyncTab());
+      void task;
       return {ok:true};
-    } catch (err) {
-      await setStatus('No se pudo enviar: '+err.message,false);
+    }catch(err) {
+      await setStatus('No se pudo enviar cotizaciones: '+err.message,false);
+      await cleanupTemporarySyncTab();
       return {ok:false,error:err.message};
     }
   }
   return {ok:false,error:'Comando no reconocido'};
 }
 chrome.runtime.onMessage.addListener((msg,sender,reply)=>{
-  route(msg,sender).then(result=>reply({...result,version:'2.1.0'})).catch(async err=>{
+  route(msg,sender).then(result=>reply({...result,version:'2.2.0'})).catch(async err=>{
     await setStatus('Error: '+err.message,false);
     reply({ok:false,error:err.message});
   });
