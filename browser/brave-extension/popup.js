@@ -6,7 +6,10 @@ let showingLocalError = false;
 function show(text) { $('status').textContent = String(text); }
 async function refresh() {
   try {
-    const s = await chrome.storage.local.get(['githubToken','autoSync','remoteControlEnabled','syncStatus','syncRunning']);
+    const s = await chrome.storage.local.get(['githubToken','autoSync','remoteControlEnabled','syncStatus','syncRunning','privateEnabled','privateRepo','privateSyncStatus']);
+    $('privateRepo').value=s.privateRepo||'';
+    $('privateRun').disabled=!s.privateEnabled;
+    $('privateStatus').textContent=s.privateSyncStatus||(s.privateEnabled?'Sincronización privada preparada.':'Necesitas configurar un repositorio privado.');
     $('token').placeholder = s.githubToken ? 'Token ya guardado (escribe solo para cambiarlo)' : 'github_pat_...';
     $('run').disabled = !!s.syncRunning;
     $('run').textContent = s.syncRunning ? 'Sincronización en curso…' : 'Sincronizar las 226 cotizaciones';
@@ -109,7 +112,22 @@ $('auto').addEventListener('click', async () => {
 chrome.storage.onChanged.addListener((changes,area) => {
   if (area==='local' && (changes.syncStatus || changes.syncRunning || changes.autoSync || changes.githubToken || changes.remoteControlEnabled)) {
     showingLocalError = false;
-    void refresh();
+    
   }
+});
+void refresh();
+
+$('savePrivate').addEventListener('click',async()=>{
+  const repository=$('privateRepo').value.trim(),token=$('privateToken').value.trim();
+  $('privateStatus').textContent='Comprobando privacidad del repositorio…';
+  const r=await ask({type:'PRIVATE_CONFIG',repository,token});
+  if(!r?.ok){$('privateStatus').textContent='Bloqueado: '+(r?.error||'Error de configuración');return;}
+  $('privateToken').value='';
+  await refresh();
+});
+$('privateRun').addEventListener('click',async()=>{
+  const r=await ask({type:'PRIVATE_START'});
+  if(!r?.ok)$('privateStatus').textContent=r?.error||'No se inició la captura.';
+  else $('privateStatus').textContent='Recopilación local iniciada…';
 });
 void refresh();
