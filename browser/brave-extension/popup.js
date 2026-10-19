@@ -110,12 +110,11 @@ $('auto').addEventListener('click', async () => {
   else if (r) await refresh();
 });
 chrome.storage.onChanged.addListener((changes,area) => {
-  if (area==='local' && (changes.syncStatus || changes.syncRunning || changes.autoSync || changes.githubToken || changes.remoteControlEnabled)) {
+  if (area==='local' && (changes.syncStatus || changes.syncRunning || changes.autoSync || changes.githubToken || changes.remoteControlEnabled || changes.privateSyncStatus || changes.privateEnabled)) {
     showingLocalError = false;
-    
+    void refresh();
   }
 });
-void refresh();
 
 $('savePrivate').addEventListener('click',async()=>{
   const repository=$('privateRepo').value.trim(),token=$('privateToken').value.trim();
