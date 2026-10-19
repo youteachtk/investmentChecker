@@ -11,8 +11,8 @@ async function refresh(){
   const s=await chrome.storage.local.get(['githubToken','privateToken','privateRepo','privateEnabled',
     'syncStatus','syncRunning','privateSyncStatus','autoSync','lastSync','privateLastSync','remoteControlEnabled']);
   const publicOk=!!s.githubToken,privateOk=!!(s.privateEnabled && s.privateRepo && s.privateToken);
-  $('connection').textContent=(publicOk?'✓ Cotizaciones conectadas':'⚠ Sin token público')+'  ·  '+
-    (privateOk?'✓ Cartera privada conectada':'⚠ Cartera privada pendiente');
+  $('connection').textContent=(publicOk?'✓ Token de cotizaciones guardado':'⚠ Sin token público')+'  ·  '+
+    (privateOk?'✓ Acceso a cartera privada verificado':'⚠ Cartera privada pendiente');
   $('connection').className=publicOk && privateOk?'minor ok':'minor warn';
   if(document.activeElement!==$('privateRepo'))$('privateRepo').value=s.privateRepo||'';
   $('token').placeholder=publicOk?'Guardado; dejar vacío para conservar':'github_pat_…';
