@@ -123,7 +123,7 @@ async function uploadPrivatePortfolio(payload) {
   if(!result.ok) throw Error('GitHub privado rechazó la escritura (HTTP '+result.status+').');
 }
 chrome.tabs.onUpdated.addListener((tabId,info,tab)=>{
-  if(info.status!=='complete'||!privateSitePattern.test(tab.url||''))return;
+  if((info.status!=='complete' && !info.url)||!privateSitePattern.test(tab.url||''))return;
   void chrome.storage.local.get('privateEnabled').then(s=>{
     if(s.privateEnabled) return capturePrivatePortfolio(tabId);
   }).catch(err=>console.warn('[investmentChecker private]',err.message));
