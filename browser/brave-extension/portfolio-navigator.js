@@ -29,7 +29,11 @@
     return false;
   };
   if(await waitForHoldings(900)) return {found:true,step:'already-open'};
-  const menu=controls().find(e=>norm(e.innerText||e.textContent)==='tu inversion');
+  const labelled=label=>[...document.querySelectorAll('span,div,li,p')].filter(visible)
+    .find(e=>e.children.length===0 && norm(e.textContent)===label);
+  const menu=controls().find(e=>norm(e.innerText||e.textContent)==='tu inversion')
+    ||labelled('tu inversion')?.closest('button,a,[role="button"],[role="menuitem"]')
+    ||labelled('tu inversion')?.parentElement;
   if(!menu || !safe(menu)) return {found:false,reason:'No se encontró el menú Tu inversión'};
   menu.click();
   await sleep(850);
@@ -40,7 +44,8 @@
     return /mi portafolio|portafolio|mi cartera|cartera|mis inversiones|mis posiciones|posiciones|mis acciones|inversiones/.test(label+' '+href)
       && label!=='tu inversion' && safe(e);
   };
-  const option=controls().find(isLink);
+  const option=controls().find(isLink) || [...document.querySelectorAll('span,li,div')].filter(visible)
+    .find(e=>e.children.length===0 && isLink(e));
   if(!option) return {found:false,reason:'Menú abierto, pero no se identificó un enlace de posiciones'};
   option.click();
   if(await waitForHoldings(11000)) return {found:true,step:'holdings-route'};
