@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.2.0",
-  "description": "Sincroniza el mercado y la cartera automáticamente con separación de datos públicos y privados; no opera.",
+  "version": "2.2.1",
+  "description": "Captura pública y cartera privada por un solo botón; recupera token privado mal ubicado y reintenta pestañas cerradas.",
   "permissions": [
     "storage",
     "scripting",
