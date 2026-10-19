@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.0.0",
-  "description": "Sincroniza cotizaciones públicas de Actinver con investmentChecker. No realiza operaciones.",
+  "version": "2.1.0",
+  "description": "Cotizaciones públicas y sincronización opcional de cartera a GitHub privado, sin operar.",
   "permissions": [
     "storage",
     "scripting",
