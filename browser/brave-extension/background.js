@@ -38,11 +38,49 @@ async function waitForPage(tabId, maxMs=25000) {
   }
   return false;
 }
-async function cleanupTemporarySyncTab() {
-  const s=await chrome.storage.local.get('syncTemporaryTabId');
-  if(s.syncTemporaryTabId) {
-    try {await chrome.tabs.remove(s.syncTemporaryTabId);}catch(_){}
-    await chrome.storage.local.remove('syncTemporaryTabId');
+async function cleanupTemporarySyncTab(expectedId=null) {
+  const s=await chrome.storage.local.get(['syncTemporaryTabId','syncRunId','syncStartedAt']);
+  if(!s.syncTemporaryTabId)return;
+  if(expectedId!==null && expectedId!==s.syncTemporaryTabId)return;
+  const tabId=s.syncTemporaryTabId;
+  await chrome.storage.local.remove('syncTemporaryTabId');
+  try{await chrome.tabs.remove(tabId);}catch(_){}
+}
+// Chrome can discard a background tab between opening and script injection.
+// Retry once with a new, independently owned temporary tab rather than failing
+// with the raw error "No tab with id: ...".
+async function injectQuotesWithRetry(firstTabId, runId) {
+  let tabId=firstTabId;
+  for(let attempt=0;attempt<2;attempt++){
+    try{
+      await chrome.tabs.get(tabId);
+      await chrome.storage.local.set({syncTabId:tabId});
+      await chrome.scripting.executeScript({
+        target:{tabId},files:['collector.js'],world:'ISOLATED'
+      });
+      return;
+    }catch(err){
+      const missing=/No tab with id|tab was closed|No frame with id/i.test(String(err?.message||''));
+      if(!missing||attempt===1){
+        await setStatus('Error de lectura de Actinver: '+(missing?'pestaña cerrada durante la captura':err.message),false);
+        await cleanupTemporarySyncTab();
+        return;
+      }
+      const old=tabId;
+      // Only clean up the failed temporary tab, not another run's tab.
+      await cleanupTemporarySyncTab(old);
+      const found=await getActinverTabs();
+      const existing=found.matches.find(t=>t.id!==old&&isMonitorTab(t));
+      if(existing){tabId=existing.id;continue;}
+      const created=await chrome.tabs.create({url:MONITOR_URL,active:false});
+      tabId=created.id;
+      await chrome.storage.local.set({syncTemporaryTabId:tabId});
+      if(!(await waitForPage(tabId))) {
+        await setStatus('Error: no cargó Monitores después de reintentar.',false);
+        await cleanupTemporarySyncTab(tabId);
+        return;
+      }
+    }
   }
 }
 
@@ -66,11 +104,7 @@ async function startSync(tabId = null) {
   }
   await chrome.storage.local.set({syncTabId:tab.id,syncStartedAt:Date.now(),syncRunning:true,
     syncStatus:'Sincronizando mercado y cartera…'});
-  void chrome.scripting.executeScript({target:{tabId:tab.id},files:['collector.js'],world:'ISOLATED'})
-    .catch(async err=>{
-      await setStatus('No se pudo leer Monitores: '+err.message,false);
-      await cleanupTemporarySyncTab();
-    });
+  void injectQuotesWithRetry(tab.id,Date.now());
   return {ok:true};
 }
 async function upload(payload) {
@@ -129,15 +163,21 @@ async function route(msg,sender) {
       void task;
       return {ok:true};
     }catch(err) {
-      await setStatus('No se pudo enviar cotizaciones: '+err.message,false);
-      await cleanupTemporarySyncTab();
-      return {ok:false,error:err.message};
+      // Token saved in the wrong box must not block private holdings capture.
+      // Keep quote failure visible; never claim public sync succeeded.
+      const publicError=err.message||'GitHub rechazó la captura pública.';
+      const privateTask=runPortfolioSync(syncTabId)
+        .then(result=>setStatus('Cotizaciones pendientes ('+publicError+'). '+(result?.message||'Cartera comprobada.'),false))
+        .catch(error=>setStatus('Cotizaciones pendientes ('+publicError+'). Cartera pendiente: '+error.message,false))
+        .finally(()=>cleanupTemporarySyncTab());
+      void privateTask;
+      return {ok:false,error:'El envío público falló; se está comprobando la cartera privada.'};
     }
   }
   return {ok:false,error:'Comando no reconocido'};
 }
 chrome.runtime.onMessage.addListener((msg,sender,reply)=>{
-  route(msg,sender).then(result=>reply({...result,version:'2.2.0'})).catch(async err=>{
+  route(msg,sender).then(result=>reply({...result,version:'2.2.1'})).catch(async err=>{
     await setStatus('Error: '+err.message,false);
     reply({ok:false,error:err.message});
   });
