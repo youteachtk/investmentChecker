@@ -39,7 +39,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add browser/investmentChecker-brave-v*.zip browser/investmentChecker-brave-latest.zip
           if ! git diff --cached --quiet; then
-            git commit -m "Package unified InvestmentChecker v2.2.0 Brave updater"
+            git commit -m "Package InvestmentChecker Brave updated extension"
             for i in 1 2 3; do
               git pull --rebase origin main && git push && exit 0
               sleep 4
