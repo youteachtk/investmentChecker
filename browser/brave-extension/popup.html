@@ -1,40 +1,42 @@
 <!doctype html>
 <html lang="es">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>investmentChecker</title>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>InvestmentChecker</title>
 <style>
-body{font-family:system-ui,Arial,sans-serif;width:335px;margin:0;padding:18px;background:#111827;color:#f9fafb;font-size:13px}
-h2{margin:0 0 8px;font-size:20px}p{line-height:1.45;color:#d1d5db}
-label{display:block;font-weight:600;margin:14px 0 6px}
-input{box-sizing:border-box;width:100%;padding:11px;border:1px solid #6b7280;border-radius:7px;background:#020617;color:#fff;font-size:13px}
-button{width:100%;padding:11px;margin-top:10px;border-radius:8px;border:0;background:#22c55e;color:#06140a;font-weight:700;cursor:pointer}
-button:disabled{opacity:.55;cursor:wait}button.secondary{background:#374151;color:#fff}
-.status{margin-top:12px;padding:10px;border-radius:7px;border:1px solid #475569;white-space:pre-wrap;line-height:1.4}
-small{color:#9ca3af}.saved{padding-top:8px;color:#bef264}a{color:#7dd3fc}
-</style></head>
-<body>
-<h2>investmentChecker <span id="version" style="font-size:12px;font-weight:500;color:#cbd5e1"></span></h2>
-<p>Conexión Brave → GitHub. Recoge únicamente precios y volúmenes públicos de Monitores. <b>Nunca compra ni vende.</b></p>
-<label for="token">Token GitHub (Actions, solo investmentChecker)</label>
-<input id="token" type="password" placeholder="github_pat_..." autocomplete="off" spellcheck="false" />
-<div id="saved" class="saved">Comprobando token…</div>
-<button id="save" class="secondary">Guardar token en esta extensión</button>
-<button id="run">Sincronizar las 226 cotizaciones</button>
-<button id="diagnose" class="secondary">Diagnosticar pestaña de Actinver</button>
-<button id="remote" class="secondary">Solicitudes desde ChatGPT: activadas</button>
-<button id="auto" class="secondary">Activar sincronización automática</button>
-<hr style="margin:18px 0;border:0;border-top:1px solid #475569">
-<h3 style="margin:0 0 8px;font-size:16px">Cartera privada</h3>
-<p>Tu saldo y posiciones solo pueden enviarse a un repositorio GitHub PRIVADO separado. Jamás al público.</p>
-<label for="privateRepo">Repositorio privado (dueño/nombre)</label>
-<input id="privateRepo" type="text" placeholder="youteachtk/investmentChecker-private" autocomplete="off">
-<label for="privateToken">Token de ese repositorio privado (Contents lectura y escritura)</label>
-<input id="privateToken" type="password" placeholder="github_pat_..." autocomplete="off">
-<button id="savePrivate" class="secondary">Verificar y activar repositorio privado</button>
-<button id="privateRun">Capturar la cartera de esta pestaña</button>
-<div class="status" id="privateStatus" role="status">La cartera privada no está configurada.</div>
-<p><small>Abre Monitores para captar saldos y Tu inversión para captar posiciones. Al visitar ambas páginas, la extensión combinará datos locales recientes y enviará solo las cifras autorizadas al repositorio PRIVADO. No capta identificadores, contraseñas ni folios.</small></p>
-<div class="status" id="status" role="status">Abre Actinver → Monitores y pulsa sincronizar.</div>
-<p><small>Para sincronizar, mantén Actinver abierto. Las cotizaciones se publican en tu repositorio público; no enviamos saldos, órdenes ni credenciales de Actinver.</small></p>
-<a href="https://github.com/youteachtk/investmentChecker/actions/workflows/ingest_quotes.yml" target="_blank" rel="noopener noreferrer">Ver comprobación en GitHub Actions</a>
-<script src="popup.js"></script>
-</body></html>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{font-family:system-ui,Arial,sans-serif;width:340px;margin:0;padding:17px;background:#13161c;color:#f9fafb;font-size:13px}
+h1{font-size:20px;margin:0 0 6px}p{margin:8px 0;line-height:1.5;color:#c8cbd1}
+h1 small{font-size:12px;font-weight:400;color:#b0b7c4}
+button{display:block;width:100%;border:none;border-radius:9px;padding:12px;margin:11px 0;background:#22c55e;color:#07130a;font-weight:750;cursor:pointer}
+button.secondary{background:#353f4c;color:#fff}
+button:disabled{opacity:.55;cursor:wait}
+.status{border:1px solid #465266;background:#1d2530;border-radius:9px;padding:12px;white-space:pre-wrap;line-height:1.5;margin-top:12px}
+.ok{color:#b8f57a}.warn{color:#ffd38a}.minor{font-size:11px;color:#a6adb8}
+details{border-top:1px solid #465266;margin-top:18px;padding-top:12px}
+summary{font-weight:700;cursor:pointer;user-select:none;padding:6px 0}
+label{display:block;margin:12px 0 6px;font-weight:650}
+input{width:100%;border:1px solid #606b7b;border-radius:8px;padding:11px;background:#0b0e13;color:#fff}
+a{color:#a2d9ff}
+</style></head><body>
+<h1>InvestmentChecker <small id="version"></small></h1>
+<p>Mercado y cartera unidos. Se sincronizan automáticamente mientras Actinver esté abierto en Brave.</p>
+<div id="connection" class="minor">Comprobando conexión…</div>
+<button id="run">Sincronizar todo ahora</button>
+<div id="status" class="status" role="status">Preparando sincronización…</div>
+<p class="minor">Cotizaciones → GitHub público. Saldos y posiciones → GitHub privado. Nunca ejecuta compras ni ventas.</p>
+<details id="settings">
+  <summary>Configuración y diagnóstico</summary>
+  <label for="token">Token de cotizaciones (GitHub público)</label>
+  <input id="token" type="password" autocomplete="off" spellcheck="false" placeholder="Token ya guardado">
+  <button class="secondary" id="save">Guardar token público</button>
+  <label for="privateRepo">Repositorio privado</label>
+  <input id="privateRepo" type="text" autocomplete="off" placeholder="youteachtk/investmentChecker-private">
+  <label for="privateToken">Token de cartera privada</label>
+  <input id="privateToken" type="password" autocomplete="off" spellcheck="false" placeholder="Token privado ya guardado">
+  <button class="secondary" id="savePrivate">Verificar conexión privada</button>
+  <button class="secondary" id="auto">Activar sincronización automática</button>
+  <button class="secondary" id="remote">Solicitudes desde ChatGPT: activadas</button>
+  <button class="secondary" id="diagnose">Diagnosticar conexión</button>
+  <a href="https://github.com/youteachtk/investmentChecker/actions/workflows/ingest_quotes.yml" target="_blank" rel="noopener noreferrer">Comprobar envíos públicos en GitHub</a>
+</details>
+<script src="popup.js"></script></body></html>
