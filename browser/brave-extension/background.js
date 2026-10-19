@@ -38,9 +38,10 @@ async function waitForPage(tabId, maxMs=25000) {
   }
   return false;
 }
-async function cleanupTemporarySyncTab(expectedId=null) {
-  const s=await chrome.storage.local.get(['syncTemporaryTabId','syncRunId','syncStartedAt']);
+async function cleanupTemporarySyncTab(expectedId=null,ownerId=null) {
+  const s=await chrome.storage.local.get(['syncTemporaryTabId','syncRunId','syncTempRunId']);
   if(!s.syncTemporaryTabId)return;
+  if(ownerId!==null && (s.syncTempRunId!==ownerId || s.syncRunId!==ownerId))return;
   if(expectedId!==null && expectedId!==s.syncTemporaryTabId)return;
   const tabId=s.syncTemporaryTabId;
   await chrome.storage.local.remove('syncTemporaryTabId');
@@ -63,21 +64,21 @@ async function injectQuotesWithRetry(firstTabId, runId) {
       const missing=/No tab with id|tab was closed|No frame with id/i.test(String(err?.message||''));
       if(!missing||attempt===1){
         await setStatus('Error de lectura de Actinver: '+(missing?'pestaña cerrada durante la captura':err.message),false);
-        await cleanupTemporarySyncTab();
+        await cleanupTemporarySyncTab(null,runId);
         return;
       }
       const old=tabId;
       // Only clean up the failed temporary tab, not another run's tab.
-      await cleanupTemporarySyncTab(old);
+      await cleanupTemporarySyncTab(old,runId);
       const found=await getActinverTabs();
       const existing=found.matches.find(t=>t.id!==old&&isMonitorTab(t));
       if(existing){tabId=existing.id;continue;}
       const created=await chrome.tabs.create({url:MONITOR_URL,active:false});
       tabId=created.id;
-      await chrome.storage.local.set({syncTemporaryTabId:tabId});
+      await chrome.storage.local.set({syncTemporaryTabId:tabId,syncTempRunId:runId});
       if(!(await waitForPage(tabId))) {
         await setStatus('Error: no cargó Monitores después de reintentar.',false);
-        await cleanupTemporarySyncTab(tabId);
+        await cleanupTemporarySyncTab(tabId,runId);
         return;
       }
     }
@@ -86,26 +87,33 @@ async function injectQuotesWithRetry(firstTabId, runId) {
 
 async function startSync(tabId = null) {
   const s=await chrome.storage.local.get(['githubToken','syncRunning','syncStartedAt']);
-  if(!s.githubToken)return {ok:false,error:'Aún no hay token público de GitHub.'};
+  if(!s.githubToken)return {ok:false,error:'Aún no hay token de cotizaciones públicas.'};
   if(s.syncRunning && s.syncStartedAt && Date.now()-s.syncStartedAt<MAX_RUN_AGE_MS)
     return {ok:false,error:'Ya hay una sincronización en curso.'};
   const found=await getActinverTabs();
-  if(!found.matches.length) return {ok:false,error:'Abre Actinver e inicia sesión en Brave. La extensión hará el resto.'};
-  let tab=(tabId!==null ? found.matches.find(t=>t.id===tabId && isMonitorTab(t)):null)
-    ||found.matches.find(t=>isMonitorTab(t)&&t.active)
-    ||found.matches.find(isMonitorTab);
-  if(!tab) {
-    tab=await chrome.tabs.create({url:MONITOR_URL,active:false});
-    await chrome.storage.local.set({syncTemporaryTabId:tab.id});
-    if(!(await waitForPage(tab.id))) {
-      await cleanupTemporarySyncTab();
-      return {ok:false,error:'No se pudo abrir Monitores en segundo plano.'};
+  if(!found.matches.length)return {ok:false,error:'Abre Actinver con sesión iniciada; se sincronizará automáticamente.'};
+  // If a private-only token was put in the public box, recover it before
+  // attempting both independent channels.
+  await recoverMisplacedPrivateToken();
+  const runId='sync-'+Date.now()+'-'+Math.floor(Math.random()*100000);
+  await chrome.storage.local.set({syncRunId:runId,syncStartedAt:Date.now(),syncRunning:true,
+    syncStatus:'Sincronizando cotizaciones y cartera…'});
+  try {
+    let tab=(tabId!==null?found.matches.find(t=>t.id===tabId&&isMonitorTab(t)):null)
+      ||found.matches.find(t=>isMonitorTab(t)&&t.active)
+      ||found.matches.find(isMonitorTab);
+    if(!tab){
+      tab=await chrome.tabs.create({url:MONITOR_URL,active:false});
+      await chrome.storage.local.set({syncTemporaryTabId:tab.id,syncTempRunId:runId});
+      if(!(await waitForPage(tab.id)))throw Error('No se pudo abrir Monitores.');
     }
+    void injectQuotesWithRetry(tab.id,runId);
+    return {ok:true};
+  }catch(error){
+    await setStatus('Error al iniciar lectura: '+error.message,false);
+    await cleanupTemporarySyncTab(null,runId);
+    return {ok:false,error:error.message};
   }
-  await chrome.storage.local.set({syncTabId:tab.id,syncStartedAt:Date.now(),syncRunning:true,
-    syncStatus:'Sincronizando mercado y cartera…'});
-  void injectQuotesWithRetry(tab.id,Date.now());
-  return {ok:true};
 }
 async function upload(payload) {
   if (!payload || !Array.isArray(payload.rows) || payload.rows.length!==226)
@@ -140,7 +148,7 @@ async function route(msg,sender) {
     return {ok:true,enabled};
   }
   if (['PROGRESS','COLLECT_FAILED','COLLECT_DONE'].includes(msg?.type)) {
-    const {syncTabId,syncRunning}=await chrome.storage.local.get(['syncTabId','syncRunning']);
+    const {syncTabId,syncRunning,syncRunId}=await chrome.storage.local.get(['syncTabId','syncRunning','syncRunId']);
     if (sender.tab?.id!==syncTabId || !syncRunning) return {ok:false,error:'Captura no reconocida'};
     if (msg.type==='PROGRESS') {
       await setStatus(msg.status,true);
@@ -148,7 +156,7 @@ async function route(msg,sender) {
     }
     if (msg.type==='COLLECT_FAILED') {
       await setStatus('Error de cotizaciones: '+(msg.reason||'lectura incompleta'),false);
-      await cleanupTemporarySyncTab();
+      await cleanupTemporarySyncTab(null,syncRunId);
       return {ok:true};
     }
     try {
@@ -159,7 +167,7 @@ async function route(msg,sender) {
       const task=runPortfolioSync(syncTabId)
         .then(result=>setStatus(result?.message||'Cotizaciones enviadas a GitHub; cartera procesada · '+stamp(),false))
         .catch(err=>setStatus('Mercado sincronizado; cartera pendiente: '+err.message,false))
-        .finally(()=>cleanupTemporarySyncTab());
+        .finally(()=>cleanupTemporarySyncTab(null,syncRunId));
       void task;
       return {ok:true};
     }catch(err) {
@@ -169,7 +177,7 @@ async function route(msg,sender) {
       const privateTask=runPortfolioSync(syncTabId)
         .then(result=>setStatus('Cotizaciones pendientes ('+publicError+'). '+(result?.message||'Cartera comprobada.'),false))
         .catch(error=>setStatus('Cotizaciones pendientes ('+publicError+'). Cartera pendiente: '+error.message,false))
-        .finally(()=>cleanupTemporarySyncTab());
+        .finally(()=>cleanupTemporarySyncTab(null,syncRunId));
       void privateTask;
       return {ok:false,error:'El envío público falló; se está comprobando la cartera privada.'};
     }
