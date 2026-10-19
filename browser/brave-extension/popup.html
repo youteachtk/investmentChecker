@@ -22,6 +22,17 @@ small{color:#9ca3af}.saved{padding-top:8px;color:#bef264}a{color:#7dd3fc}
 <button id="diagnose" class="secondary">Diagnosticar pestaña de Actinver</button>
 <button id="remote" class="secondary">Solicitudes desde ChatGPT: activadas</button>
 <button id="auto" class="secondary">Activar sincronización automática</button>
+<hr style="margin:18px 0;border:0;border-top:1px solid #475569">
+<h3 style="margin:0 0 8px;font-size:16px">Cartera privada</h3>
+<p>Tu saldo y posiciones solo pueden enviarse a un repositorio GitHub PRIVADO separado. Jamás al público.</p>
+<label for="privateRepo">Repositorio privado (dueño/nombre)</label>
+<input id="privateRepo" type="text" placeholder="youteachtk/investmentChecker-private" autocomplete="off">
+<label for="privateToken">Token de ese repositorio privado (Contents lectura y escritura)</label>
+<input id="privateToken" type="password" placeholder="github_pat_..." autocomplete="off">
+<button id="savePrivate" class="secondary">Verificar y activar repositorio privado</button>
+<button id="privateRun">Capturar la cartera de esta pestaña</button>
+<div class="status" id="privateStatus" role="status">La cartera privada no está configurada.</div>
+<p><small>Abre Monitores para captar saldos y Tu inversión para captar posiciones. Al visitar ambas páginas, la extensión combinará datos locales recientes y enviará solo las cifras autorizadas al repositorio PRIVADO. No capta identificadores, contraseñas ni folios.</small></p>
 <div class="status" id="status" role="status">Abre Actinver → Monitores y pulsa sincronizar.</div>
 <p><small>Para sincronizar, mantén Actinver abierto. Las cotizaciones se publican en tu repositorio público; no enviamos saldos, órdenes ni credenciales de Actinver.</small></p>
 <a href="https://github.com/youteachtk/investmentChecker/actions/workflows/ingest_quotes.yml" target="_blank" rel="noopener noreferrer">Ver comprobación en GitHub Actions</a>
