@@ -17,31 +17,29 @@ concurrency:
 jobs:
   package:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 7
     steps:
       - uses: actions/checkout@v4
-      - name: Check JavaScript syntax and manifest
+      - name: Validate JavaScript and manifest
         run: |
-          node --check browser/brave-extension/background.js
-          node --check browser/brave-extension/popup.js
-          node --check browser/brave-extension/collector.js
-          node --check browser/brave-extension/portfolio-collector.js
-          node --check browser/brave-extension/private-sync.js
-          node --check browser/brave-extension/remote.js
-          python -m json.tool browser/brave-extension/manifest.json >/dev/null
-      - name: Create ready-to-install ZIP
+          for file in browser/brave-extension/*.js; do node --check "$file"; done
+          python -m json.tool browser/brave-extension/manifest.json > /dev/null
+      - name: Build stable folder-layout installer
         run: |
-          mkdir -p /tmp/investmentChecker-v2.1.0
-          cp browser/brave-extension/{manifest.json,background.js,popup.html,popup.js,collector.js,remote.js,private-sync.js,portfolio-collector.js,README.md} /tmp/investmentChecker-v2.1.0/
-          cd /tmp/investmentChecker-v2.1.0
-          zip -q -r "${GITHUB_WORKSPACE}/browser/investmentChecker-brave-v2.1.0.zip" .
-      - name: Publish ZIP in repository
+          VERSION=$(python -c "import json;print(json.load(open('browser/brave-extension/manifest.json'))['version'])")
+          mkdir -p /tmp/ics-dist/investmentChecker
+          cp browser/brave-extension/{manifest.json,background.js,popup.html,popup.js,collector.js,remote.js,private-sync.js,portfolio-collector.js,portfolio-navigator.js,README.md} /tmp/ics-dist/investmentChecker/
+          cp browser/brave-extension/{ACTUALIZAR.cmd,ACTUALIZAR.ps1} /tmp/ics-dist/
+          cd /tmp/ics-dist
+          zip -q -r "${GITHUB_WORKSPACE}/browser/investmentChecker-brave-v${VERSION}.zip" .
+          cp "${GITHUB_WORKSPACE}/browser/investmentChecker-brave-v${VERSION}.zip" "${GITHUB_WORKSPACE}/browser/investmentChecker-brave-latest.zip"
+      - name: Publish verified ZIP files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add browser/investmentChecker-brave-v2.1.0.zip
+          git add browser/investmentChecker-brave-v*.zip browser/investmentChecker-brave-latest.zip
           if ! git diff --cached --quiet; then
-            git commit -m "Publish Brave extension v2.1.0 installer ZIP"
+            git commit -m "Package unified InvestmentChecker v2.2.0 Brave updater"
             for i in 1 2 3; do
               git pull --rebase origin main && git push && exit 0
               sleep 4
