@@ -72,7 +72,7 @@ async function acceptPrivateCapture(msg,sender) {
   if(!sender?.tab?.id || !privateSitePattern.test(sender.tab.url||'')) return {ok:false,error:'Origen no autorizado.'};
   const capture=sanitizePrivateCapture(msg.payload);
   if(!capture.summary && !capture.holdings) return {ok:false,error:'No se detectó información de cartera.'};
-  const previous=await chrome.storage.local.get('privateCache');
+  const previous=await chrome.storage.local.get(['privateCache','privateLastSync']);
   const cache=previous.privateCache||{};
   if(capture.summary) cache.summary={at:capture.captured_at,values:capture.summary};
   if(capture.holdings) cache.holdings={at:capture.captured_at,values:capture.holdings};
@@ -87,6 +87,9 @@ async function acceptPrivateCapture(msg,sender) {
     await privateState('La captura de cartera está incompleta o caducada. Abre Monitores y Tu inversión.');
     return {ok:true,partial:true};
   }
+  // Avoid duplicate writes from React re-renders and the background tab.
+  if (previous.privateLastSync && Date.now()-previous.privateLastSync<120000)
+    return {ok:true,recentlySaved:true};
   const payload={schema_version:1,captured_at:new Date().toISOString(),
     summary:cache.summary.values,holdings:cache.holdings.values};
   if(Math.abs(payload.summary.total_value-payload.summary.investments-payload.summary.buying_power-(payload.summary.unsettled||0))>Math.max(100,payload.summary.total_value*.02))
@@ -122,9 +125,53 @@ async function uploadPrivatePortfolio(payload) {
   const result=await fetch(url,{method:'PUT',headers,body:JSON.stringify(body)});
   if(!result.ok) throw Error('GitHub privado rechazó la escritura (HTTP '+result.status+').');
 }
+// One unified market + portfolio workflow. All extra navigation happens in an
+// inactive temporary tab; Actinver's trading UI is never interacted with.
+let privateDiscoveryBusy=false;
+async function runPortfolioSync(marketTabId) {
+  const settings=await chrome.storage.local.get(['privateEnabled','privateRepo','privateToken']);
+  if(!settings.privateEnabled || !settings.privateRepo || !settings.privateToken)
+    return {message:'Mercado actualizado; cartera privada no configurada.'};
+  await privateState('Mercado recibido. Leyendo cartera automáticamente…');
+  await capturePrivatePortfolio(marketTabId);
+  let cache=(await chrome.storage.local.get('privateCache')).privateCache;
+  const freshHoldings=cache?.holdings && Date.now()-Date.parse(cache.holdings.at)<PRIVATE_TTL_MS;
+  if(!freshHoldings && !privateDiscoveryBusy) {
+    privateDiscoveryBusy=true;
+    let tmp=null;
+    try {
+      // A read-only clone avoids disturbing the Actinver page the user is using.
+      tmp=await chrome.tabs.create({url:MONITOR_URL,active:false});
+      if(!(await waitForPage(tmp.id))) throw Error('No se pudo abrir la vista de inversiones.');
+      const nav=await chrome.scripting.executeScript({
+        target:{tabId:tmp.id},files:['portfolio-navigator.js'],world:'ISOLATED'
+      });
+      const found=nav?.[0]?.result;
+      if(found?.found) await capturePrivatePortfolio(tmp.id);
+      else await privateState('Mercado sincronizado; posiciones todavía no detectadas automáticamente.');
+    }catch(err) {
+      await privateState('Mercado sincronizado; posiciones pendientes: '+err.message);
+    }finally {
+      if(tmp)try{await chrome.tabs.remove(tmp.id);}catch(_){}
+      privateDiscoveryBusy=false;
+    }
+  }
+  cache=(await chrome.storage.local.get(['privateCache','privateLastSync','privateSyncStatus']));
+  if(cache.privateLastSync && Date.now()-cache.privateLastSync < PRIVATE_TTL_MS)
+    return {message:'Mercado y cartera privada sincronizados · '+stamp()};
+  return {message:'Mercado sincronizado. Cartera pendiente de validar en Actinver.'};
+}
+
+// Silent opportunistic capture whenever the authenticated SPA changes screens;
+// no extra clicks or manual uploads.
+let lastPrivateProbe=new Map();
 chrome.tabs.onUpdated.addListener((tabId,info,tab)=>{
   if((info.status!=='complete' && !info.url)||!privateSitePattern.test(tab.url||''))return;
+  const last=lastPrivateProbe.get(tabId)||0;
+  if(Date.now()-last<2500)return;
+  lastPrivateProbe.set(tabId,Date.now());
   void chrome.storage.local.get('privateEnabled').then(s=>{
-    if(s.privateEnabled) return capturePrivatePortfolio(tabId);
+    if(s.privateEnabled)return capturePrivatePortfolio(tabId);
   }).catch(err=>console.warn('[investmentChecker private]',err.message));
 });
+chrome.tabs.onRemoved.addListener(tabId=>lastPrivateProbe.delete(tabId));
