@@ -66,6 +66,9 @@ async function upload(payload) {
   }
 }
 async function route(msg,sender) {
+  if (msg?.type==='PRIVATE_CONFIG') return await configurePrivatePortfolio(msg);
+  if (msg?.type==='PRIVATE_START') return await capturePrivatePortfolio();
+  if (msg?.type==='PRIVATE_CAPTURE') return await acceptPrivateCapture(msg,sender);
   if (msg?.type==='START_SYNC') return await startSync();
   if (msg?.type==='DIAGNOSE') return {ok:true,...await getTabDiagnostics()};
   if (msg?.type==='TOGGLE_AUTO') {
@@ -101,7 +104,7 @@ async function route(msg,sender) {
   return {ok:false,error:'Comando no reconocido'};
 }
 chrome.runtime.onMessage.addListener((msg,sender,reply)=>{
-  route(msg,sender).then(result=>reply({...result,version:'2.0.0'})).catch(async err=>{
+  route(msg,sender).then(result=>reply({...result,version:'2.1.0'})).catch(async err=>{
     await setStatus('Error: '+err.message,false);
     reply({ok:false,error:err.message});
   });
@@ -122,3 +125,4 @@ chrome.runtime.onInstalled.addListener(async()=>{
 
 // Remote read-only quote capture requests initiated from ChatGPT via GitHub.
 importScripts('remote.js');
+importScripts('private-sync.js');
