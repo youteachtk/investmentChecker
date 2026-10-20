@@ -1,6 +1,7 @@
 // Real Actinver Capitales DOM contract, recorded 2026-10-20 from user inspector.
 // Angular Material components, tab-btn.active parent and app-paginator .btn-pages.
-// No assumed ticker names or fixed first symbols.
+// No assumed ticker names or fixed first symbols. The selected tab changes
+// eight seconds BEFORE Angular renders the corresponding category rows.
 'use strict';
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -12,12 +13,12 @@ for(const obsolete of ['const CATALOG=','AAXJ','AA1','ACTDUAL',
 }
 const tickers=[145,56,25].map((size,g)=>
   Array.from({length:size},(_,j)=>'S'+g+'_'+String(j+1).padStart(4,'0')));
-let state={category:0,page:1,window:0,stalledETF:0,arrowClicks:0};
+let state={category:0,visibleCategory:0,page:1,window:0,stalledETF:0,arrowClicks:0,pendingCategory:null,refreshAt:Infinity};
 let captured=null,error=null,now=Date.UTC(2026,9,20,16);
 const visible=()=>[{}];
 const cells=['Fav','Información','Emisora','Precio','% Variación','Volumen Compra',
   'Precio de Compra','Volumen de Venta','Precio de Venta','Comprar o vender'];
-const rows=()=>tickers[state.category]
+const rows=()=>tickers[state.visibleCategory]
   .slice((state.page-1)*10,state.page*10)
   .map(symbol=>({
     getClientRects:visible,
@@ -46,6 +47,7 @@ const categories=[0,1,2].map(i=>({
     return {disabled:false,click(){
       if(i===1&&state.category===0&&state.stalledETF++===0)return;
       state.category=i;state.page=1;state.window=0;
+      state.pendingCategory=i;state.refreshAt=now+8000;
     }};
   }
 }));
@@ -99,7 +101,7 @@ class FakeDate extends Date{
   await vm.runInNewContext(src,{
     document,chrome,location:{hash:'#/capitales'},Date:FakeDate,
     console:{log(){},error(){}},Promise,JSON,Set,
-    setTimeout:(fn,ms=0)=>{now+=ms;fn();}
+    setTimeout:(fn,ms=0)=>{now+=ms;if(now>=state.refreshAt){state.visibleCategory=state.pendingCategory;state.refreshAt=Infinity;}fn();}
   },{timeout:5000});
   assert.equal(error,null,error||'Collector failed');
   assert.ok(captured,'No quotes captured');
@@ -114,5 +116,6 @@ class FakeDate extends Date{
   assert.equal(captured.rows[0].ask,'$101.00');
   assert.ok(state.arrowClicks>=3,'Never advanced past pages 4/8/12');
   assert.ok(state.stalledETF>=1,'Delayed category load was not simulated');
+  assert.equal(state.visibleCategory,2,'Delayed Angular render never caught up');
   console.log('PASS: real Angular selectors; all 226; arrows and header mappings');
 })().catch(e=>{console.error(e);process.exitCode=1;});
