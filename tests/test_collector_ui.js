@@ -76,6 +76,7 @@ const context={document,chrome,Date:FakeDate,Promise,Set,JSON,
     ['ACCIONES','ETFs','FONDOS'][i]).length),[145,56,25]);
   assert.equal(captured.rows[145].symbol,'INSTR_1_001');
   assert.ok(progress.some(x=>x.includes('reintento')),'Category retry not exercised');
+  assert.ok(delaySwitch>=1,'Stale tab transition was not simulated');
   assert.ok(clicks>=5,'Stale tab retry did not occur');
   console.log('PASS UI: 226 rows, category transitions without any expected symbol name');
 })().catch(e=>{console.error(e);process.exitCode=1;});
