@@ -2,6 +2,7 @@
   'use strict';
   if(globalThis.__investmentCheckerBusy) return;
   globalThis.__investmentCheckerBusy=true;
+  // Keep full-catalog verification: never substitute previous category rows.
   const EXPECTED=[['ACCIONES',145,'AA1'],['ETFs',56,'AAXJ'],['FONDOS',25,'ACTDUAL']];
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   const text=e=>(e?.innerText||'').trim().replace(/\s+/g,' ');
@@ -15,17 +16,24 @@
   const progress=async s=>{console.log('[investmentChecker]',s);await chrome.runtime.sendMessage({type:'PROGRESS',status:s});};
   // React can update prices, page state, and the actual category rows separately.
   // Treat a condition as confirmed only after repeated matching observations.
-  const wait=async (test,why)=>{
-    const stop=Date.now()+18000;
-    let stable=0;
+  const wait=async (test,why,{timeoutMs=40000,onDelay=null}={})=>{
+    const began=Date.now(),stop=began+timeoutMs;
+    let stable=0, retries=0;
+    const marks=[8500,21000,38500];
     while(Date.now()<stop){
-      await sleep(220);
+      await sleep(280);
       if(test()) {
         stable++;
         if(stable>=3) return;
       } else stable=0;
+      if(onDelay && retries<marks.length && Date.now()-began>=marks[retries]){
+        retries++;
+        await progress('Actinver sigue cargando '+why+'. Reintento automático '+retries+'…');
+        onDelay();
+      }
     }
-    throw Error('Actinver no terminó de cargar '+why+' (18 segundos).');
+    const seen=firstSymbol();
+    throw Error('Actinver no entregó '+why+' tras '+Math.round(timeoutMs/1000)+' segundos. Tabla actual: '+(seen||'vacía')+'.');
   };
   const findTab=name=>buttons().find(b=>text(b).toUpperCase()===name.toUpperCase());
   const pager=()=>{
@@ -55,13 +63,14 @@
       tab.click();
       // A quote update on the PREVIOUS tab is not a category change.
       // Wait for the actual first ticker of the target catalog.
-      await wait(()=>firstSymbol()===first,category+' (primera emisora '+first+')');
+      await wait(()=>firstSymbol()===first,category+' (primera emisora '+first+')',
+        {timeoutMs:60000,onDelay:()=>tab.click()});
       let current=page();
       if(current!==1){
         const toFirst=pageButton('Primera');
         if(!toFirst) throw Error('No encuentro Primera en '+category);
         toFirst.click();
-        await wait(()=>page()===1 && firstSymbol()===first,'primera página de '+category);
+        await wait(()=>page()===1 && firstSymbol()===first,'primera página de '+category,{timeoutMs:45000});
       }
       if(firstSymbol()!==first) throw Error('La pestaña '+category+' no coincide con el catálogo (esperaba '+first+', aparece '+firstSymbol()+')');
       const known=new Set(), visited=new Set();
@@ -87,7 +96,7 @@
         if(!next || next.disabled) throw Error('No hay página '+(current+1)+'; solo '+known.size+'/'+count+' '+category);
         const beforeFirst=firstSymbol();next.click();
         // Page-number changes can precede table rendering; require new rows.
-        await wait(()=>page()===current+1 && firstSymbol()!==beforeFirst,category+' página '+(current+1));
+        await wait(()=>page()===current+1 && firstSymbol()!==beforeFirst,category+' página '+(current+1),{timeoutMs:45000});
       }
       if(known.size!==count) throw Error('Se capturaron solo '+known.size+'/'+count+' en '+category);
     }
