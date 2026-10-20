@@ -23,7 +23,7 @@ const tabs=['ACCIONES','ETFs','FONDOS'].map(cat=>button(cat,()=>{
   if(cat==='ETFs'&&state.category==='ACCIONES'&&state.delay<2) {state.delay++;return;}
   state.category=cat;state.page=1;
 }));
-const navRoot={querySelectorAll:()=>pagerButtons()};
+const navRoot={querySelectorAll:()=>pagerButtons(),classList:{contains:()=>false}};
 const pagerButtons=()=>{
  const list=lists[state.category],max=Math.ceil(list.length/10);
  const out=[button('Primera',()=>{state.page=1})];
