@@ -1,73 +1,81 @@
-// Regression test: the ETF AAXJ may exist without being the first displayed ticker.
-// All 226 rows must still be captured with their correct category and no stale tabs.
+// Tests for UI-structure based collection: NO ticker names, catalog membership,
+// or alphabetical order are used to decide when category/page transitions finish.
 'use strict';
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
 const collector=fs.readFileSync('browser/brave-extension/collector.js','utf8');
-const csv=fs.readFileSync('data/universe.csv','utf8').trim().split(/\r?\n/).slice(1);
-const lists={ACCIONES:[],ETFs:[],FONDOS:[]};
-for(const line of csv){const [category,symbol]=line.split(',');lists[category].push(symbol);}
-assert.deepEqual(Object.fromEntries(Object.entries(lists).map(([k,v])=>[k,v.length])),
-  {ACCIONES:145,ETFs:56,FONDOS:25});
-// Intentionally display ACWI before AAXJ, violating old first-row assumption.
-lists.ETFs=[...lists.ETFs.slice(1,4),lists.ETFs[0],...lists.ETFs.slice(4)];
-let state={category:'ACCIONES',page:1,pending:null,delay:0};
-let done=null,failed=null;
-const button=(label,click,active=false)=>({
-  innerText:label,click:click||(()=>{}),
-  classList:{contains:name=>name==='active'&&active},
-  parentElement:null,getAttribute:name=>null,disabled:false
-});
-const tabs=['ACCIONES','ETFs','FONDOS'].map(cat=>button(cat,()=>{
-  if(cat==='ETFs'&&state.category==='ACCIONES'&&state.delay<2) {state.delay++;return;}
-  state.category=cat;state.page=1;
-}));
-const navRoot={querySelectorAll:()=>pagerButtons(),classList:{contains:()=>false}};
-const pagerButtons=()=>{
- const list=lists[state.category],max=Math.ceil(list.length/10);
- const out=[button('Primera',()=>{state.page=1})];
- for(let n=1;n<=max;n++)out.push(button(String(n),()=>{state.page=n},state.page===n));
- out.push(button('Última',()=>{state.page=max}));
- out.forEach(x=>x.parentElement=navRoot);
- return out;
+const groups=[145,56,25].map((len,i)=>
+  Array.from({length:len},(_,j)=>'INSTR_'+i+'_'+String(j+1).padStart(3,'0')));
+let category=0,page=1,clicks=0,delaySwitch=0;
+let captured=null,error=null,progress=[];
+const rect=(top,left,width,height)=>({top,left,width,height,bottom:top+height});
+const sharedParent={};
+function makeButton(label,click,options={}) {
+  return {
+    innerText:label,click:click||(()=>{}),disabled:false,
+    parentElement:options.parent||null,
+    getBoundingClientRect:()=>rect(options.top||0,options.left||0,options.width||60,options.height||25),
+    getClientRects:()=>[{}],
+    getAttribute:()=>null,
+    classList:{contains:k=>k==='active'&&!!options.active}
+  };
+}
+const tabs=[0,1,2].map(i=>makeButton('GROUP_'+i,()=>{
+  clicks++;
+  // The first two attempts to reach group 2 leave the old table unchanged.
+  if(i===1 && category===0 && delaySwitch<2){delaySwitch++;return;}
+  category=i;page=1;
+},{parent:sharedParent,top:200,left:i*320,width:300,height:38}));
+let pagerParent=null;
+function pager() {
+  const max=Math.ceil(groups[category].length/10);
+  const els=[makeButton('Primera',()=>page=1)];
+  for(let p=1;p<=max;p++)els.push(makeButton(String(p),()=>page=p,{active:page===p}));
+  els.push(makeButton('Última',()=>page=max));
+  for(const el of els)el.parentElement=pagerParent;
+  return els;
+}
+pagerParent={querySelectorAll:()=>pager(),classList:{contains:()=>false}};
+const table={
+  getClientRects:()=>[{}],
+  getBoundingClientRect:()=>rect(360,100,900,250)
 };
 const document={
   querySelector:()=>null,
-  querySelectorAll(selector){
-    if(selector==='button')return [...tabs,...pagerButtons()];
-    if(selector==='table tbody tr'){
-      return lists[state.category].slice((state.page-1)*10,state.page*10).map(symbol=>{
-        const vals=['','',''+symbol,'100.00','0.00','100','99.50','100','100.50'];
-        return {getClientRects:()=>[{}],
-          querySelectorAll:()=>vals.map(innerText=>({innerText}))};
-      });
-    }
-    throw Error('unexpected selector: '+selector);
+  querySelectorAll(s) {
+    if(s==='button') return [...tabs,...pager()];
+    if(s==='[role="tablist"]'||s==='[role="tab"]') return [];
+    if(s==='table') return [table];
+    if(s==='table tbody tr')return groups[category]
+      .slice((page-1)*10,page*10).map(ticker=>({
+        getClientRects:()=>[{}],
+        querySelectorAll:()=>['','',ticker,'100.00','-1.00','100','99.80','100','100.20']
+          .map(innerText=>({innerText}))
+      }));
+    throw Error('Selector unexpected: '+s);
   }
 };
-const chrome={runtime:{sendMessage:async payload=>{
-  if(payload.type==='COLLECT_DONE'){done=payload.payload;return {ok:true};}
-  if(payload.type==='COLLECT_FAILED'){failed=payload.reason;return {ok:true};}
+const chrome={runtime:{sendMessage:async msg=>{
+  if(msg.type==='COLLECT_DONE'){captured=msg.payload;return {ok:true};}
+  if(msg.type==='COLLECT_FAILED'){error=msg.reason;return {ok:true};}
+  if(msg.type==='PROGRESS')progress.push(msg.status);
   return {ok:true};
 }}};
-let simulatedMs=Date.UTC(2026,9,20,14,0,0);
-class SimDate extends Date {
-  constructor(...args){super(...(args.length?args:[simulatedMs]));}
-  static now(){return simulatedMs;}
-}
-const context={document,chrome,console:{log:()=>{},error:()=>{}},
-  setTimeout(fn,ms=0){simulatedMs+=ms;fn();},Promise,Date:SimDate,Set,JSON};
+let now=Date.UTC(2026,9,20,15);
+class FakeDate extends Date{constructor(...args){super(...(args.length?args:[now]));}static now(){return now;}}
+const context={document,chrome,Date:FakeDate,Promise,Set,JSON,
+  console:{log:()=>{},error:()=>{}},setTimeout:(fn,ms=0)=>{now+=ms;fn();}};
 (async()=>{
-  vm.runInNewContext(collector,context,{timeout:3000});
-  for(let i=0;i<500&&!done&&!failed;i++)await new Promise(setImmediate);
-  assert.equal(failed,null,failed||'Unexpected failure');
-  assert.ok(done,'collector should finish');
-  assert.equal(done.rows.length,226);
-  const etfs=done.rows.filter(x=>x.category==='ETFs').map(x=>x.symbol);
-  assert.equal(etfs.length,56);
-  assert.equal(etfs[0],'ACWI','collector should not demand AAXJ first');
-  assert.ok(etfs.includes('AAXJ'));
-  assert.equal(state.delay,2,'initial stale action rows were simulated');
-  console.log('PASS: 226 symbols captured with stale tab transitions and ETF AAXJ not first');
-})().catch(err=>{console.error(err);process.exitCode=1;});
+  vm.runInNewContext(collector,context,{timeout:4000});
+  for(let i=0;i<2500&&!captured&&!error;i++)await new Promise(setImmediate);
+  assert.equal(error,null,'Collection error: '+error);
+  assert.ok(captured,'Collector did not complete');
+  assert.equal(captured.rows.length,226);
+  assert.deepEqual([0,1,2].map(i=>captured.rows.filter(x=>x.category===
+    ['ACCIONES','ETFs','FONDOS'][i]).length),[145,56,25]);
+  assert.equal(captured.rows[145].symbol,'INSTR_1_001');
+  assert.ok(progress.some(x=>x.includes('reintento')),'Category retry not exercised');
+  assert.ok(clicks>=5,'Stale tab retry did not occur');
+  console.log('PASS UI: 226 rows, category transitions without any expected symbol name');
+})().catch(e=>{console.error(e);process.exitCode=1;});
