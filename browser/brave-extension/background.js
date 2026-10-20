@@ -107,6 +107,11 @@ async function startSync(tabId = null) {
       await chrome.storage.local.set({syncTemporaryTabId:tab.id,syncTempRunId:runId});
       if(!(await waitForPage(tab.id)))throw Error('No se pudo abrir Monitores.');
     }
+    // Start the private read-only portfolio sync independently of market quotes.
+    // A delayed ETF table must never block positions or available balance.
+    void runPortfolioSync(tab.id)
+      .then(result=>chrome.storage.local.set({privateSyncStatus:result?.message||'Lectura privada completada.'}))
+      .catch(error=>chrome.storage.local.set({privateSyncStatus:'Cartera: '+error.message}));
     void injectQuotesWithRetry(tab.id,runId);
     return {ok:true};
   }catch(error){
@@ -155,37 +160,30 @@ async function route(msg,sender) {
       return {ok:true};
     }
     if (msg.type==='COLLECT_FAILED') {
-      await setStatus('Error de cotizaciones: '+(msg.reason||'lectura incompleta'),false);
+      await setStatus('Cotizaciones pendientes: '+(msg.reason||'lectura incompleta')+
+        '. La captura privada se procesa por separado.',false);
       await cleanupTemporarySyncTab(null,syncRunId);
       return {ok:true};
     }
     try {
-      await setStatus('226 cotizaciones capturadas. Guardando y comprobando cartera…',true);
+      await setStatus('226 cotizaciones capturadas. Validando en GitHub…',true);
       await upload(msg.payload);
       await chrome.storage.local.set({lastSync:Date.now()});
-      // One workflow: market capture AND private portfolio capture.
-      const task=runPortfolioSync(syncTabId)
-        .then(result=>setStatus(result?.message||'Cotizaciones enviadas a GitHub; cartera procesada · '+stamp(),false))
-        .catch(err=>setStatus('Mercado sincronizado; cartera pendiente: '+err.message,false))
-        .finally(()=>cleanupTemporarySyncTab(null,syncRunId));
-      void task;
+      await setStatus('226 cotizaciones enviadas a GitHub · '+stamp()+
+        '. Cartera privada en proceso independiente.',false);
+      await cleanupTemporarySyncTab(null,syncRunId);
       return {ok:true};
     }catch(err) {
-      // Token saved in the wrong box must not block private holdings capture.
-      // Keep quote failure visible; never claim public sync succeeded.
-      const publicError=err.message||'GitHub rechazó la captura pública.';
-      const privateTask=runPortfolioSync(syncTabId)
-        .then(result=>setStatus('Cotizaciones pendientes ('+publicError+'). '+(result?.message||'Cartera comprobada.'),false))
-        .catch(error=>setStatus('Cotizaciones pendientes ('+publicError+'). Cartera pendiente: '+error.message,false))
-        .finally(()=>cleanupTemporarySyncTab(null,syncRunId));
-      void privateTask;
-      return {ok:false,error:'El envío público falló; se está comprobando la cartera privada.'};
+      await setStatus('Error en envío público: '+err.message+
+        '. La cartera privada no se interrumpe.',false);
+      await cleanupTemporarySyncTab(null,syncRunId);
+      return {ok:false,error:err.message};
     }
   }
   return {ok:false,error:'Comando no reconocido'};
 }
 chrome.runtime.onMessage.addListener((msg,sender,reply)=>{
-  route(msg,sender).then(result=>reply({...result,version:'2.2.1'})).catch(async err=>{
+  route(msg,sender).then(result=>reply({...result,version:'2.2.2'})).catch(async err=>{
     await setStatus('Error: '+err.message,false);
     reply({ok:false,error:err.message});
   });
