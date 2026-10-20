@@ -161,7 +161,15 @@ async function route(msg,sender) {
     }
     if (msg.type==='COLLECT_FAILED') {
       await setStatus('Cotizaciones pendientes: '+(msg.reason||'lectura incompleta')+
-        '. La captura privada se procesa por separado.',false);
+        '. Guardando diagnóstico privado; la cartera se procesa por separado.',false);
+      let diagnosticStatus='unavailable';
+      try {
+        const saved=await uploadPrivateDiagnostic(msg.diagnostic);
+        diagnosticStatus=saved.ok?'saved':saved.reason;
+      }catch(error){
+        diagnosticStatus='upload_failed';
+      }
+      await chrome.storage.local.set({lastDiagnosticStatus:diagnosticStatus});
       await cleanupTemporarySyncTab(null,syncRunId);
       return {ok:true};
     }
@@ -183,7 +191,7 @@ async function route(msg,sender) {
   return {ok:false,error:'Comando no reconocido'};
 }
 chrome.runtime.onMessage.addListener((msg,sender,reply)=>{
-  route(msg,sender).then(result=>reply({...result,version:'2.2.2'})).catch(async err=>{
+  route(msg,sender).then(result=>reply({...result,version:'2.3.1'})).catch(async err=>{
     await setStatus('Error: '+err.message,false);
     reply({ok:false,error:err.message});
   });
