@@ -10,6 +10,30 @@
     {category:'ETFs', expected:56},
     {category:'FONDOS', expected:25}
   ];
+  const capturedStart = Date.now();
+  const stage = {phase:'BOOT',category_index:null,page_index:null,retries:0};
+  function diagnostic(error) {
+    // Deliberately excludes symbols, page contents, account information, URL,
+    // credentials and raw exception text.
+    const reason=String(error?.message||'');
+    let code='UNCLASSIFIED';
+    if (/barra|pestaña|tab/i.test(reason))code='CATEGORY_STATE';
+    if (/paginaci[oó]n|p[aá]gina/i.test(reason))code='PAGE_STATE';
+    if (/duplicad|repetid/i.test(reason))code='ROWS_DUPLICATE';
+    if (/actualiz|esperando|entreg/i.test(reason))code='DOM_TRANSITION_TIMEOUT';
+    if (/incompleta|cantidad|captura/i.test(reason))code='PARTIAL_CAPTURE';
+    let currentTab=-1,totalTabs=null,pagesCount=null,visibleRows=null,activePage=null;
+    try { currentTab=selectedTabIndex(); } catch(_){}
+    try { totalTabs=tabButtons().length; } catch(_){}
+    try { pagesCount=pageButtons().length;activePage=pageNumber(); } catch(_){}
+    try { visibleRows=rows().length; } catch(_){}
+    return {schema_version:1,code,phase:stage.phase,
+      category_index:stage.category_index,page_index:stage.page_index,
+      retries:stage.retries,selected_tab_index:currentTab,tab_count:totalTabs,
+      visible_rows:visibleRows,numeric_page_buttons:pagesCount,active_page:activePage,
+      elapsed_seconds:Math.min(600,Math.round((Date.now()-capturedStart)/1000)),
+      captured_at:new Date().toISOString()};
+  }
   const sleep = ms => new Promise(resolve => setTimeout(resolve,ms));
   const visible = e => !!(e && e.getClientRects().length);
   const text = e => (e?.innerText || '').trim().replace(/\s+/g,' ');
@@ -113,6 +137,7 @@
       } else consecutive=0;
       if (retry && nextRetry<milestones.length && Date.now()-started>=milestones[nextRetry]) {
         nextRetry++;
+        stage.retries++;
         await progress('Esperando que cambie la tabla de '+why+'; reintento '+nextRetry);
         await retry();
         consecutive=0;
@@ -161,6 +186,7 @@
     const seenGlobal = new Set();
     for (let i=0;i<GROUPS.length;i++) {
       const {category,expected}=GROUPS[i];
+      stage.category_index=i;stage.page_index=null;stage.phase='CATEGORY_NAV';
       await progress('Leyendo pestaña '+(i+1)+' de '+GROUPS.length+'; esperando actualización de tabla');
       const before=identity();
       const selectedBefore=selectedTabIndex();
@@ -191,6 +217,7 @@
           selectedTabIndex()===i),60000,()=>retryCategory(i));
       }
 
+      stage.phase='FIRST_PAGE';stage.page_index=1;
       const toFirst=pageButton(1);
       if (!toFirst) throw Error('No se encuentra la primera página');
       const prior=identity();
@@ -203,6 +230,7 @@
       const categorySeen=new Set();
       let currentPage=1;
       for (let step=0;step<30;step++) {
+        stage.phase='READ_PAGE';stage.page_index=currentPage;
         const keys=signature();
         if (!distinct(keys)) throw Error('Filas vacías o duplicadas en pestaña '+(i+1));
         const fingerprint=JSON.stringify(keys);
@@ -224,6 +252,7 @@
         const next=pageButton(currentPage+1);
         if (!next || next.disabled)
           throw Error('No hay siguiente página de la pestaña '+(i+1));
+        stage.phase='NEXT_PAGE';
         next.click();
         const previous=fingerprint;
         const expectedPage=currentPage+1;
@@ -236,13 +265,15 @@
           ': '+categorySeen.size+'/'+expected+'; no se publica');
     }
 
+    stage.phase='VALIDATION';
     if (all.length!==226) throw Error('Captura incompleta: '+all.length+'/226');
     const payload={captured_at:new Date().toISOString(),rows:all};
     const reply=await chrome.runtime.sendMessage({type:'COLLECT_DONE',payload});
     if (!reply?.ok) throw Error(reply?.error||'GitHub no aceptó la captura');
   } catch (err) {
     console.error('[investmentChecker]',err);
-    await chrome.runtime.sendMessage({type:'COLLECT_FAILED',reason:err.message});
+    await chrome.runtime.sendMessage({type:'COLLECT_FAILED',reason:err.message,
+      diagnostic:diagnostic(err)});
   } finally {
     globalThis.__investmentCheckerBusy=false;
   }
