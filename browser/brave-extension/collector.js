@@ -147,7 +147,7 @@
     }
     throw Error('Tiempo agotado: '+label);
   }
-  async function selectCategory(i){
+  async function selectCategory(i,alreadyRead){
     phase.name='CATEGORY';phase.tab=i;phase.page=null;
     const before=identities(),was=selectedIndex();
     switchTo(i);
@@ -155,11 +155,12 @@
       await waitFor('tabla categoría '+(i+1),()=>selectedIndex()===i&&validRows(rows()));
       return;
     }
-    const fn=()=>selectedIndex()===i&&validRows(rows())&&identities()!==before;
+    const fn=()=>selectedIndex()===i&&validRows(rows())&&identities()!==before&&
+      rows().every(r=>!alreadyRead.has(r.symbol));
     await waitFor('cambio a categoría '+(i+1),fn,{ms:45000,
       retry:async()=>{switchTo((i+1)%3);await sleep(700);switchTo(i);}});
   }
-  async function goFirst(){
+  async function goFirst(alreadyRead){
     phase.name='FIRST_PAGE';phase.page=1;
     const first=firstButton();
     if(!first)throw Error('Sin btn-first-page');
@@ -167,9 +168,10 @@
       const before=identities();
       first.click();
       await waitFor('primera página',()=>currentPage()===1&&validRows(rows())&&
-        identities()!==before);
+        identities()!==before&&rows().every(r=>!alreadyRead.has(r.symbol)));
     }else{
-      await waitFor('primera página activa',()=>currentPage()===1&&validRows(rows()));
+      await waitFor('primera página activa',()=>currentPage()===1&&validRows(rows())&&
+        rows().every(r=>!alreadyRead.has(r.symbol)));
     }
   }
   function sanitizeDiagnostic(err){
@@ -198,8 +200,8 @@
     for(let i=0;i<GROUPS.length;i++){
       const {category,expected}=GROUPS[i];
       await progress('Capitales: pestaña '+(i+1)+' / 3');
-      await selectCategory(i);
-      await goFirst();
+      await selectCategory(i,globalSeen);
+      await goFirst(globalSeen);
       const local=new Set(),visited=new Set();
       let page=1;
       for(let steps=0;steps<30;steps++){
