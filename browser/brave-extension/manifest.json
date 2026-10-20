@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.4.0",
-  "description": "Captura Capitales por selectores Angular reales: tab-btn, tabla-capitales y app-paginator; diagnóstico privado.",
+  "version": "2.4.1",
+  "description": "Evita capturar filas antiguas al cambiar de Acciones a ETFs o Fondos en la interfaz Angular de Capitales.",
   "permissions": [
     "storage",
     "scripting",
