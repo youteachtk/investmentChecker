@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.2.2",
-  "description": "Una sola sincronización con lectura privada independiente, recuperación lenta de ETFs y navegación automática; nunca opera.",
+  "version": "2.2.3",
+  "description": "Identifica ETFs por catálogo completo sin exigir AAXJ en primera fila; reintenta cambio de categoría y sincroniza cartera privada.",
   "permissions": [
     "storage",
     "scripting",
