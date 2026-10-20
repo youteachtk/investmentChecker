@@ -26,7 +26,8 @@ const rows=()=>tickers[state.visibleCategory]
       assert.equal(sel,'td');
       // Deliberately different buy / sell volumes and price fields,
       // including misleading mat-column classes from actual user report.
-      const data=['*','Detalle',symbol,'$100.00','1.00%','123','$99.00','555','$101.00','Operar'];
+      const funds=symbol.startsWith('S2_');
+      const data=['*','Detalle',symbol,funds?'':'$100.00',funds?'':'1.00%',funds?'0':'123',funds?'0':'$99.00',funds?'0':'555',funds?'':'$101.00','Operar'];
       return data.map((innerText,i)=>({
         innerText,
         classList:{contains:name=>i===7?name==='mat-column-precioVenta':
@@ -114,6 +115,10 @@ class FakeDate extends Date{
   assert.equal(captured.rows[0].bid,'$99.00');
   assert.equal(captured.rows[0].ask_volume,'555');
   assert.equal(captured.rows[0].ask,'$101.00');
+  const funds=captured.rows.filter(x=>x.category==='FONDOS');
+  assert.equal(funds.length,25);
+  assert.ok(funds.every(x=>x.last==='' && x.ask===''),
+    'Capitales funds must accept absent last and ask prices');
   assert.ok(state.arrowClicks>=3,'Never advanced past pages 4/8/12');
   assert.ok(state.stalledETF>=1,'Delayed category load was not simulated');
   assert.equal(state.visibleCategory,2,'Delayed Angular render never caught up');
