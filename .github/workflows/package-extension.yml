@@ -24,6 +24,8 @@ jobs:
         run: |
           for file in browser/brave-extension/*.js; do node --check "$file"; done
           python -m json.tool browser/brave-extension/manifest.json > /dev/null
+      - name: Regression test for delayed React tabs and non-first ETF AAXJ
+        run: node tests/test_collector_ui.js
       - name: Build stable folder-layout installer
         run: |
           VERSION=$(python -c "import json;print(json.load(open('browser/brave-extension/manifest.json'))['version'])")
