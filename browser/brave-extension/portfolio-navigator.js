@@ -3,6 +3,11 @@
 (async () => {
   'use strict';
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const findEventually = async (lookup, maxMs=12000) => {
+    const until=Date.now()+maxMs;
+    while(Date.now()<until){const found=lookup();if(found)return found;await sleep(350);}
+    return null;
+  };
   const visible = el => !!(el && el.getClientRects().length);
   const norm = s => String(s || '').trim().replace(/\s+/g,' ').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   const controls = () => [...document.querySelectorAll('a,button,[role="menuitem"],[role="button"]')].filter(visible);
@@ -31,10 +36,10 @@
   if(await waitForHoldings(900)) return {found:true,step:'already-open'};
   const labelled=label=>[...document.querySelectorAll('span,div,li,p')].filter(visible)
     .find(e=>e.children.length===0 && norm(e.textContent)===label);
-  const menu=controls().find(e=>norm(e.innerText||e.textContent)==='tu inversion')
+  const menu=await findEventually(()=>controls().find(e=>norm(e.innerText||e.textContent)==='tu inversion')
     ||labelled('tu inversion')?.closest('button,a,[role="button"],[role="menuitem"]')
-    ||labelled('tu inversion')?.parentElement;
-  if(!menu || !safe(menu)) return {found:false,reason:'No se encontró el menú Tu inversión'};
+    ||labelled('tu inversion')?.parentElement,15000);
+  if(!menu || !safe(menu)) return {found:false,reason:'La navegación Tu inversión no apareció tras cargar la sesión'};
   menu.click();
   await sleep(850);
   if(await waitForHoldings(900)) return {found:true,step:'investment-menu'};
@@ -44,10 +49,10 @@
     return /mi portafolio|portafolio|mi cartera|cartera|mis inversiones|mis posiciones|posiciones|mis acciones|inversiones/.test(label+' '+href)
       && label!=='tu inversion' && safe(e);
   };
-  const option=controls().find(isLink) || [...document.querySelectorAll('span,li,div')].filter(visible)
-    .find(e=>e.children.length===0 && isLink(e));
-  if(!option) return {found:false,reason:'Menú abierto, pero no se identificó un enlace de posiciones'};
+  const option=await findEventually(()=>controls().find(isLink) || [...document.querySelectorAll('span,li,div')].filter(visible)
+    .find(e=>e.children.length===0 && isLink(e)),10000);
+  if(!option) return {found:false,reason:'El menú no mostró un enlace reconocido de posiciones'};
   option.click();
-  if(await waitForHoldings(11000)) return {found:true,step:'holdings-route'};
+  if(await waitForHoldings(18000)) return {found:true,step:'holdings-route'};
   return {found:false,reason:'No apareció una tabla reconocible de posiciones'};
 })();
