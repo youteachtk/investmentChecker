@@ -79,7 +79,7 @@
   }
   const identities=()=>JSON.stringify(rows().map(x=>x.symbol));
   const validRows=r=>r.length>0 && r.length<=10 &&
-    r.every(x=>x.symbol && x.last && x.bid && x.ask) &&
+    r.every(x=>x.symbol) &&
     new Set(r.map(x=>x.symbol)).size===r.length;
 
   function paginator(){
