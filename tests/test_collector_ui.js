@@ -27,7 +27,9 @@ const rows=()=>tickers[state.visibleCategory]
       // Deliberately different buy / sell volumes and price fields,
       // including misleading mat-column classes from actual user report.
       const funds=symbol.startsWith('S2_');
-      const data=['*','Detalle',symbol,funds?'':'$100.00',funds?'':'1.00%',funds?'0':'123',funds?'0':'$99.00',funds?'0':'555',funds?'':'$101.00','Operar'];
+      const data=funds
+        ?['*','Detalle',symbol,'Renta variable','$123.45','8.25%','19.50%','27.10%','Operar']
+        :['*','Detalle',symbol,'$100.00','1.00%','123','$99.00','555','$101.00','Operar'];
       return data.map((innerText,i)=>({
         innerText,
         classList:{contains:name=>i===7?name==='mat-column-precioVenta':
@@ -35,9 +37,12 @@ const rows=()=>tickers[state.visibleCategory]
       }));
     }
   }));
+const fundHeaders=['Fav','Información','Fondo','Categoria','Precio',
+  '1 año','3 años','5 años','Comprar o vender'];
 const table={
   getClientRects:visible,
-  querySelectorAll:sel=>sel==='thead th'?cells.map(innerText=>({innerText})):
+  querySelectorAll:sel=>sel==='thead th'?
+    (state.visibleCategory===2?fundHeaders:cells).map(innerText=>({innerText})):
     sel==='tbody tr'?rows():[]
 };
 const categories=[0,1,2].map(i=>({
@@ -117,10 +122,14 @@ class FakeDate extends Date{
   assert.equal(captured.rows[0].ask,'$101.00');
   const funds=captured.rows.filter(x=>x.category==='FONDOS');
   assert.equal(funds.length,25);
-  assert.ok(funds.every(x=>x.last==='' && x.ask===''),
-    'Capitales funds must accept absent last and ask prices');
+  assert.ok(funds.every(x=>x.last==='$123.45' && x.ask==='' && x.bid==='' &&
+    x.variation==='' && x.fund_category==='Renta variable'),
+    'Funds must read the ninth-column layout and not invent bids/asks');
+  assert.equal(funds[0].return_1y,'8.25%');
+  assert.equal(funds[0].return_3y,'19.50%');
+  assert.equal(funds[0].return_5y,'27.10%');
   assert.ok(state.arrowClicks>=3,'Never advanced past pages 4/8/12');
   assert.ok(state.stalledETF>=1,'Delayed category load was not simulated');
   assert.equal(state.visibleCategory,2,'Delayed Angular render never caught up');
-  console.log('PASS: real Angular selectors; all 226; arrows and header mappings');
+  console.log('PASS: 226 stocks, ETFs, nine-column funds, returns and Angular pagination');
 })().catch(e=>{console.error(e);process.exitCode=1;});
