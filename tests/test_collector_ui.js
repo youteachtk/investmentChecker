@@ -5,6 +5,9 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
 const collector=fs.readFileSync('browser/brave-extension/collector.js','utf8');
+for(const disallowed of ['AAXJ','AA1','ACTDUAL','CATALOG','SETS','findTab']){
+  assert.equal(collector.includes(disallowed),false,'Name-anchored collection has returned: '+disallowed);
+}
 const groups=[145,56,25].map((len,i)=>
   Array.from({length:len},(_,j)=>'INSTR_'+i+'_'+String(j+1).padStart(3,'0')));
 let category=0,page=1,clicks=0,delaySwitch=0;
