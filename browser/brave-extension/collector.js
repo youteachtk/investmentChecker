@@ -57,6 +57,15 @@
       ask_volume:lookup('volumen de venta'),
       ask:lookup('precio de venta')
     };
+    // Capitales uses a completely different nine-column table for funds.
+    // Its performance periods are not bid/ask prices or daily variation.
+    const fundHeaders=['fondo','categoria','precio','1 ano','3 anos','5 anos'];
+    if(fundHeaders.every(h=>lookup(h)>=0)) return {
+      symbol:lookup('fondo'),last:lookup('precio'),variation:-1,
+      bid_volume:-1,bid:-1,ask_volume:-1,ask:-1,
+      fund_category:lookup('categoria'),return_1y:lookup('1 ano'),
+      return_3y:lookup('3 anos'),return_5y:lookup('5 anos')
+    };
     if(Object.values(fields).some(i=>i<0) ||
        new Set(Object.values(fields)).size!==7)
       throw Error('Encabezados de tabla incompletos o inesperados');
@@ -72,7 +81,12 @@
         .replace(/[\*?ⓘℹ]/g,'').trim().toUpperCase().replace(/\s+/g,' ');
       const obj={symbol:sym};
       for(const f of ['last','variation','bid_volume','bid','ask_volume','ask']){
-        obj[f]=cells[map[f]]||'';
+        obj[f]=map[f]>=0?(cells[map[f]]||''):'';
+      }
+      if(map.fund_category>=0){
+        for(const f of ['fund_category','return_1y','return_3y','return_5y']){
+          obj[f]=cells[map[f]]||'';
+        }
       }
       return obj;
     }).filter(Boolean);
