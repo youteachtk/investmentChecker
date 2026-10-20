@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.2.3",
-  "description": "Identifica ETFs por catálogo completo sin exigir AAXJ en primera fila; reintenta cambio de categoría y sincroniza cartera privada.",
+  "version": "2.3.0",
+  "description": "Sincroniza por estado real de pestañas, cambio de filas y paginación; no depende de emisoras específicas.",
   "permissions": [
     "storage",
     "scripting",
