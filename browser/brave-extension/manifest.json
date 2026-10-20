@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.2.1",
-  "description": "Captura pública y cartera privada por un solo botón; recupera token privado mal ubicado y reintenta pestañas cerradas.",
+  "version": "2.2.2",
+  "description": "Una sola sincronización con lectura privada independiente, recuperación lenta de ETFs y navegación automática; nunca opera.",
   "permissions": [
     "storage",
     "scripting",
