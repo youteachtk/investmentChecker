@@ -25,7 +25,7 @@ jobs:
         run: |
           for file in browser/brave-extension/*.js; do node --check "$file"; done
           python -m json.tool browser/brave-extension/manifest.json > /dev/null
-      - name: Regression test for delayed React tabs and non-first ETF AAXJ
+      - name: Regression test for actual Angular Capitales DOM and sliding paginator
         run: node tests/test_collector_ui.js
       - name: Build stable folder-layout installer
         run: |
