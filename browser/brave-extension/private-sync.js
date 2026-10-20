@@ -157,6 +157,49 @@ async function uploadPrivatePortfolio(payload) {
   const result=await fetch(url,{method:'PUT',headers,body:JSON.stringify(body)});
   if(!result.ok) throw Error('GitHub privado rechazó la escritura (HTTP '+result.status+').');
 }
+// Bounded, de-identified real-session diagnostic. Written only to private repo.
+// This is intentionally NOT a DOM dump and never includes names, tickers, URLs,
+// account data, credentials, table values, HTML, cookies, or screenshots.
+async function uploadPrivateDiagnostic(raw) {
+  const keys=['category_index','page_index','retries','selected_tab_index',
+    'tab_count','visible_rows','numeric_page_buttons','active_page','elapsed_seconds'];
+  const stages=new Set(['BOOT','CATEGORY_NAV','FIRST_PAGE','READ_PAGE','NEXT_PAGE','VALIDATION']);
+  const codes=new Set(['CATEGORY_STATE','PAGE_STATE','ROWS_DUPLICATE',
+    'DOM_TRANSITION_TIMEOUT','PARTIAL_CAPTURE','UNCLASSIFIED']);
+  if(!raw || typeof raw!=='object')return {ok:false,reason:'No diagnostic'};
+  const stored=await chrome.storage.local.get(['privateRepo','privateToken','privateEnabled','lastDiagnosticAt']);
+  if(!stored.privateEnabled||!stored.privateRepo||!stored.privateToken)
+    return {ok:false,reason:'Private repository not connected'};
+  if(stored.lastDiagnosticAt && Date.now()-stored.lastDiagnosticAt<5*60_000)
+    return {ok:false,reason:'Diagnostic rate limited'};
+  const payload={schema_version:1,
+    captured_at:new Date().toISOString(),
+    code:codes.has(raw.code)?raw.code:'UNCLASSIFIED',
+    phase:stages.has(raw.phase)?raw.phase:'BOOT'};
+  for(const k of keys){
+    const v=raw[k];
+    payload[k]=Number.isInteger(v)&&v>=-1&&v<=1000?v:null;
+  }
+  await verifyPrivateRepo(stored.privateRepo,stored.privateToken);
+  const path='actinver/diagnostics-latest.json';
+  const url='https://api.github.com/repos/'+stored.privateRepo+'/contents/'+path;
+  const headers={Authorization:'Bearer '+stored.privateToken,
+    Accept:'application/vnd.github+json',
+    'X-GitHub-Api-Version':'2022-11-28','Content-Type':'application/json'};
+  const current=await fetch(url,{headers,cache:'no-store'});
+  if(current.status!==404 && !current.ok)throw Error('Private diagnostic preflight '+current.status);
+  const sha=current.ok?(await current.json()).sha:undefined;
+  const str=JSON.stringify(payload,null,2)+'\n';
+  const bin=Array.from(new TextEncoder().encode(str),b=>String.fromCharCode(b)).join('');
+  const body={message:'Store sanitized Actinver DOM transition diagnostic',
+    content:btoa(bin),branch:'main'};
+  if(sha)body.sha=sha;
+  const response=await fetch(url,{method:'PUT',headers,body:JSON.stringify(body)});
+  if(!response.ok)throw Error('Private diagnostic HTTP '+response.status);
+  await chrome.storage.local.set({lastDiagnosticAt:Date.now()});
+  return {ok:true};
+}
+
 // One unified market + portfolio workflow. All extra navigation happens in an
 // inactive temporary tab; Actinver's trading UI is never interacted with.
 let privateDiscoveryBusy=false;
