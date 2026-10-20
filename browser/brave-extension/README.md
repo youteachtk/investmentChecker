@@ -1,3 +1,15 @@
+## v2.3.0 — Pestañas por posición, datos por transición (20/oct/2026)
+
+Se sustituyó el reconocimiento por nombres por una máquina de estados basada en la interfaz:
+
+- Reconoce la barra de tres pestañas por `role=tablist` o por estructura/disposición horizontal; usa posiciones 1, 2 y 3, sin comparar los textos de las pestañas.
+- Comprueba que **cambien los identificadores de las filas de la tabla** después de cambiar pestaña/página; los cambios de precio por sí solos no cuentan. Se apoya además en estado seleccionado visible, cuando Actinver lo ofrece.
+- Detecta la página por botones numéricos y un contador de filas; rechaza páginas duplicadas y aborta si no hay exactamente 145 acciones, 56 ETFs y 25 fondos.
+- La **validación final del catálogo** sigue en GitHub Actions, no en el código de captura de Brave: GitHub comprueba que los 226 instrumentos recibidos pertenecen al universo autorizado, antes de publicar las cotizaciones.
+- La cartera privada continúa independiente de los retrasos de tablas públicas. Ninguna función compra ni vende valores.
+
+Pruebas: un simulador de DOM verifica cambio de pestañas demorado, avance de páginas, y 226 instrumentos con símbolos ficticios; una prueba estática impide volver a depender de nombres específicos. Falta validación sobre la sesión real de Brave después de actualizar.
+
 ## v2.2.2 — Corregido fallo ETFs y lectura de cartera independiente (20/oct/2026)
 
 El monitor puede tardar más de 18 segundos en actualizar la tabla de ETFs aunque el botón de ETFs ya esté seleccionado. El recolector ahora concede hasta 60 segundos en cambios de categoría y reintenta el botón automáticamente mientras mantiene la comprobación exacta de primera emisora por categoría; NO acepta acciones como ETFs y solo publica la captura pública si los 226 instrumentos están completos.
