@@ -18,8 +18,7 @@
     .map(tr => [...tr.querySelectorAll('td')].map(text))
     .filter(cells => cells.length >= 9);
   const symbol = r => (r?.[2] || '').replace(/[\*?ⓘℹ]/g,'').trim().toUpperCase().replace(/\s+/g,' ');
-  // Use row identity fingerprints ONLY to detect DOM updates. No comparison
-  // to AA1, AAXJ, ACTDUAL or any other known symbol.
+  // Row identity is only a fingerprint for DOM changes, never a list of known names.
   const identity = () => JSON.stringify(rows().map(symbol));
   const signature = () => rows().map(symbol);
   const distinct = r => r.length > 0 && r.every(Boolean) && new Set(r).size === r.length;
@@ -65,7 +64,25 @@
       return da-db;
     });
     if (candidates[0]) return candidates[0];
-    throw Error('No se encontró una barra con tres pestañas de mercado');
+
+    // Some layouts wrap each tab in a separate column. In that case, use
+    // physical alignment and width, still without reading ANY tab label.
+    const rects=all.map(el=>({el,r:el.getBoundingClientRect?.()}))
+      .filter(item=>item.r && item.r.width>=70 && item.r.height>0 &&
+        item.r.top>=0 && item.r.bottom<tableTop);
+    const visual=[];
+    for (let i=0;i<rects.length;i++) {
+      const row=rects.filter(v=>Math.abs(v.r.top-rects[i].r.top)<20)
+        .sort((a,b)=>a.r.left-b.r.left);
+      if (row.length!==3)continue;
+      if (row[0].r.right>row[1].r.left+6 ||
+          row[1].r.right>row[2].r.left+6)continue;
+      const rightmost=Math.max(...row.map(v=>v.r.bottom));
+      visual.push({distance:tableTop-rightmost,group:row.map(v=>v.el)});
+    }
+    visual.sort((a,b)=>a.distance-b.distance);
+    if (visual[0])return visual[0].group;
+    throw Error('No se encontró una barra con tres pestañas por su disposición visual');
   }
 
   function pageButtons() {
@@ -103,6 +120,24 @@
     }
     throw Error('Actinver no actualizó la tabla de '+why+'; no se enviaron datos incompletos');
   }
+  const isSelected = e =>
+    e?.classList?.contains('active') ||
+    e?.parentElement?.classList?.contains('active') ||
+    e?.getAttribute?.('aria-selected')==='true' ||
+    e?.getAttribute?.('data-state')==='active';
+  function selectedTabIndex(){
+    const tabs=tabButtons();
+    const marked=tabs.map(isSelected);
+    if(marked.filter(Boolean).length===1)return marked.indexOf(true);
+    if(typeof getComputedStyle==='function'){
+      const colors=tabs.map(e=>getComputedStyle(e).backgroundColor);
+      for(let i=0;i<colors.length;i++){
+        if(colors.filter(x=>x===colors[i]).length===1 &&
+          colors.filter(x=>x===colors[(i+1)%3]).length===2)return i;
+      }
+    }
+    return -1;
+  }
   async function clickCategory(index) {
     const tabs=tabButtons();
     if (!tabs[index]) throw Error('Falta la pestaña en posición '+(index+1));
@@ -128,14 +163,32 @@
       const {category,expected}=GROUPS[i];
       await progress('Leyendo pestaña '+(i+1)+' de '+GROUPS.length+'; esperando actualización de tabla');
       const before=identity();
+      const selectedBefore=selectedTabIndex();
       await clickCategory(i);
-      if (i === 0) {
-        // The existing Monitores route initially displays the first tab.
-        // The backend will also verify every instrument's category.
-        await awaitRows('pestaña 1',() => distinct(signature()),45000);
+      // On an already-selected tab the row identity may be unchanged.
+      // On an OTHER tab, a visible state change AND a row-key change are
+      // necessary; a live price tick cannot fool that second condition.
+      if (selectedBefore===i) {
+        await awaitRows('pestaña '+(i+1),() => distinct(signature()),45000);
+      } else if (i===0 && selectedBefore===-1) {
+        // Unknown initial tab state: do not prematurely accept stale rows.
+        await sleep(2000);
+        if (identity()===before) {
+          await clickCategory(2);
+          await awaitRows('preparación de pestañas',() =>
+            distinct(signature()) && identity()!==before,60000,()=>retryCategory(2));
+          const reset=identity();
+          await clickCategory(0);
+          await awaitRows('pestaña inicial',() =>
+            distinct(signature()) && identity()!==reset,60000,()=>retryCategory(0));
+        } else {
+          await awaitRows('pestaña inicial',() =>
+            distinct(signature()) && identity()!==before,45000);
+        }
       } else {
         await awaitRows('pestaña '+(i+1),() => distinct(signature()) &&
-          identity() !== before,60000,()=>retryCategory(i));
+          identity()!==before && (selectedTabIndex()===-1 ||
+          selectedTabIndex()===i),60000,()=>retryCategory(i));
       }
 
       const toFirst=pageButton(1);
