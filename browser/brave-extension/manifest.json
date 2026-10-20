@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.3.0",
-  "description": "Sincroniza por estado real de pestañas, cambio de filas y paginación; no depende de emisoras específicas.",
+  "version": "2.4.0",
+  "description": "Captura Capitales por selectores Angular reales: tab-btn, tabla-capitales y app-paginator; diagnóstico privado.",
   "permissions": [
     "storage",
     "scripting",
