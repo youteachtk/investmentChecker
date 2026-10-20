@@ -1,3 +1,13 @@
+## v2.4.0 — DOM real de Capitales verificado (20/oct/2026)
+
+Esta versión reemplaza la identificación supuesta de pestañas y tablas por la estructura real recopilada en la consola de Brave:
+
+- `app-capitales div.tab-btn` tiene tres contenedores; la clase `active` está en el DIV, no en el botón de Angular Material. Se admite incluso el ancho real de 69px del botón de ETFs, antes descartado por error.
+- `app-tabla-material table.table-capitales` contiene 10 columnas; su lectura se deriva de los encabezados reales, sin presuponer índices para volumen y precio de venta. Los encabezados son la fuente de correspondencia; se permite que las clases `cdk-column` de las celdas no coincidan con su orden visible.
+- `app-paginator .btn-pages` muestra cuatro números por ventana, con flechas anterior/siguiente como primer y último botón; cuando se agotan los cuatro números, avanza a otra ventana y continúa hasta 145 acciones, 56 ETFs y 25 fondos.
+- Solo captura cotizaciones públicas; las posiciones y los saldos siguen aislados en GitHub privado. Los errores recopilan exclusivamente estado técnico numérico, nunca las filas, los precios, el HTML ni las credenciales.
+- Prueba de regresión con una reproducción de estos selectores auténticos, datos inventados y paginación desplazable. El comportamiento en el navegador real debe confirmarse después de aplicar la versión.
+
 ## v2.3.0 — Pestañas por posición, datos por transición (20/oct/2026)
 
 Se sustituyó el reconocimiento por nombres por una máquina de estados basada en la interfaz:
