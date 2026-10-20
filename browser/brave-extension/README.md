@@ -1,3 +1,11 @@
+## v2.4.3 — Diseño real de Fondos (20/oct/2026)
+
+El usuario inspeccionó la tabla activa de Fondos. Tiene nueve columnas: `Fav`, `Información`, `Fondo`, `Categoria`, `Precio`, `1 año`, `3 años`, `5 años`, `Comprar o vender`. No tiene campos de compra/venta de Acciones ni ETFs. La versión 2.4.2 asumía los siete encabezados de bolsa, por eso el informe privado mostró `TIMEOUT` en fase `CATEGORY`, índice `2`, pese a estar seleccionada la pestaña.
+
+El recolector 2.4.3 identifica automáticamente ambos formatos mediante los encabezados visibles. De Fondos transmite el símbolo, precio, categoría y rendimientos a 1, 3 y 5 años; deja vacíos los campos de volumen y posturas de compra/venta, que no existen. El receptor GitHub registra tales campos como `null` y conserva los rendimientos públicos. La prueba de 226 filas simula ambas tablas y los retrasos de Angular.
+
+*Pendiente:* confirmar captura real y sincronización de cartera privada en Brave. Nunca se ejecutan órdenes de inversión.
+
 ## v2.4.2 — Fondos sin cotización disponible (20/oct/2026)
 
 Actinver publica los 25 Fondos con emisora válida pero sin último precio ni postura de venta. Antes `validRows` exigía ambos precios y rechazaba toda la categoría, impidiendo concluir la sincronización de 226 registros. Ahora se exige un símbolo por fila, único en la página; los valores ausentes se pasan sin inventar datos y GitHub los convierte en `null`. La validación completa por categoría y universo sigue en el receptor público.
