@@ -51,7 +51,7 @@ async function configurePrivatePortfolio(msg) {
   await verifyPrivateRepo(repository,token);
   // Do not log, display or upload this token to public GitHub.
   await chrome.storage.local.set({privateRepo:repository,privateToken:token,privateEnabled:true,
-    privateSyncStatus:'Repositorio privado verificado. Abre Tu inversión para captar las posiciones.'});
+    privateSyncStatus:'Repositorio privado verificado. Captura de cartera automática habilitada.'});
   return {ok:true};
 }
 async function capturePrivatePortfolio(tabId=null) {
@@ -111,12 +111,12 @@ async function acceptPrivateCapture(msg,sender) {
   await chrome.storage.local.set({privateCache:cache});
   if(!cache.summary || !cache.holdings) {
     const missing=cache.summary?'posiciones (Tu inversión)':'resumen (Monitores)';
-    await privateState('Captura parcial local. Falta '+missing+'. Ningún dato privado ha salido de Brave.');
+    await privateState('Captura parcial local. Falta '+missing+'. Reintento automático pendiente; ningún dato privado ha salido de Brave.');
     return {ok:true,partial:true};
   }
   const a=Date.parse(cache.summary.at),b=Date.parse(cache.holdings.at);
   if(!Number.isFinite(a)||!Number.isFinite(b)||Math.max(Date.now()-a,Date.now()-b)>PRIVATE_TTL_MS) {
-    await privateState('La captura de cartera está incompleta o caducada. Abre Monitores y Tu inversión.');
+    await privateState('La captura de cartera está incompleta o caducada; se actualizará al acceder a Actinver.');
     return {ok:true,partial:true};
   }
   // Avoid duplicate writes from React re-renders and the background tab.
@@ -164,8 +164,8 @@ async function runPortfolioSync(marketTabId) {
   await recoverMisplacedPrivateToken();
   const settings=await chrome.storage.local.get(['privateEnabled','privateRepo','privateToken']);
   if(!settings.privateEnabled || !settings.privateRepo || !settings.privateToken)
-    return {message:'Mercado actualizado; cartera privada no configurada.'};
-  await privateState('Mercado recibido. Leyendo cartera automáticamente…');
+    return {message:'La cartera privada todavía no está configurada.'};
+  await privateState('Leyendo saldo y posiciones en segundo plano…');
   await capturePrivatePortfolio(marketTabId);
   let cache=(await chrome.storage.local.get('privateCache')).privateCache;
   const freshHoldings=cache?.holdings && Date.now()-Date.parse(cache.holdings.at)<PRIVATE_TTL_MS;
@@ -181,9 +181,9 @@ async function runPortfolioSync(marketTabId) {
       });
       const found=nav?.[0]?.result;
       if(found?.found) await capturePrivatePortfolio(tmp.id);
-      else await privateState('Mercado sincronizado; posiciones todavía no detectadas automáticamente.');
+      else await privateState('No se pudo identificar la tabla de posiciones en la sesión actual. Se reintentará.');
     }catch(err) {
-      await privateState('Mercado sincronizado; posiciones pendientes: '+err.message);
+      await privateState('Posiciones pendientes: '+err.message);
     }finally {
       if(tmp)try{await chrome.tabs.remove(tmp.id);}catch(_){}
       privateDiscoveryBusy=false;
@@ -191,8 +191,8 @@ async function runPortfolioSync(marketTabId) {
   }
   cache=(await chrome.storage.local.get(['privateCache','privateLastSync','privateSyncStatus']));
   if(cache.privateLastSync && Date.now()-cache.privateLastSync < PRIVATE_TTL_MS)
-    return {message:'Mercado y cartera privada sincronizados · '+stamp()};
-  return {message:'Mercado sincronizado. Cartera pendiente de validar en Actinver.'};
+    return {message:'Cartera privada sincronizada · '+stamp()};
+  return {message:'Cartera privada pendiente de lectura; nueva búsqueda automática en el siguiente ciclo.'};
 }
 
 // Silent opportunistic capture whenever the authenticated SPA changes screens;
