@@ -1,3 +1,11 @@
+## v2.4.1 — Arreglo reproducido con el diagnóstico privado (20/oct/2026)
+
+El registro privado señaló fallo READ_PAGE, categoría ETFs (índice 1), página 1. La interfaz Angular cambia visualmente de pestaña y reinicia la paginación antes de reemplazar las filas de la tabla.
+
+Se reprodujo una actualización de filas ocho segundos después del cambio: el código anterior falló con `Emisora duplicada` a los ~19 s; el código corregido reunió las 226 filas al impedir que una pestaña nueva acepte emisoras ya leídas en la anterior. La regresión con retraso está integrada en GitHub Actions antes de empaquetar.
+
+No se modifica ninguna cartera ni se envían datos privados al repositorio público. Sigue pendiente comprobar el resultado dentro de la sesión real de Brave.
+
 ## v2.4.0 — DOM real de Capitales verificado (20/oct/2026)
 
 Esta versión reemplaza la identificación supuesta de pestañas y tablas por la estructura real recopilada en la consola de Brave:
