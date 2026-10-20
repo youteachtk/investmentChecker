@@ -101,6 +101,34 @@
   function firstButton(){
     return paginator().querySelector('button.btn-first-page');
   }
+  function rightPageArrow(){
+    // Capitales .btn-pages has six children: left arrow, four numbers,
+    // right arrow. The numbered buttons alone cannot reach page 5+.
+    const group=paginator().querySelector('.btn-pages');
+    if(!group)return null;
+    const buttons=[...group.querySelectorAll('button')].filter(visible);
+    if(buttons.length<3)return null;
+    const last=buttons[buttons.length-1];
+    return /^\d+$/.test(text(last))?null:last;
+  }
+  async function moveToNextPage(current,fingerprint){
+    const target=current+1;
+    let next=pageButton(target);
+    if(!next){
+      const arrow=rightPageArrow();
+      if(!arrow||arrow.disabled)
+        throw Error('No se encontró el avance al bloque de páginas '+target);
+      arrow.click(); // only paginator navigation
+      await waitFor('bloque de paginación '+target,()=>!!pageButton(target)||
+        (currentPage()===target&&identities()!==fingerprint),{ms:30000});
+      if(currentPage()===target&&identities()!==fingerprint)return;
+      next=pageButton(target);
+    }
+    if(!next||next.disabled)throw Error('Página '+target+' no disponible');
+    next.click(); // only numeric page navigation
+    await waitFor('página '+target,()=>currentPage()===target&&
+      validRows(rows())&&identities()!==fingerprint);
+  }
   async function waitFor(label,condition,{ms=40000,retry=null}={}){
     const start=Date.now();let consecutive=0,tries=0;
     const timeouts=[7500,18000,30000];
@@ -192,13 +220,8 @@
           ' · '+local.size+'/'+expected);
         if(local.size===expected)break;
         if(local.size>expected)throw Error('Más filas de las esperadas');
-        const next=pageButton(page+1);
-        if(!next||next.disabled)throw Error('Faltó página '+(page+1));
-        const before=fingerprint;
-        next.click();
         phase.name='NEXT_PAGE';phase.page=page+1;
-        await waitFor('página '+(page+1),()=>currentPage()===page+1&&
-          validRows(rows())&&JSON.stringify(rows().map(r=>r.symbol))!==before);
+        await moveToNextPage(page,fingerprint);
         page++;
       }
       if(local.size!==expected)
