@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.4.2",
-  "description": "Captura las 25 filas de Fondos de Capitales aunque no haya cotizaciones de último precio o venta.",
+  "version": "2.4.3",
+  "description": "Reconoce las tablas diferentes de Acciones/ETFs (10 columnas) y Fondos (9 columnas), incluido precio y rendimientos de fondos.",
   "permissions": [
     "storage",
     "scripting",
