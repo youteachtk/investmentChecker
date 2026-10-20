@@ -1,3 +1,11 @@
+## v2.2.2 — Corregido fallo ETFs y lectura de cartera independiente (20/oct/2026)
+
+El monitor puede tardar más de 18 segundos en actualizar la tabla de ETFs aunque el botón de ETFs ya esté seleccionado. El recolector ahora concede hasta 60 segundos en cambios de categoría y reintenta el botón automáticamente mientras mantiene la comprobación exacta de primera emisora por categoría; NO acepta acciones como ETFs y solo publica la captura pública si los 226 instrumentos están completos.
+
+La lectura privada empieza al mismo tiempo que la de cotizaciones, no al finalizarla: un fallo de ETFs o del token público no bloquea el intento de leer saldo y posiciones. La navegación por "Tu inversión" espera a que React presente el menú y la tabla; no requiere cambiar de pestaña manualmente. Mensajes de estado separados reflejan éxitos y fallos reales.
+
+Los tokens que ya aparecen guardados/verificados se preservan al actualizar la misma carpeta de la extensión. La extensión nunca ejecuta operaciones, ni coloca órdenes, y solo transmite información de cartera a un repositorio comprobado como privado. La navegación automática aún debe validarse contra la sesión de Brave del usuario.
+
 ## v2.2.0 — Una sola sincronización, instalación estable (19/oct/2026)
 
 **Ya no hay dos paneles ni dos botones de captura.** La ventana tiene un único botón **Sincronizar todo ahora** y un solo estado. Tokens y diagnóstico permanecen dentro de **Configuración y diagnóstico** (plegado). Conserva las llaves `githubToken`, `privateToken`, `privateRepo` y `privateEnabled` guardadas por v2.1: **no las pide otra vez**.
