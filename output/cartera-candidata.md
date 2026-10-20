@@ -6,11 +6,11 @@ Equal-weight candidate allocation: 20% each. Total 100%; 5 different securities.
 
 | Sleeve | Instrument | Allocation (actipesos) | Relative score | Risk | Last external close |
 |---|---|---:|---:|---|---:|
-| Health care | PFE | 200,000 | 83.1 | lower | 29.44 |
-| Technology equity | AAPL | 200,000 | 72.4 | lower | 342.94 |
-| Technology ETF | QQQ | 200,000 | 63.46 | lower | 718.35999 |
-| International | EWZ | 200,000 | 79.29 | lower | 41.93 |
-| Broad market | SPY | 200,000 | 66.61 | lower | 766.47998 |
+| Health care | PFE | 200,000 | 83.96 | lower | 30.215 |
+| Technology equity | MSFT | 200,000 | 65.49 | moderate | 532.34998 |
+| Technology ETF | QQQ | 200,000 | 62.76 | lower | 719.21503 |
+| International | EWZ | 200,000 | 80.17 | lower | 42.905 |
+| Broad market | SPY | 200,000 | 66.99 | lower | 769.33002 |
 
 ## Required checks before trading
 
@@ -22,4 +22,4 @@ Equal-weight candidate allocation: 20% each. Total 100%; 5 different securities.
 6. Review potential market-moving news and earnings before entering.
 
 The suggested percentages are an initial experimental allocation, not optimized for a 6-week contest.
-Generated (UTC): 2026-10-20T02:00:21.716498+00:00
+Generated (UTC): 2026-10-20T18:05:50.788800+00:00
