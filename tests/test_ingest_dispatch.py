@@ -27,6 +27,26 @@ class IngestTests(unittest.TestCase):
         result=validate(payload(),ROOT/"data/universe.csv")
         self.assertEqual(result["total"],226)
         self.assertEqual(result["counts"],{"ACCIONES":145,"ETFs":56,"FONDOS":25})
+    def test_nine_column_funds_and_historical_returns(self):
+        data=payload()
+        funds=[r for r in data["rows"] if r["category"]=="FONDOS"]
+        self.assertEqual(len(funds),25)
+        for r in funds:
+            r.update({"last":"$123.45","variation":"","bid_volume":"",
+                      "bid":"","ask_volume":"","ask":"",
+                      "fund_category":"Renta variable",
+                      "return_1y":"8.25%","return_3y":"19.50%",
+                      "return_5y":"27.10%"})
+        result=validate(data,ROOT/"data/universe.csv")
+        funds_clean=[r for r in result["quotes"] if r["category"]=="FONDOS"]
+        self.assertEqual(len(funds_clean),25)
+        self.assertEqual(funds_clean[0]["last"],123.45)
+        self.assertIsNone(funds_clean[0]["ask"])
+        self.assertEqual(funds_clean[0]["return_1y"],8.25)
+        self.assertEqual(funds_clean[0]["return_3y"],19.5)
+        self.assertEqual(funds_clean[0]["return_5y"],27.1)
+        self.assertEqual(funds_clean[0]["fund_category"],"Renta variable")
+
     def test_duplicate_instead_of_etf_is_rejected(self):
         data=payload()
         data["rows"][-1]=dict(data["rows"][0])
