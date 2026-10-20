@@ -163,9 +163,8 @@ async function uploadPrivatePortfolio(payload) {
 async function uploadPrivateDiagnostic(raw) {
   const keys=['category_index','page_index','retries','selected_tab_index',
     'tab_count','visible_rows','numeric_page_buttons','active_page','elapsed_seconds'];
-  const stages=new Set(['BOOT','CATEGORY_NAV','FIRST_PAGE','READ_PAGE','NEXT_PAGE','VALIDATION']);
-  const codes=new Set(['CATEGORY_STATE','PAGE_STATE','ROWS_DUPLICATE',
-    'DOM_TRANSITION_TIMEOUT','PARTIAL_CAPTURE','UNCLASSIFIED']);
+  const stages=new Set(['START','CATEGORY','FIRST_PAGE','READ_PAGE','NEXT_PAGE','UPLOAD']);
+  const codes=new Set(['TABS','PAGINATION','TABLE','TIMEOUT','OTHER']);
   if(!raw || typeof raw!=='object')return {ok:false,reason:'No diagnostic'};
   const stored=await chrome.storage.local.get(['privateRepo','privateToken','privateEnabled','lastDiagnosticAt']);
   if(!stored.privateEnabled||!stored.privateRepo||!stored.privateToken)
@@ -174,8 +173,8 @@ async function uploadPrivateDiagnostic(raw) {
     return {ok:false,reason:'Diagnostic rate limited'};
   const payload={schema_version:1,
     captured_at:new Date().toISOString(),
-    code:codes.has(raw.code)?raw.code:'UNCLASSIFIED',
-    phase:stages.has(raw.phase)?raw.phase:'BOOT'};
+    code:codes.has(raw.code)?raw.code:'OTHER',
+    phase:stages.has(raw.phase)?raw.phase:'START'};
   for(const k of keys){
     const v=raw[k];
     payload[k]=Number.isInteger(v)&&v>=-1&&v<=1000?v:null;
