@@ -1,3 +1,9 @@
+## v2.4.2 — Fondos sin cotización disponible (20/oct/2026)
+
+Actinver publica los 25 Fondos con emisora válida pero sin último precio ni postura de venta. Antes `validRows` exigía ambos precios y rechazaba toda la categoría, impidiendo concluir la sincronización de 226 registros. Ahora se exige un símbolo por fila, único en la página; los valores ausentes se pasan sin inventar datos y GitHub los convierte en `null`. La validación completa por categoría y universo sigue en el receptor público.
+
+La regresión `tests/test_collector_ui.js` simula retraso en Angular, paginación en bloques de cuatro y 25 fondos sin precios. El código de cotizaciones no ejecuta operaciones.
+
 ## v2.4.1 — Arreglo reproducido con el diagnóstico privado (20/oct/2026)
 
 El registro privado señaló fallo READ_PAGE, categoría ETFs (índice 1), página 1. La interfaz Angular cambia visualmente de pestaña y reinicia la paginación antes de reemplazar las filas de la tabla.
