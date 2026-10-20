@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'browser/brave-extension/**'
+      - 'tests/test_collector_ui.js'
       - '.github/workflows/package-extension.yml'
   workflow_dispatch:
 
