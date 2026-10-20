@@ -51,8 +51,13 @@ const chrome={runtime:{sendMessage:async payload=>{
   if(payload.type==='COLLECT_FAILED'){failed=payload.reason;return {ok:true};}
   return {ok:true};
 }}};
+let simulatedMs=Date.UTC(2026,9,20,14,0,0);
+class SimDate extends Date {
+  constructor(...args){super(...(args.length?args:[simulatedMs]));}
+  static now(){return simulatedMs;}
+}
 const context={document,chrome,console:{log:()=>{},error:()=>{}},
-  setTimeout(fn){fn();},Promise,Date,Set,JSON};
+  setTimeout(fn,ms=0){simulatedMs+=ms;fn();},Promise,Date:SimDate,Set,JSON};
 (async()=>{
   vm.runInNewContext(collector,context,{timeout:3000});
   for(let i=0;i<500&&!done&&!failed;i++)await new Promise(setImmediate);
