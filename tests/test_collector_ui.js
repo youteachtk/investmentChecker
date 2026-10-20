@@ -1,85 +1,118 @@
-// Tests for UI-structure based collection: NO ticker names, catalog membership,
-// or alphabetical order are used to decide when category/page transitions finish.
+// Real Actinver Capitales DOM contract, recorded 2026-10-20 from user inspector.
+// Angular Material components, tab-btn.active parent and app-paginator .btn-pages.
+// No assumed ticker names or fixed first symbols.
 'use strict';
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
-const collector=fs.readFileSync('browser/brave-extension/collector.js','utf8');
-for(const disallowed of ['AAXJ','AA1','ACTDUAL','CATALOG','SETS','findTab']){
-  assert.equal(collector.includes(disallowed),false,'Name-anchored collection has returned: '+disallowed);
+const src=fs.readFileSync('browser/brave-extension/collector.js','utf8');
+for(const obsolete of ['const CATALOG=','AAXJ','AA1','ACTDUAL',
+  'findTab(name)','table tbody tr']) {
+  assert.equal(src.includes(obsolete),false,'Old selector/catalog logic: '+obsolete);
 }
-const groups=[145,56,25].map((len,i)=>
-  Array.from({length:len},(_,j)=>'INSTR_'+i+'_'+String(j+1).padStart(3,'0')));
-let category=0,page=1,clicks=0,delaySwitch=0;
-let captured=null,error=null,progress=[];
-const rect=(top,left,width,height)=>({top,left,width,height,bottom:top+height});
-const sharedParent={};
-function makeButton(label,click,options={}) {
-  return {
-    innerText:label,click:click||(()=>{}),disabled:false,
-    parentElement:options.parent||null,
-    getBoundingClientRect:()=>rect(options.top||0,options.left||0,options.width||60,options.height||25),
-    getClientRects:()=>[{}],
-    getAttribute:()=>null,
-    classList:{contains:k=>k==='active'&&!!options.active}
-  };
-}
-const tabs=[0,1,2].map(i=>makeButton('GROUP_'+i,()=>{
-  clicks++;
-  // The first two attempts to reach group 2 leave the old table unchanged.
-  if(i===1 && category===0 && delaySwitch<2){delaySwitch++;return;}
-  category=i;page=1;
-},{parent:sharedParent,top:200,left:i*320,width:300,height:38}));
-let pagerParent=null;
-function pager() {
-  const max=Math.ceil(groups[category].length/10);
-  const els=[makeButton('Primera',()=>page=1)];
-  for(let p=1;p<=max;p++)els.push(makeButton(String(p),()=>page=p,{active:page===p}));
-  els.push(makeButton('Última',()=>page=max));
-  for(const el of els)el.parentElement=pagerParent;
-  return els;
-}
-pagerParent={querySelectorAll:()=>pager(),classList:{contains:()=>false}};
-const table={
-  getClientRects:()=>[{}],
-  getBoundingClientRect:()=>rect(360,100,900,250)
-};
-const document={
-  querySelector:()=>null,
-  querySelectorAll(s) {
-    if(s==='button') return [...tabs,...pager()];
-    if(s==='[role="tablist"]'||s==='[role="tab"]') return [];
-    if(s==='table') return [table];
-    if(s==='table tbody tr')return groups[category]
-      .slice((page-1)*10,page*10).map(ticker=>({
-        getClientRects:()=>[{}],
-        querySelectorAll:()=>['','',ticker,'100.00','-1.00','100','99.80','100','100.20']
-          .map(innerText=>({innerText}))
+const tickers=[145,56,25].map((size,g)=>
+  Array.from({length:size},(_,j)=>'S'+g+'_'+String(j+1).padStart(4,'0')));
+let state={category:0,page:1,window:0,stalledETF:0,arrowClicks:0};
+let captured=null,error=null,now=Date.UTC(2026,9,20,16);
+const visible=()=>[{}];
+const cells=['Fav','Información','Emisora','Precio','% Variación','Volumen Compra',
+  'Precio de Compra','Volumen de Venta','Precio de Venta','Comprar o vender'];
+const rows=()=>tickers[state.category]
+  .slice((state.page-1)*10,state.page*10)
+  .map(symbol=>({
+    getClientRects:visible,
+    querySelectorAll:sel=>{
+      assert.equal(sel,'td');
+      // Deliberately different buy / sell volumes and price fields,
+      // including misleading mat-column classes from actual user report.
+      const data=['*','Detalle',symbol,'$100.00','1.00%','123','$99.00','555','$101.00','Operar'];
+      return data.map((innerText,i)=>({
+        innerText,
+        classList:{contains:name=>i===7?name==='mat-column-precioVenta':
+          i===8?name==='mat-column-venta':false}
       }));
-    throw Error('Selector unexpected: '+s);
-  }
+    }
+  }));
+const table={
+  getClientRects:visible,
+  querySelectorAll:sel=>sel==='thead th'?cells.map(innerText=>({innerText})):
+    sel==='tbody tr'?rows():[]
 };
+const categories=[0,1,2].map(i=>({
+  getClientRects:visible,
+  classList:{contains:name=>name==='active'&&state.category===i},
+  querySelector:sel=>{
+    assert.equal(sel,'button');
+    return {disabled:false,click(){
+      if(i===1&&state.category===0&&state.stalledETF++===0)return;
+      state.category=i;state.page=1;state.window=0;
+    }};
+  }
+}));
+const makePage=n=>({
+  innerText:String(n),getClientRects:visible,disabled:false,
+  classList:{contains:key=>key==='active'&&state.page===n},
+  click(){state.page=n}
+});
+const left={
+  innerText:'',getClientRects:visible,disabled:false,
+  click(){state.window=Math.max(0,state.window-1)}
+};
+const right={
+  innerText:'',getClientRects:visible,disabled:false,
+  click(){state.arrowClicks++;state.window++}
+};
+const buttonsWindow=()=>[
+  left,
+  ...Array.from({length:Math.min(4,Math.ceil(tickers[state.category].length/10)-
+    state.window*4)},(_,j)=>makePage(state.window*4+j+1)),
+  right
+];
+const paginator={
+  getClientRects:visible,
+  querySelector:sel=>{
+    if(sel==='button.btn-first-page')return {
+      get disabled(){return state.page===1;},
+      click(){state.page=1;state.window=0}
+    };
+    if(sel==='.btn-pages')return {querySelectorAll:()=>buttonsWindow()};
+    return null;
+  },
+  querySelectorAll:()=>buttonsWindow()
+};
+const root={
+  querySelectorAll:sel=>sel==='div.tab-btn'?categories:
+    sel==='app-tabla-material table.table-capitales'?[table]:[],
+  querySelector:sel=>sel==='app-paginator'?paginator:null
+};
+const document={querySelector:sel=>sel==='app-capitales'?root:null};
 const chrome={runtime:{sendMessage:async msg=>{
-  if(msg.type==='COLLECT_DONE'){captured=msg.payload;return {ok:true};}
-  if(msg.type==='COLLECT_FAILED'){error=msg.reason;return {ok:true};}
-  if(msg.type==='PROGRESS')progress.push(msg.status);
+  if(msg.type==='COLLECT_DONE')captured=msg.payload;
+  if(msg.type==='COLLECT_FAILED')error=msg.reason;
   return {ok:true};
 }}};
-let now=Date.UTC(2026,9,20,15);
-class FakeDate extends Date{constructor(...args){super(...(args.length?args:[now]));}static now(){return now;}}
-const context={document,chrome,Date:FakeDate,Promise,Set,JSON,
-  console:{log:()=>{},error:()=>{}},setTimeout:(fn,ms=0)=>{now+=ms;fn();}};
+class FakeDate extends Date{
+  constructor(...args){super(...(args.length?args:[now]));}
+  static now(){return now;}
+}
 (async()=>{
-  vm.runInNewContext(collector,context,{timeout:4000});
-  for(let i=0;i<2500&&!captured&&!error;i++)await new Promise(setImmediate);
-  assert.equal(error,null,'Collection error: '+error);
-  assert.ok(captured,'Collector did not complete');
+  await vm.runInNewContext(src,{
+    document,chrome,location:{hash:'#/capitales'},Date:FakeDate,
+    console:{log(){},error(){}},Promise,JSON,Set,
+    setTimeout:(fn,ms=0)=>{now+=ms;fn();}
+  },{timeout:5000});
+  assert.equal(error,null,error||'Collector failed');
+  assert.ok(captured,'No quotes captured');
   assert.equal(captured.rows.length,226);
-  assert.deepEqual([0,1,2].map(i=>captured.rows.filter(x=>x.category===
-    ['ACCIONES','ETFs','FONDOS'][i]).length),[145,56,25]);
-  assert.equal(captured.rows[145].symbol,'INSTR_1_001');
-  assert.ok(progress.some(x=>x.includes('reintento')),'Category retry not exercised');
-  assert.ok(delaySwitch>=1,'Stale tab transition was not simulated');
-  assert.ok(clicks>=5,'Stale tab retry did not occur');
-  console.log('PASS UI: 226 rows, category transitions without any expected symbol name');
+  assert.deepEqual(['ACCIONES','ETFs','FONDOS'].map(c=>
+    captured.rows.filter(x=>x.category===c).length),[145,56,25]);
+  assert.equal(captured.rows[0].symbol,'S0_0001');
+  assert.equal(captured.rows[145].symbol,'S1_0001');
+  assert.equal(captured.rows[0].bid_volume,'123');
+  assert.equal(captured.rows[0].bid,'$99.00');
+  assert.equal(captured.rows[0].ask_volume,'555');
+  assert.equal(captured.rows[0].ask,'$101.00');
+  assert.ok(state.arrowClicks>=3,'Never advanced past pages 4/8/12');
+  assert.ok(state.stalledETF>=1,'Delayed category load was not simulated');
+  console.log('PASS: real Angular selectors; all 226; arrows and header mappings');
 })().catch(e=>{console.error(e);process.exitCode=1;});
