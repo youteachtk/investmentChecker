@@ -49,6 +49,12 @@ def validate(payload, universe_path):
         entry={"category":cat,"symbol":sym}
         for k in FIELDS[2:]:
             entry[k]=parse_num(r[k])
+        if cat=="FONDOS":
+            # Fund tables have a different schema: category and 1/3/5-year
+            # historical returns, not order-book bid/ask data.
+            entry["fund_category"]=str(r.get("fund_category") or "").strip()[:100]
+            for k in ("return_1y","return_3y","return_5y"):
+                entry[k]=parse_num(r.get(k))
         cleaned.append(entry)
     if dict(counts)!=EXPECTED or found!=universe:
         raise ValueError(f"Unverified category membership: {dict(counts)}")
