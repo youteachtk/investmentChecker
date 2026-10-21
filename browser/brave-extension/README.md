@@ -1,3 +1,11 @@
+## v2.6.0 — Mi portafolio en su URL real (21/oct/2026)
+
+La ruta real suministrada por el usuario es **https://www.retoactinver.com/RetoActinver/#/portafolio**. El recolector anterior no tenía permiso para `www.retoactinver.com` y buscaba un menú ficticio llamado «Tu inversión». Ahora se concede el permiso específico al host con `www`, se abre directamente `#/portafolio` en una pestaña secundaria vinculada a la sesión, se espera la carga y se lee únicamente la cartera permitida. Si Actinver redirige a otra ruta, se registra un fallo sin afirmar éxito. Capitales mantiene su captura de 226 instrumentos; si se abre desde otra página, conserva el host de la pestaña de origen.
+
+Las carteras realmente vacías son válidas si el DOM presenta una tabla reconocible sin registros y el balance invertido resulta coherente con cero posiciones. No se fabrican posiciones, importes ni órdenes. El motor de decisiones privado también permite cero tenencias con esa comprobación; **las compras siguen sujetas a precios recientes y aprobación del usuario**.
+
+El test `tests/test_direct_portfolio.js` protege la URL, el permiso de dominio y la detección de redirecciones. **Pendiente:** confirmar la primera captura privada real desde Brave. Al incorporar el permiso `https://www.retoactinver.com/*`, Brave puede pedir que el usuario lo apruebe al recargar la extensión.
+
 ## 2.5.1 (21/oct/2026) — Navegación Tu inversión
 
 El diagnóstico privado real de 2.5.0 registró ausencia tanto de resumen como de posiciones. El navegador privado exigía reconocer una tabla específica antes de aceptar el enlace de Tu inversión, aunque éste podía navegar directamente a la cartera o abrir un submenú. La navegación ahora distingue ambas posibilidades, reconoce un cambio de ruta y permite inspeccionar encabezados todavía desconocidos sin confundir el clic con una captura exitosa. No accede a controles de comprar/vender.
