@@ -25,7 +25,7 @@ async function getTabDiagnostics(){
   return {allCount,matchCount:matches.length,sitePermission,diagnostic};
 }
 
-const MONITOR_URL = 'https://retoactinver.com/RetoActinver/#/capitales';
+const MONITOR_URL = 'https://www.retoactinver.com/RetoActinver/#/capitales';
 const isMonitorTab = t => /\/#\/capitales(?:[/?#]|$)/i.test(t?.url || '');
 async function waitForPage(tabId, maxMs=25000) {
   const until=Date.now()+maxMs;
@@ -103,7 +103,16 @@ async function startSync(tabId = null) {
       ||found.matches.find(t=>isMonitorTab(t)&&t.active)
       ||found.matches.find(isMonitorTab);
     if(!tab){
-      tab=await chrome.tabs.create({url:MONITOR_URL,active:false});
+      // Use the already-authenticated Actinver origin for Capitales.
+      const originTab=found.matches.find(t=>t.active)||found.matches[0];
+      const origin=/^https:\/\/(?:www\.)?retoactinver\.com(?:\/|$)/i
+        .exec(originTab.url||originTab.pendingUrl||'')?.[0];
+      const host=origin&&origin.includes('www.')?
+        'https://www.retoactinver.com':'https://retoactinver.com';
+      const marketUrl=host+'/RetoActinver/#/capitales';
+      tab=await chrome.tabs.create({
+        url:marketUrl,openerTabId:originTab.id,active:false
+      });
       await chrome.storage.local.set({syncTemporaryTabId:tab.id,syncTempRunId:runId});
       if(!(await waitForPage(tab.id)))throw Error('No se pudo abrir Monitores.');
     }
