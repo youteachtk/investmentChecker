@@ -289,7 +289,7 @@ async function runPortfolioSync(marketTabId) {
       private_portfolio:true,phase:'PRIVATE_DONE',code,
       summary_detected:freshSummary,
       holdings_detected:freshHoldings,
-      visible_tables:null
+      navigation_step:navStep,visible_tables:null
     });
   }catch(error){
     console.warn('[investmentChecker private diagnostics]',error.message);
