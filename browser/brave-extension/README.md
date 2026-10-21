@@ -1,3 +1,11 @@
+## 2.5.1 (21/oct/2026) — Navegación Tu inversión
+
+El diagnóstico privado real de 2.5.0 registró ausencia tanto de resumen como de posiciones. El navegador privado exigía reconocer una tabla específica antes de aceptar el enlace de Tu inversión, aunque éste podía navegar directamente a la cartera o abrir un submenú. La navegación ahora distingue ambas posibilidades, reconoce un cambio de ruta y permite inspeccionar encabezados todavía desconocidos sin confundir el clic con una captura exitosa. No accede a controles de comprar/vender.
+
+El lector de balance busca importes junto a etiquetas aunque Angular los renderice en hermanos o contenedores separados, y conserva la validación de conciliación de totales. El diagnóstico privado ahora registra además la fase de navegación, nunca saldos ni posiciones sin depurar. Las regresiones prueban enlaces directos y submenús, un resumen y posiciones ficticias, y las 226 cotizaciones públicas.
+
+**Pendiente de confirmación real:** todavía se necesita comprobar que el navegador del usuario cree `actinver/portfolio-latest.json`. El ZIP no actualiza Brave automáticamente; no se enviarán operaciones de inversión.
+
 ## v2.5.0 — Sincronización privada verificable (21/oct/2026)
 
 Mantiene sin cambios la captura pública de Capitales 2.4.3, que se confirmó 226/226 en la sesión real. Corrige el flujo privado: reconoce el menú Angular «Tu inversión» con iconos y controles anidados; permite inspeccionar la pantalla a la que se navegó aunque tenga otros nombres de columnas; lee etiquetas de saldo con iconos de ayuda; acepta variantes de encabezado de cantidad y títulos; espera a que Angular cargue y confirma la respuesta real del lector, no solo la inyección.
