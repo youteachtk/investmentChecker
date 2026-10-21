@@ -254,6 +254,7 @@ async function runPortfolioSync(marketTabId) {
         world:'ISOLATED'
       });
       const state=nav?.[0]?.result;
+      navStep=typeof state?.step==='string'?state.step:'navigation-error';
       navOK=state?.found===true;
       if(navOK){
         // Navigation alone is not success: the reader must actually return
