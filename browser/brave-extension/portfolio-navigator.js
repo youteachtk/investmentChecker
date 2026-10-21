@@ -38,7 +38,10 @@
   if(await waitForHoldings(900)) return {found:true,step:'already-open'};
   const labelled=label=>[...document.querySelectorAll('span,div,li,p')].filter(visible)
     .find(e=>e.children.length===0 && norm(e.textContent)===label);
-  const menu=await findEventually(()=>controls().find(e=>norm(e.innerText||e.textContent)==='tu inversion')
+  const menu=await findEventually(()=>controls().find(e=>{
+    const label=norm(e.innerText||e.textContent);
+    return label.startsWith('tu inversion') && label.length<40;
+  })
     ||labelled('tu inversion')?.closest('button,a,[role="button"],[role="menuitem"]')
     ||labelled('tu inversion')?.parentElement,15000);
   if(!menu || !safe(menu)) return {found:false,reason:'La navegación Tu inversión no apareció tras cargar la sesión'};
@@ -51,8 +54,11 @@
     return /mi portafolio|portafolio|mi cartera|cartera|mis inversiones|mis posiciones|posiciones|mis acciones|inversiones/.test(label+' '+href)
       && label!=='tu inversion' && safe(e);
   };
-  const option=await findEventually(()=>controls().find(isLink) || [...document.querySelectorAll('span,li,div')].filter(visible)
-    .find(e=>e.children.length===0 && isLink(e)),10000);
+  const option=await findEventually(()=>controls().find(isLink) ||
+    [...document.querySelectorAll('span,li,div')].filter(visible)
+      .find(e=>e.children.length===0 && isLink(e))?.closest(
+        'a,button,[role="menuitem"],[role="button"],[routerlink],mat-list-item'
+      ),10000);
   if(!option) return {found:false,reason:'El menú no mostró un enlace reconocido de posiciones'};
   const oldRoute=location.hash;
   option.click();
