@@ -236,7 +236,7 @@ async function runPortfolioSync(marketTabId) {
   if(!settings.privateEnabled||!settings.privateRepo||!settings.privateToken)
     return {message:'La cartera privada todavía no está configurada.'};
   await privateState('Leyendo resumen y posiciones de inversión…');
-  let navOK=false,navError=false;
+  let navOK=false,navError=false,navStep='not-attempted';
   let initial=null,second=null;
   try{initial=await capturePrivatePortfolio(marketTabId);}
   catch(e){initial={ok:false,error:'Summary reader failed'};}
