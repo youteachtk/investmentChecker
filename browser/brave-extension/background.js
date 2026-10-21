@@ -109,10 +109,13 @@ async function startSync(tabId = null) {
     }
     // Start the private read-only portfolio sync independently of market quotes.
     // A delayed ETF table must never block positions or available balance.
+    // Keep the source monitor tab alive until the private navigator finishes.
+    // Otherwise the public quote uploader may close it while the portfolio
+    // reader still uses this tab as its opener, aborting Tu inversion.
     void runPortfolioSync(tab.id)
       .then(result=>chrome.storage.local.set({privateSyncStatus:result?.message||'Lectura privada completada.'}))
-      .catch(error=>chrome.storage.local.set({privateSyncStatus:'Cartera: '+error.message}));
-    void injectQuotesWithRetry(tab.id,runId);
+      .catch(error=>chrome.storage.local.set({privateSyncStatus:'Cartera: '+error.message}))
+      .finally(()=>{void injectQuotesWithRetry(tab.id,runId);});
     return {ok:true};
   }catch(error){
     await setStatus('Error al iniciar lectura: '+error.message,false);
