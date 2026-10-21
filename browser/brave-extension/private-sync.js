@@ -225,37 +225,76 @@ async function uploadPrivateDiagnostic(raw) {
 let privateDiscoveryBusy=false;
 async function runPortfolioSync(marketTabId) {
   await recoverMisplacedPrivateToken();
-  const settings=await chrome.storage.local.get(['privateEnabled','privateRepo','privateToken']);
-  if(!settings.privateEnabled || !settings.privateRepo || !settings.privateToken)
+  const settings=await chrome.storage.local.get([
+    'privateEnabled','privateRepo','privateToken']);
+  if(!settings.privateEnabled||!settings.privateRepo||!settings.privateToken)
     return {message:'La cartera privada todavía no está configurada.'};
-  await privateState('Leyendo saldo y posiciones en segundo plano…');
-  await capturePrivatePortfolio(marketTabId);
+  await privateState('Leyendo resumen y posiciones de inversión…');
+  let navOK=false,navError=false;
+  let initial=null,second=null;
+  try{initial=await capturePrivatePortfolio(marketTabId);}
+  catch(e){initial={ok:false,error:'Summary reader failed'};}
   let cache=(await chrome.storage.local.get('privateCache')).privateCache;
-  const freshHoldings=cache?.holdings && Date.now()-Date.parse(cache.holdings.at)<PRIVATE_TTL_MS;
-  if(!freshHoldings && !privateDiscoveryBusy) {
+  let freshHoldings=!!(cache?.holdings&&
+    Date.now()-Date.parse(cache.holdings.at)<PRIVATE_TTL_MS);
+  if(!freshHoldings&&!privateDiscoveryBusy){
     privateDiscoveryBusy=true;
     let tmp=null;
-    try {
-      // A read-only clone avoids disturbing the Actinver page the user is using.
+    try{
       tmp=await chrome.tabs.create({url:MONITOR_URL,active:false});
-      if(!(await waitForPage(tmp.id))) throw Error('No se pudo abrir la vista de inversiones.');
+      if(!(await waitForPage(tmp.id)))throw Error('Portfolio tab did not load');
       const nav=await chrome.scripting.executeScript({
-        target:{tabId:tmp.id},files:['portfolio-navigator.js'],world:'ISOLATED'
+        target:{tabId:tmp.id},files:['portfolio-navigator.js'],
+        world:'ISOLATED'
       });
-      const found=nav?.[0]?.result;
-      if(found?.found) await capturePrivatePortfolio(tmp.id);
-      else await privateState('No se pudo identificar la tabla de posiciones en la sesión actual. Se reintentará.');
-    }catch(err) {
-      await privateState('Posiciones pendientes: '+err.message);
-    }finally {
+      const state=nav?.[0]?.result;
+      navOK=state?.found===true;
+      if(navOK){
+        // Navigation alone is not success: the reader must actually return
+        // positions and the private repository must acknowledge the upload.
+        second=await capturePrivatePortfolio(tmp.id);
+      }else{
+        navError=true;
+      }
+    }catch(e){
+      navError=true;
+    }finally{
       if(tmp)try{await chrome.tabs.remove(tmp.id);}catch(_){}
       privateDiscoveryBusy=false;
     }
   }
-  cache=(await chrome.storage.local.get(['privateCache','privateLastSync','privateSyncStatus']));
-  if(cache.privateLastSync && Date.now()-cache.privateLastSync < PRIVATE_TTL_MS)
-    return {message:'Cartera privada sincronizada · '+stamp()};
-  return {message:'Cartera privada pendiente de lectura; nueva búsqueda automática en el siguiente ciclo.'};
+  const state=await chrome.storage.local.get([
+    'privateCache','privateLastSync']);
+  cache=state.privateCache;
+  const freshSummary=!!(cache?.summary&&
+    Date.now()-Date.parse(cache.summary.at)<PRIVATE_TTL_MS);
+  freshHoldings=!!(cache?.holdings&&
+    Date.now()-Date.parse(cache.holdings.at)<PRIVATE_TTL_MS);
+  const hasUpload=!!(state.privateLastSync&&
+    Date.now()-state.privateLastSync<PRIVATE_TTL_MS);
+  const code=hasUpload?'PRIVATE_OK':
+    !freshSummary?'PRIVATE_SUMMARY_MISSING':
+    !freshHoldings?(navError?'PRIVATE_NAV_FAILED':'PRIVATE_HOLDINGS_MISSING'):
+    'PRIVATE_UPLOAD_FAILED';
+  try{
+    await uploadPrivateDiagnostic({
+      private_portfolio:true,phase:'PRIVATE_DONE',code,
+      summary_detected:freshSummary,
+      holdings_detected:freshHoldings,
+      visible_tables:null
+    });
+  }catch(error){
+    console.warn('[investmentChecker private diagnostics]',error.message);
+  }
+  if(hasUpload)return {message:'Cartera privada sincronizada · '+stamp()};
+  const label={
+    PRIVATE_SUMMARY_MISSING:'No se encontraron saldos en Capitales.',
+    PRIVATE_NAV_FAILED:'No se logró abrir automáticamente Tu inversión.',
+    PRIVATE_HOLDINGS_MISSING:'Tu inversión abrió, pero falta reconocer sus posiciones.',
+    PRIVATE_UPLOAD_FAILED:'Lectura parcial; el archivo privado aún no se confirmó.'
+  }[code]||'Captura privada pendiente.';
+  await privateState(label+' Se guardó un diagnóstico técnico privado.');
+  return {message:label};
 }
 
 // Silent opportunistic capture whenever the authenticated SPA changes screens;
