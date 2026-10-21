@@ -91,7 +91,7 @@ function sanitizePrivateCapture(raw) {
       .map(k=>[k,raw.summary[k]])
   );
   let holdings=null;
-  if (Array.isArray(raw.holdings) && raw.holdings.length<=100 && raw.holdings.length>0) {
+  if (Array.isArray(raw.holdings) && raw.holdings.length<=100) {
     holdings=raw.holdings.map(v=>{
       const symbol=String(v.symbol||'').trim().toUpperCase();
       if (!/^[A-Z0-9 .&+/-]{1,48}$/.test(symbol) || !Number.isFinite(v.quantity) || v.quantity<=0)
@@ -130,6 +130,11 @@ async function acceptPrivateCapture(msg,sender) {
     return {ok:true,recentlySaved:true};
   const payload={schema_version:1,captured_at:new Date().toISOString(),
     summary:cache.summary.values,holdings:cache.holdings.values};
+  // An empty table is only compatible with a negligible invested balance.
+  // Never interpret unrecognized or missing rows as a liquidated portfolio.
+  if(payload.holdings.length===0 &&
+    payload.summary.investments>Math.max(100,payload.summary.total_value*.01))
+    return {ok:false,error:'Las inversiones declaradas no concuerdan con una cartera sin posiciones.'};
   if(Math.abs(payload.summary.total_value-payload.summary.investments-payload.summary.buying_power-(payload.summary.unsettled||0))>Math.max(100,payload.summary.total_value*.02))
     return {ok:false,error:'Resumen inconsistente. No se enviaron datos.'};
   if(privateUploading)return {ok:true,pending:true};
