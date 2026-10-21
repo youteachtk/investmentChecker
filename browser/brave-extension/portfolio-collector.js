@@ -19,49 +19,63 @@
     return /^[-+]?\d+(?:\.\d+)?$/.test(v) ? Number(v) : null;
   };
   function summary() {
-    const labels = {
-      total_value: 'Valuación total',
-      investments: 'Inversiones',
-      buying_power: 'Poder de compra',
-      unsettled: 'Por liquidar',
-      change_mxn: 'Variación (MXN)'
+    const labels={
+      total_value:'Valuación total',investments:'Inversiones',
+      buying_power:'Poder de compra',unsettled:'Por liquidar',
+      change_mxn:'Variación (MXN)'
     };
-    const found = {};
-    const leaves = [...document.querySelectorAll('span,div,p,small,strong,dt,label')].filter(
-      e => visible(e) && norm(e.textContent).length < 60
-    );
-    for (const [key, label] of Object.entries(labels)) {
-      const leaf = leaves.find(e => {
-        const actual=canon(e.textContent);
-        const target=canon(label);
-        return actual===target || (actual.startsWith(target) && actual.length<=target.length+6);
-      });
-      if (!leaf) continue;
-      let node = leaf;
-      for (let i = 0; node && i < 4; i++, node = node.parentElement) {
-        const t = norm(node.innerText);
-        const p = t.toLowerCase().indexOf(label.toLowerCase());
-        if (p < 0) continue;
-        const tail = t.slice(p + label.length);
-        const n = money(tail);
-        if (n !== null && Number.isFinite(n)) {found[key] = n; break;}
+    const textOf=e=>norm(e?.innerText||e?.textContent);
+    const elements=[...document.querySelectorAll(
+      'span,div,p,small,strong,dt,label,mat-card,mat-card-title,mat-card-content'
+    )].filter(e=>visible(e)&&norm(e.textContent).length<140);
+    const found={};
+    for(const [key,label] of Object.entries(labels)){
+      const target=canon(label);
+      const candidates=elements.filter(e=>canon(e.textContent).startsWith(target))
+        .sort((a,b)=>norm(a.textContent).length-norm(b.textContent).length);
+      for(const start of candidates.slice(0,8)){
+        const nodes=[];
+        let cur=start;
+        for(let k=0;cur&&k<5;k++,cur=cur.parentElement)nodes.push(cur);
+        nodes.push(start.nextElementSibling,start.parentElement?.nextElementSibling);
+        for(const node of nodes){
+          if(!node)continue;
+          const t=textOf(node),flat=canon(t),idx=flat.indexOf(target);
+          // If the label and value are in separate siblings, permit value-only text.
+          const after=idx>=0?flat.slice(idx+target.length,idx+target.length+100):
+            (node===start.nextElementSibling||node===start.parentElement?.nextElementSibling)
+              ?flat.slice(0,50):'';
+          const cut=after.search(/valuacion total|inversiones|poder de compra|por liquidar/);
+          const candidate=cut>0?after.slice(0,cut):after;
+          const value=money(candidate);
+          if(value!==null && Number.isFinite(value)){
+            found[key]=value;break;
+          }
+        }
+        if(Number.isFinite(found[key]))break;
       }
     }
-    const percentLeaf = leaves.find(e => canon(e.textContent).startsWith('variacion (%)') &&
-      canon(e.textContent).length<=18);
-    if (percentLeaf) {
-      let node = percentLeaf;
-      for (let i = 0; node && i < 4; i++, node = node.parentElement) {
-        const t = norm(node.innerText);
-        const m = t.match(/Variaci[oó]n\s*\(%\)[^\d+-]*([-+]?\s*\d+(?:\.\d+)?)\s*%/i);
-        if (m) {found.change_pct = Number(m[1].replace(/\s/g, '')); break;}
-      }
+    // The labelled values can be rendered in an Angular host not matched by
+    // the DOM fragment above. Only inspect a short window after exact labels;
+    // never export body text, HTML, or unrecognized fields.
+    const body=canon(document.body?.innerText||'');
+    for(const [key,label] of Object.entries(labels)){
+      if(Number.isFinite(found[key])||!body)continue;
+      const target=canon(label),at=body.indexOf(target);
+      if(at<0)continue;
+      const tail=body.slice(at+target.length,at+target.length+85);
+      const next=tail.search(/valuacion total|inversiones|poder de compra|por liquidar/);
+      const value=money(next>=0?tail.slice(0,next):tail);
+      if(value!==null)found[key]=value;
     }
-    // Fail closed: a portfolio summary must have all three main figures.
-    if (['total_value','investments','buying_power'].every(k => Number.isFinite(found[k])) &&
-        found.total_value >= 0 && found.buying_power >= 0 && found.investments >= 0 &&
-        Math.abs(found.total_value - found.investments - found.buying_power - (found.unsettled || 0)) < Math.max(100, found.total_value * 0.02))
+    // Reconciliation matters more than any particular Angular container.
+    if(['total_value','investments','buying_power']
+        .every(k=>Number.isFinite(found[k])) &&
+      found.total_value>=0 && found.investments>=0 && found.buying_power>=0 &&
+      Math.abs(found.total_value-found.investments-found.buying_power-
+        (found.unsettled||0)) < Math.max(100,found.total_value*.02)){
       return found;
+    }
     return null;
   }
 
