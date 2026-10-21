@@ -195,10 +195,8 @@ async function uploadPrivateDiagnostic(raw) {
     payload.private_portfolio=true;
     payload.summary_detected=raw.summary_detected===true;
     payload.holdings_detected=raw.holdings_detected===true;
-    const navSteps=new Set(['not-attempted','already-open','menu-missing',
-      'submenu-missing','menu-route','menu-table','menu-holdings',
-      'submenu-route','submenu-table','submenu-holdings','submenu-inspect',
-      'navigation-error']);
+    const navSteps=new Set(['not-attempted','tab-create','tab-load',
+      'direct-portfolio','direct-redirect','navigation-error']);
     payload.navigation_step=navSteps.has(raw.navigation_step)?
       raw.navigation_step:'not-attempted';
     // This field counts DOM tables, never the customer's holdings.
@@ -228,6 +226,10 @@ async function uploadPrivateDiagnostic(raw) {
 
 // One unified market + portfolio workflow. All extra navigation happens in an
 // inactive temporary tab; Actinver's trading UI is never interacted with.
+// The actual authenticated Actinver destination is "Mi portafolio".
+ // Never guess by clicking menus: open the verified URL directly in a
+ // read-only background tab, without sending any portfolio data publicly.
+const PORTFOLIO_URL='https://www.retoactinver.com/RetoActinver/#/portafolio';
 let privateDiscoveryBusy=false;
 async function runPortfolioSync(marketTabId) {
   await recoverMisplacedPrivateToken();
@@ -235,50 +237,52 @@ async function runPortfolioSync(marketTabId) {
     'privateEnabled','privateRepo','privateToken']);
   if(!settings.privateEnabled||!settings.privateRepo||!settings.privateToken)
     return {message:'La cartera privada todavía no está configurada.'};
-  await privateState('Leyendo resumen y posiciones de inversión…');
-  let navOK=false,navError=false,navStep='not-attempted';
-  let initial=null,second=null;
-  try{initial=await capturePrivatePortfolio(marketTabId);}
-  catch(e){initial={ok:false,error:'Summary reader failed'};}
+  await privateState('Leyendo saldos y Mi portafolio en segundo plano…');
+  let readSummary=null,readHoldings=null;
+  let navError=false,navStep='not-attempted';
+  try{readSummary=await capturePrivatePortfolio(marketTabId);}
+  catch(error){readSummary={ok:false,error:'No se pudo leer el resumen'};}
   let cache=(await chrome.storage.local.get('privateCache')).privateCache;
-  let freshHoldings=!!(cache?.holdings&&
+  let freshHoldings=!!(cache?.holdings &&
     Date.now()-Date.parse(cache.holdings.at)<PRIVATE_TTL_MS);
   if(!freshHoldings&&!privateDiscoveryBusy){
     privateDiscoveryBusy=true;
-    let tmp=null;
+    let temporary=null;
     try{
       navStep='tab-create';
-      tmp=await chrome.tabs.create({url:MONITOR_URL,openerTabId:marketTabId,active:false});
-      if(!(await waitForPage(tmp.id)))throw Error('Portfolio tab did not load');
-      const nav=await chrome.scripting.executeScript({
-        target:{tabId:tmp.id},files:['portfolio-navigator.js'],
-        world:'ISOLATED'
+      temporary=await chrome.tabs.create({
+        url:PORTFOLIO_URL,openerTabId:marketTabId,active:false
       });
-      const state=nav?.[0]?.result;
-      navStep=typeof state?.step==='string'?state.step:'navigation-error';
-      navOK=state?.found===true;
-      if(navOK){
-        // Navigation alone is not success: the reader must actually return
-        // positions and the private repository must acknowledge the upload.
-        second=await capturePrivatePortfolio(tmp.id);
-      }else{
+      navStep='tab-load';
+      if(!(await waitForPage(temporary.id)))
+        throw Error('La pestaña privada no terminó de cargar');
+      const landed=await chrome.tabs.get(temporary.id);
+      if(!privateSitePattern.test(landed.url||''))
+        throw Error('La pestaña salió de Actinver');
+      // Hash changes due to a session redirect must not be reported as
+      // successful portfolio navigation.
+      navStep=/#\/portafolio(?:[/?#]|$)/i.test(landed.url||'')?
+        'direct-portfolio':'direct-redirect';
+      if(navStep!=='direct-portfolio'){
         navError=true;
+      }else{
+        readHoldings=await capturePrivatePortfolio(temporary.id);
       }
-    }catch(e){
+    }catch(error){
       navError=true;
     }finally{
-      if(tmp)try{await chrome.tabs.remove(tmp.id);}catch(_){}
+      if(temporary)try{await chrome.tabs.remove(temporary.id);}catch(_){}
       privateDiscoveryBusy=false;
     }
   }
   const state=await chrome.storage.local.get([
     'privateCache','privateLastSync']);
   cache=state.privateCache;
-  const freshSummary=!!(cache?.summary&&
+  const freshSummary=!!(cache?.summary &&
     Date.now()-Date.parse(cache.summary.at)<PRIVATE_TTL_MS);
-  freshHoldings=!!(cache?.holdings&&
+  freshHoldings=!!(cache?.holdings &&
     Date.now()-Date.parse(cache.holdings.at)<PRIVATE_TTL_MS);
-  const hasUpload=!!(state.privateLastSync&&
+  const hasUpload=!!(state.privateLastSync &&
     Date.now()-state.privateLastSync<PRIVATE_TTL_MS);
   const code=hasUpload?'PRIVATE_OK':
     (!freshHoldings&&navError)?'PRIVATE_NAV_FAILED':
@@ -288,8 +292,7 @@ async function runPortfolioSync(marketTabId) {
   try{
     await uploadPrivateDiagnostic({
       private_portfolio:true,phase:'PRIVATE_DONE',code,
-      summary_detected:freshSummary,
-      holdings_detected:freshHoldings,
+      summary_detected:freshSummary,holdings_detected:freshHoldings,
       navigation_step:navStep,visible_tables:null
     });
   }catch(error){
@@ -297,12 +300,12 @@ async function runPortfolioSync(marketTabId) {
   }
   if(hasUpload)return {message:'Cartera privada sincronizada · '+stamp()};
   const label={
-    PRIVATE_SUMMARY_MISSING:'No se encontraron saldos en Capitales.',
-    PRIVATE_NAV_FAILED:'No se logró abrir automáticamente Tu inversión.',
-    PRIVATE_HOLDINGS_MISSING:'Tu inversión abrió, pero falta reconocer sus posiciones.',
-    PRIVATE_UPLOAD_FAILED:'Lectura parcial; el archivo privado aún no se confirmó.'
-  }[code]||'Captura privada pendiente.';
-  await privateState(label+' Se guardó un diagnóstico técnico privado.');
+    PRIVATE_SUMMARY_MISSING:'No se encontraron saldos válidos.',
+    PRIVATE_NAV_FAILED:'Mi portafolio no abrió con la sesión actual.',
+    PRIVATE_HOLDINGS_MISSING:'Mi portafolio abrió, pero aún no se reconocen las posiciones.',
+    PRIVATE_UPLOAD_FAILED:'Se detectaron datos, pero GitHub no confirmó la cartera.'
+  }[code]||'Cartera privada pendiente';
+  await privateState(label+' Diagnóstico guardado solo en GitHub privado.');
   return {message:label};
 }
 
