@@ -28,7 +28,7 @@
     };
     const found = {};
     const leaves = [...document.querySelectorAll('span,div,p,small,strong,dt,label')].filter(
-      e => visible(e) && e.children.length === 0
+      e => visible(e) && norm(e.textContent).length < 60
     );
     for (const [key, label] of Object.entries(labels)) {
       const leaf = leaves.find(e => {
@@ -47,7 +47,8 @@
         if (n !== null && Number.isFinite(n)) {found[key] = n; break;}
       }
     }
-    const percentLeaf = leaves.find(e => norm(e.textContent).toLowerCase() === 'variación (%)');
+    const percentLeaf = leaves.find(e => canon(e.textContent).startsWith('variacion (%)') &&
+      canon(e.textContent).length<=18);
     if (percentLeaf) {
       let node = percentLeaf;
       for (let i = 0; node && i < 4; i++, node = node.parentElement) {
