@@ -81,6 +81,7 @@
 
   function holdings() {
     const out = [];
+    let confirmedEmptyTable=false;
     for (const table of document.querySelectorAll('table,[role="table"]')) {
       if (!visible(table)) continue;
       const head = [...table.querySelectorAll('thead th,[role="columnheader"]')].map(e => canon(e.innerText));
@@ -91,8 +92,12 @@
       const val = head.findIndex(h => /valor actual|valor de mercado|valuacion|importe actual/.test(h));
       const price = head.findIndex(h => /ultimo precio|precio actual|cotizacion/.test(h));
       const records = [...table.querySelectorAll('tbody tr,[role="rowgroup"] [role="row"]')];
+      if(records.length===0)confirmedEmptyTable=true;
       for (const tr of records) {
         if (!visible(tr)) continue;
+        const txt=canon(tr.innerText);
+        if (/sin posiciones|sin inversiones|sin tenencias|no tienes posiciones|no hay posiciones|no tienes inversiones/.test(txt))
+          confirmedEmptyTable=true;
         const cols = [...tr.querySelectorAll('td,[role="cell"]')].map(e => norm(e.innerText));
         if (cols.length <= Math.max(sym,qty)) continue;
         const symbol = cols[sym].toUpperCase().replace(/[ⓘℹ*]/g,'').trim().slice(0,48);
@@ -106,7 +111,8 @@
       }
       if (out.length) break;
     }
-    return out.length && out.length <= 100 ? out : null;
+    return out.length>0 && out.length<=100 ? out :
+      confirmedEmptyTable ? [] : null;
   }
   try {
     // Angular can finish loading its shell before the account values.
@@ -114,8 +120,12 @@
     let foundSummary=null,foundHoldings=null;
     for(let attempt=0;attempt<24;attempt++){
       foundSummary=foundSummary||summary();
-      foundHoldings=foundHoldings||holdings();
-      if(foundSummary && foundHoldings)break;
+      const latestHoldings=holdings();
+      if(Array.isArray(latestHoldings) &&
+         (!Array.isArray(foundHoldings) || latestHoldings.length>foundHoldings.length))
+        foundHoldings=latestHoldings;
+      // A newly rendered empty table might still be loading its real rows.
+      if(foundSummary && Array.isArray(foundHoldings) && foundHoldings.length>0)break;
       if(attempt<23)await new Promise(r=>setTimeout(r,500));
     }
     const result={captured_at:new Date().toISOString(),
