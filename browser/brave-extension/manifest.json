@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.5.0",
-  "description": "Captura pública 226/226 intacta; navegación privada mejorada con confirmación de saldos, posiciones y diagnóstico automático privado.",
+  "version": "2.5.1",
+  "description": "Corrige Tu inversión con ruta directa o submenú Angular; lee saldos adyacentes y registra la etapa exacta del fallo privado.",
   "permissions": [
     "storage",
     "scripting",
