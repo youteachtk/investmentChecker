@@ -247,6 +247,7 @@ async function runPortfolioSync(marketTabId) {
     privateDiscoveryBusy=true;
     let tmp=null;
     try{
+      navStep='tab-create';
       tmp=await chrome.tabs.create({url:MONITOR_URL,openerTabId:marketTabId,active:false});
       if(!(await waitForPage(tmp.id)))throw Error('Portfolio tab did not load');
       const nav=await chrome.scripting.executeScript({
