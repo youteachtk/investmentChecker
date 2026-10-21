@@ -1,3 +1,11 @@
+## v2.5.0 — Sincronización privada verificable (21/oct/2026)
+
+Mantiene sin cambios la captura pública de Capitales 2.4.3, que se confirmó 226/226 en la sesión real. Corrige el flujo privado: reconoce el menú Angular «Tu inversión» con iconos y controles anidados; permite inspeccionar la pantalla a la que se navegó aunque tenga otros nombres de columnas; lee etiquetas de saldo con iconos de ayuda; acepta variantes de encabezado de cantidad y títulos; espera a que Angular cargue y confirma la respuesta real del lector, no solo la inyección.
+
+Cuando no logra completar la lectura, escribe únicamente indicadores booleanos y de estado en `actinver/portfolio-diagnostic.json` del repositorio privado verificado. Nunca sube allí HTML sin filtrar, contraseñas, URLs, cuentas ni precios; los saldos/posiciones reconocidos solo se publican en el archivo privado `actinver/portfolio-latest.json`. Si falta algún componente no anuncia un falso éxito.
+
+La prueba `tests/test_portfolio_ui.js` usa saldos y cantidades inventados para comprobar la extracción y la confirmación de envío; se ejecuta junto a la prueba de 226 cotizaciones antes de empaquetar. **Esta prueba no sustituye la confirmación de captura privada en la sesión real de Brave**. Las propuestas de compra requieren cotizaciones recientes y cartera privada válida; nunca se ejecutan órdenes sin aprobación.
+
 ## v2.4.3 — Diseño real de Fondos (20/oct/2026)
 
 El usuario inspeccionó la tabla activa de Fondos. Tiene nueve columnas: `Fav`, `Información`, `Fondo`, `Categoria`, `Precio`, `1 año`, `3 años`, `5 años`, `Comprar o vender`. No tiene campos de compra/venta de Acciones ni ETFs. La versión 2.4.2 asumía los siete encabezados de bolsa, por eso el informe privado mostró `TIMEOUT` en fase `CATEGORY`, índice `2`, pese a estar seleccionada la pestaña.
