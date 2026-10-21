@@ -7,6 +7,7 @@ on:
       - 'tests/test_collector_ui.js'
       - 'tests/test_portfolio_ui.js'
       - 'tests/test_portfolio_navigation.js'
+      - 'tests/test_direct_portfolio.js'
       - '.github/workflows/package-extension.yml'
   workflow_dispatch:
 
@@ -33,6 +34,8 @@ jobs:
         run: node tests/test_portfolio_ui.js
       - name: Regression test for Tu inversion navigation
         run: node tests/test_portfolio_navigation.js
+      - name: Regression test for exact Mi portafolio URL and domain permissions
+        run: node tests/test_direct_portfolio.js
       - name: Build stable folder-layout installer
         run: |
           VERSION=$(python -c "import json;print(json.load(open('browser/brave-extension/manifest.json'))['version'])")
