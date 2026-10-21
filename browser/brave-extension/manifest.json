@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.5.1",
-  "description": "Corrige Tu inversión con ruta directa o submenú Angular; lee saldos adyacentes y registra la etapa exacta del fallo privado.",
+  "version": "2.5.2",
+  "description": "La lectura privada termina antes de procesar cotizaciones y cerrar pestañas temporales. Corrige la sincronización desde otras secciones de Actinver.",
   "permissions": [
     "storage",
     "scripting",
