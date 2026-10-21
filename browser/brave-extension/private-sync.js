@@ -273,8 +273,9 @@ async function runPortfolioSync(marketTabId) {
   const hasUpload=!!(state.privateLastSync&&
     Date.now()-state.privateLastSync<PRIVATE_TTL_MS);
   const code=hasUpload?'PRIVATE_OK':
+    (!freshHoldings&&navError)?'PRIVATE_NAV_FAILED':
     !freshSummary?'PRIVATE_SUMMARY_MISSING':
-    !freshHoldings?(navError?'PRIVATE_NAV_FAILED':'PRIVATE_HOLDINGS_MISSING'):
+    !freshHoldings?'PRIVATE_HOLDINGS_MISSING':
     'PRIVATE_UPLOAD_FAILED';
   try{
     await uploadPrivateDiagnostic({
