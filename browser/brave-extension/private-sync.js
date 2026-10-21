@@ -169,13 +169,19 @@ async function uploadPrivatePortfolio(payload) {
 async function uploadPrivateDiagnostic(raw) {
   const keys=['category_index','page_index','retries','selected_tab_index',
     'tab_count','visible_rows','numeric_page_buttons','active_page','elapsed_seconds'];
-  const stages=new Set(['START','CATEGORY','FIRST_PAGE','READ_PAGE','NEXT_PAGE','UPLOAD']);
-  const codes=new Set(['TABS','PAGINATION','TABLE','TIMEOUT','OTHER']);
+  const stages=new Set(['START','CATEGORY','FIRST_PAGE','READ_PAGE','NEXT_PAGE','UPLOAD',
+    'PRIVATE_START','PRIVATE_NAV','PRIVATE_READ','PRIVATE_DONE']);
+  const codes=new Set(['TABS','PAGINATION','TABLE','TIMEOUT','OTHER',
+    'PRIVATE_SUMMARY_MISSING','PRIVATE_HOLDINGS_MISSING',
+    'PRIVATE_NAV_FAILED','PRIVATE_UPLOAD_FAILED','PRIVATE_OK']);
   if(!raw || typeof raw!=='object')return {ok:false,reason:'No diagnostic'};
-  const stored=await chrome.storage.local.get(['privateRepo','privateToken','privateEnabled','lastDiagnosticAt']);
+  const portfolio=raw?.private_portfolio===true;
+  const rateKey=portfolio?'lastPortfolioDiagnosticAt':'lastDiagnosticAt';
+  const stored=await chrome.storage.local.get(['privateRepo','privateToken',
+    'privateEnabled',rateKey]);
   if(!stored.privateEnabled||!stored.privateRepo||!stored.privateToken)
     return {ok:false,reason:'Private repository not connected'};
-  if(stored.lastDiagnosticAt && Date.now()-stored.lastDiagnosticAt<5*60_000)
+  if(stored[rateKey] && Date.now()-stored[rateKey]<5*60_000)
     return {ok:false,reason:'Diagnostic rate limited'};
   const payload={schema_version:1,
     captured_at:new Date().toISOString(),
@@ -185,8 +191,17 @@ async function uploadPrivateDiagnostic(raw) {
     const v=raw[k];
     payload[k]=Number.isInteger(v)&&v>=-1&&v<=1000?v:null;
   }
+  if(portfolio){
+    payload.private_portfolio=true;
+    payload.summary_detected=raw.summary_detected===true;
+    payload.holdings_detected=raw.holdings_detected===true;
+    // This field counts DOM tables, never the customer's holdings.
+    payload.visible_tables=Number.isInteger(raw.visible_tables)&&
+      raw.visible_tables>=0&&raw.visible_tables<=50?raw.visible_tables:null;
+  }
   await verifyPrivateRepo(stored.privateRepo,stored.privateToken);
-  const path='actinver/diagnostics-latest.json';
+  const path=portfolio?'actinver/portfolio-diagnostic.json':
+    'actinver/diagnostics-latest.json';
   const url='https://api.github.com/repos/'+stored.privateRepo+'/contents/'+path;
   const headers={Authorization:'Bearer '+stored.privateToken,
     Accept:'application/vnd.github+json',
@@ -201,7 +216,7 @@ async function uploadPrivateDiagnostic(raw) {
   if(sha)body.sha=sha;
   const response=await fetch(url,{method:'PUT',headers,body:JSON.stringify(body)});
   if(!response.ok)throw Error('Private diagnostic HTTP '+response.status);
-  await chrome.storage.local.set({lastDiagnosticAt:Date.now()});
+  await chrome.storage.local.set({[rateKey]:Date.now()});
   return {ok:true};
 }
 
