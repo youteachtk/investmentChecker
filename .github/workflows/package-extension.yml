@@ -5,6 +5,7 @@ on:
     paths:
       - 'browser/brave-extension/**'
       - 'tests/test_collector_ui.js'
+      - 'tests/test_portfolio_ui.js'
       - '.github/workflows/package-extension.yml'
   workflow_dispatch:
 
@@ -27,6 +28,8 @@ jobs:
           python -m json.tool browser/brave-extension/manifest.json > /dev/null
       - name: Regression test for actual Angular Capitales DOM and sliding paginator
         run: node tests/test_collector_ui.js
+      - name: Regression test for private balances and positions
+        run: node tests/test_portfolio_ui.js
       - name: Build stable folder-layout installer
         run: |
           VERSION=$(python -c "import json;print(json.load(open('browser/brave-extension/manifest.json'))['version'])")
