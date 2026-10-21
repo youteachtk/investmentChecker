@@ -6,9 +6,12 @@
   if (globalThis.__icPortfolioBusy) return;
   globalThis.__icPortfolioBusy = true;
   const norm = s => String(s || '').replace(/\s+/g, ' ').trim();
+  const canon = s => norm(s).toLowerCase().normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
   const visible = e => !!(e && e.getClientRects().length);
   const money = s => {
-    const m = norm(s).match(/[-+]?\s*\$\s*[\d,]+(?:\.\d{1,2})?/);
+    const txt=norm(s);
+    const m = txt.match(/[-+]?\s*\$\s*[\d,]+(?:\.\d{1,2})?/);
     return m ? Number(m[0].replace(/[^\d.-]/g, '')) : null;
   };
   const amount = s => {
@@ -28,7 +31,11 @@
       e => visible(e) && e.children.length === 0
     );
     for (const [key, label] of Object.entries(labels)) {
-      const leaf = leaves.find(e => norm(e.textContent).toLowerCase() === label.toLowerCase());
+      const leaf = leaves.find(e => {
+        const actual=canon(e.textContent);
+        const target=canon(label);
+        return actual===target || (actual.startsWith(target) && actual.length<=target.length+6);
+      });
       if (!leaf) continue;
       let node = leaf;
       for (let i = 0; node && i < 4; i++, node = node.parentElement) {
@@ -56,14 +63,14 @@
       return found;
     return null;
   }
-  const canon = s => norm(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
   function holdings() {
     const out = [];
     for (const table of document.querySelectorAll('table,[role="table"]')) {
       if (!visible(table)) continue;
       const head = [...table.querySelectorAll('thead th,[role="columnheader"]')].map(e => canon(e.innerText));
-      const sym = head.findIndex(h => /emisora|simbolo|instrumento|accion|ticker/.test(h));
-      const qty = head.findIndex(h => /titulos|cantidad|posicion/.test(h));
+      const sym = head.findIndex(h => /emisora|simbolo|instrumento|accion|ticker|fondo|serie/.test(h));
+      const qty = head.findIndex(h => /titulos|cantidad|posicion|unidades|participaciones|numero de/.test(h));
       if (sym < 0 || qty < 0 || head.some(h => /volumen de compra|volumen de venta|postura de compra|postura de venta/.test(h))) continue;
       const cost = head.findIndex(h => /costo promedio|precio promedio|precio de compra/.test(h));
       const val = head.findIndex(h => /valor actual|valor de mercado|valuacion|importe actual/.test(h));
