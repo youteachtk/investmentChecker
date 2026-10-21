@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.5.2",
-  "description": "La lectura privada termina antes de procesar cotizaciones y cerrar pestañas temporales. Corrige la sincronización desde otras secciones de Actinver.",
+  "version": "2.6.0",
+  "description": "Abre Mi portafolio por su URL real #/portafolio. Reconoce www.retoactinver.com y conserva la sesión para lectura privada.",
   "permissions": [
     "storage",
     "scripting",
@@ -12,6 +12,7 @@
   ],
   "host_permissions": [
     "https://retoactinver.com/*",
+    "https://www.retoactinver.com/*",
     "https://api.github.com/*",
     "https://raw.githubusercontent.com/*"
   ],
