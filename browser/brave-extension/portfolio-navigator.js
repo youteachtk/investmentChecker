@@ -10,7 +10,9 @@
   };
   const visible = el => !!(el && el.getClientRects().length);
   const norm = s => String(s || '').trim().replace(/\s+/g,' ').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  const controls = () => [...document.querySelectorAll('a,button,[role="menuitem"],[role="button"]')].filter(visible);
+  const controls = () => [...document.querySelectorAll(
+    'a,button,[role="menuitem"],[role="button"],[routerlink],mat-list-item,mat-expansion-panel-header'
+  )].filter(visible);
   const hasHoldingsTable = () => [...document.querySelectorAll('table,[role="table"]')].filter(visible).some(t => {
     const labels = [...t.querySelectorAll('thead th,[role="columnheader"]')].map(x => norm(x.textContent));
     return labels.some(h=>/emisora|simbolo|instrumento|ticker/.test(h)) &&
@@ -52,7 +54,11 @@
   const option=await findEventually(()=>controls().find(isLink) || [...document.querySelectorAll('span,li,div')].filter(visible)
     .find(e=>e.children.length===0 && isLink(e)),10000);
   if(!option) return {found:false,reason:'El menú no mostró un enlace reconocido de posiciones'};
+  const oldRoute=location.hash;
   option.click();
   if(await waitForHoldings(18000)) return {found:true,step:'holdings-route'};
-  return {found:false,reason:'No apareció una tabla reconocible de posiciones'};
+  // Route identification is distinct from table recognition: the reader
+  // must inspect the page even if the columns are not the expected names.
+  if(location.hash!==oldRoute) return {found:true,step:'navigated-unrecognized-table'};
+  return {found:false,reason:'No se pudo abrir la vista de posiciones'};
 })();
