@@ -64,15 +64,21 @@ async function capturePrivatePortfolio(tabId=null) {
   const selected=actinver.find(t=>t.id===tabId) || actinver.find(t=>t.active) || actinver[0];
   if(!selected)return {ok:false,error:'La sesión de Actinver no está abierta.'};
   try{
-    await chrome.scripting.executeScript({target:{tabId:selected.id},files:['portfolio-collector.js'],world:'ISOLATED'});
-    return {ok:true};
+    const executed=await chrome.scripting.executeScript({target:{tabId:selected.id},
+      files:['portfolio-collector.js'],world:'ISOLATED'});
+    const result=executed?.[0]?.result;
+    return result&&typeof result==='object'?result:{ok:false,
+      error:'La lectura privada no confirmó ningún resultado.'};
   }catch(error){
     if(!/No tab with id|tab was closed|No frame with id/i.test(String(error.message||'')))throw error;
     const refreshed=await chrome.tabs.query({});
     const fallback=refreshed.find(t=>t.id!==selected.id && privateSitePattern.test(t.url||''));
     if(!fallback)return {ok:false,error:'La pestaña de Actinver cambió. Se reintentará al abrirla.'};
-    await chrome.scripting.executeScript({target:{tabId:fallback.id},files:['portfolio-collector.js'],world:'ISOLATED'});
-    return {ok:true,recoveredTab:true};
+    const executed=await chrome.scripting.executeScript({target:{tabId:fallback.id},
+      files:['portfolio-collector.js'],world:'ISOLATED'});
+    const result=executed?.[0]?.result;
+    return result&&typeof result==='object'?{...result,recoveredTab:true}:
+      {ok:false,error:'El segundo intento no confirmó lectura privada.'};
   }
 }
 function sanitizePrivateCapture(raw) {
