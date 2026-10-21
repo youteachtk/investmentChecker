@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.4.3",
-  "description": "Reconoce las tablas diferentes de Acciones/ETFs (10 columnas) y Fondos (9 columnas), incluido precio y rendimientos de fondos.",
+  "version": "2.5.0",
+  "description": "Captura pública 226/226 intacta; navegación privada mejorada con confirmación de saldos, posiciones y diagnóstico automático privado.",
   "permissions": [
     "storage",
     "scripting",
