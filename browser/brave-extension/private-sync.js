@@ -195,6 +195,12 @@ async function uploadPrivateDiagnostic(raw) {
     payload.private_portfolio=true;
     payload.summary_detected=raw.summary_detected===true;
     payload.holdings_detected=raw.holdings_detected===true;
+    const navSteps=new Set(['not-attempted','already-open','menu-missing',
+      'submenu-missing','menu-route','menu-table','menu-holdings',
+      'submenu-route','submenu-table','submenu-holdings','submenu-inspect',
+      'navigation-error']);
+    payload.navigation_step=navSteps.has(raw.navigation_step)?
+      raw.navigation_step:'not-attempted';
     // This field counts DOM tables, never the customer's holdings.
     payload.visible_tables=Number.isInteger(raw.visible_tables)&&
       raw.visible_tables>=0&&raw.visible_tables<=50?raw.visible_tables:null;
