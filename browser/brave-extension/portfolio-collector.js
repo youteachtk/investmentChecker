@@ -87,10 +87,33 @@
     return out.length && out.length <= 100 ? out : null;
   }
   try {
-    const result = {captured_at:new Date().toISOString(),summary:summary(),holdings:holdings()};
-    await chrome.runtime.sendMessage({type:'PRIVATE_CAPTURE',payload:result});
+    // Angular can finish loading its shell before the account values.
+    // Read again briefly, but never click trading controls or collect raw HTML.
+    let foundSummary=null,foundHoldings=null;
+    for(let attempt=0;attempt<24;attempt++){
+      foundSummary=foundSummary||summary();
+      foundHoldings=foundHoldings||holdings();
+      if(foundSummary && foundHoldings)break;
+      if(attempt<23)await new Promise(r=>setTimeout(r,500));
+    }
+    const result={captured_at:new Date().toISOString(),
+      summary:foundSummary,holdings:foundHoldings};
+    const ack=await chrome.runtime.sendMessage({type:'PRIVATE_CAPTURE',
+      payload:result,diagnostic:{
+        summary_detected:!!foundSummary,
+        summary_fields:foundSummary?Object.keys(foundSummary).length:0,
+        holdings_detected:!!foundHoldings,
+        holding_count:foundHoldings?foundHoldings.length:0,
+        visible_tables:[...document.querySelectorAll('table')]
+          .filter(visible).length
+      }});
+    return {ok:!!ack?.ok,partial:!!ack?.partial,
+      uploaded:!!ack?.uploaded,
+      error:ack?.ok?null:(ack?.error||'Capture not accepted'),
+      summary_detected:!!foundSummary,holdings_detected:!!foundHoldings};
   } catch (err) {
     console.warn('[investmentChecker private]',err.message);
+    return {ok:false,error:'Private capture failed'};
   } finally {
     globalThis.__icPortfolioBusy = false;
   }
