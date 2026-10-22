@@ -1,3 +1,13 @@
+## v2.7.0 — Cotizaciones sin mover la página visible (22/oct/2026)
+
+La captura pública de 145 Acciones, 56 ETFs y 25 Fondos ahora utiliza **siempre una pestaña secundaria inactiva de Capitales**, aunque la pestaña visible del usuario ya esté en Capitales. Las categorías y el paginador se recorren en esa pestaña separada, no en la pantalla del usuario. La pestaña temporal usa el mismo dominio de Actinver y un vínculo con la sesión existente; se cierra tras un envío exitoso o un fallo de captura.
+
+La protección `injectQuotesWithRetry` comprueba que la pestaña donde se va a ejecutar `collector.js` haya sido creada por esta sincronización específica. Si Brave descarta una pestaña temporal, se crea **otra temporal**; nunca se usa una pestaña visible como alternativa. Se conserva la secuencia privada → pública para no cerrar el origen mientras la cartera lo necesite.
+
+La prueba `tests/test_isolated_market_capture.js` incluye Capitales abierto, Mi portafolio abierto y la recuperación de una pestaña descartada. El recolector Angular y las comprobaciones de catálogo siguen sin cambios. Para evitar completamente la paginación incluso en segundo plano haría falta verificar los endpoints autorizados que utiliza Actinver: no se presuponen ni inventan llamadas API.
+
+**Comprobación pendiente:** sincronización en la sesión real de Brave con la versión instalada; las pruebas automáticas no sustituyen esta verificación. No compra ni vende.
+
 ## v2.6.0 — Mi portafolio en su URL real (21/oct/2026)
 
 La ruta real suministrada por el usuario es **https://www.retoactinver.com/RetoActinver/#/portafolio**. El recolector anterior no tenía permiso para `www.retoactinver.com` y buscaba un menú ficticio llamado «Tu inversión». Ahora se concede el permiso específico al host con `www`, se abre directamente `#/portafolio` en una pestaña secundaria vinculada a la sesión, se espera la carga y se lee únicamente la cartera permitida. Si Actinver redirige a otra ruta, se registra un fallo sin afirmar éxito. Capitales mantiene su captura de 226 instrumentos; si se abre desde otra página, conserva el host de la pestaña de origen.
