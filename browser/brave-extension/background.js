@@ -17,7 +17,9 @@ async function getTabDiagnostics(){
   const {allCount,matches}=await getActinverTabs();
   let sitePermission='no se pudo determinar';
   try {
-    const granted=await chrome.permissions.contains({origins:['https://retoactinver.com/*']});
+    const granted=await chrome.permissions.contains({
+      origins:['https://retoactinver.com/*','https://www.retoactinver.com/*']
+    });
     sitePermission=granted?'concedido':'no concedido';
   }catch(_){}
   let diagnostic='Brave detecta '+allCount+' pestaña(s). Actinver: '+matches.length+'. Permiso del sitio: '+sitePermission+'.';
@@ -80,6 +82,15 @@ async function cleanupTemporarySyncTab(expectedId=null,ownerId=null) {
 async function injectQuotesWithRetry(firstTabId, runId) {
   let tabId=firstTabId;
   for(let attempt=0;attempt<2;attempt++){
+    // Never inject into a tab we did not create and own for this exact run.
+    const state=await chrome.storage.local.get([
+      'syncTemporaryTabId','syncTempRunId','syncRunId'
+    ]);
+    if(state.syncTemporaryTabId!==tabId ||
+       state.syncTempRunId!==runId || state.syncRunId!==runId){
+      await setStatus('Cotizaciones detenidas: la pestaña secundaria no coincide.',false);
+      return;
+    }
     try{
       await chrome.tabs.get(tabId);
       await chrome.storage.local.set({syncTabId:tabId});
@@ -128,7 +139,7 @@ async function startSync(tabId = null) {
   await recoverMisplacedPrivateToken();
   const runId='sync-'+Date.now()+'-'+Math.floor(Math.random()*100000);
   await chrome.storage.local.set({syncRunId:runId,syncStartedAt:Date.now(),syncRunning:true,
-    syncStatus:'Sincronizando cotizaciones y cartera…'});
+    syncStatus:'Recopilando cotizaciones y cartera en pestañas secundarias…'});
   try {
     const sourceTab=(tabId!==null?found.matches.find(t=>t.id===tabId):null)
       ||found.matches.find(t=>t.active)
