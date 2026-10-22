@@ -37,7 +37,7 @@ jobs:
         run: node tests/test_portfolio_navigation.js
       - name: Regression test for exact Mi portafolio URL and domain permissions
         run: node tests/test_direct_portfolio.js
-      - name: Regression test: never change the visible Actinver page
+      - name: Regression test for background-only market collection
         run: node tests/test_isolated_market_capture.js
       - name: Build stable folder-layout installer
         run: |
