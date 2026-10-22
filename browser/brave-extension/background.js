@@ -219,7 +219,7 @@ async function route(msg,sender) {
       await upload(msg.payload);
       await chrome.storage.local.set({lastSync:Date.now()});
       await setStatus('226 cotizaciones enviadas a GitHub · '+stamp()+
-        '. Cartera privada en proceso independiente.',false);
+        '. Consulta también el estado de la cartera privada.',false);
       await cleanupTemporarySyncTab(null,syncRunId);
       return {ok:true};
     }catch(err) {
@@ -232,7 +232,7 @@ async function route(msg,sender) {
   return {ok:false,error:'Comando no reconocido'};
 }
 chrome.runtime.onMessage.addListener((msg,sender,reply)=>{
-  route(msg,sender).then(result=>reply({...result,version:'2.6.0'})).catch(async err=>{
+  route(msg,sender).then(result=>reply({...result,version:'2.7.0'})).catch(async err=>{
     await setStatus('Error: '+err.message,false);
     reply({ok:false,error:err.message});
   });
