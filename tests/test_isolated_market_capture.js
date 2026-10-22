@@ -59,8 +59,10 @@ async function scenario(path,failFirst=false){
   assert.equal(result.ok,true);
   assert.ok(!events.some(x=>x.kind==='inject'),'Public capture began before private read');
   finishPrivate({message:'test complete'});
+  // Let the extension's asynchronous retry cross an event-loop turn;
+  // microtask-only polling can inspect events before the retry is scheduled.
   for(let i=0;i<50 && events.filter(x=>x.kind==='inject').length<(failFirst?2:1);i++)
-    await Promise.resolve();
+    await new Promise(resolve=>setImmediate(resolve));
   const created=events.filter(x=>x.kind==='create');
   const injected=events.filter(x=>x.kind==='inject');
   assert.equal(created.length,failFirst?2:1);
