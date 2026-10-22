@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.6.0",
-  "description": "Abre Mi portafolio por su URL real #/portafolio. Reconoce www.retoactinver.com y conserva la sesión para lectura privada.",
+  "version": "2.7.0",
+  "description": "Sincroniza las 226 cotizaciones en una pestaña secundaria inactiva, sin cambiar Capitales, Mi portafolio ni ninguna pantalla visible.",
   "permissions": [
     "storage",
     "scripting",
