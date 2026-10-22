@@ -38,6 +38,33 @@ async function waitForPage(tabId, maxMs=25000) {
   }
   return false;
 }
+// Public quotes are always collected in a separate INACTIVE tab. Never
+// click categories or paginator controls inside the user's visible tab.
+function marketUrlForSession(tab) {
+  const source=tab?.url||tab?.pendingUrl||'';
+  const host=/^https:\/\/www\.retoactinver\.com(?:[\/:#?]|$)/i.test(source)?
+    'https://www.retoactinver.com':'https://retoactinver.com';
+  return host+'/RetoActinver/#/capitales';
+}
+async function createIsolatedMarketTab(sourceTab,runId) {
+  if(!Number.isInteger(sourceTab?.id)||
+     !ACTINVER.test(sourceTab.url||sourceTab.pendingUrl||''))
+    throw Error('No se encontró una sesión Actinver para la pestaña de lectura.');
+  const tab=await chrome.tabs.create({
+    url:marketUrlForSession(sourceTab),
+    openerTabId:sourceTab.id,
+    active:false
+  });
+  await chrome.storage.local.set({
+    syncTemporaryTabId:tab.id,syncTempRunId:runId
+  });
+  if(!(await waitForPage(tab.id))){
+    await cleanupTemporarySyncTab(tab.id,runId);
+    throw Error('No se pudo cargar Capitales en la pestaña secundaria.');
+  }
+  return tab;
+}
+
 async function cleanupTemporarySyncTab(expectedId=null,ownerId=null) {
   const s=await chrome.storage.local.get(['syncTemporaryTabId','syncRunId','syncTempRunId']);
   if(!s.syncTemporaryTabId)return;
@@ -70,15 +97,19 @@ async function injectQuotesWithRetry(firstTabId, runId) {
       const old=tabId;
       // Only clean up the failed temporary tab, not another run's tab.
       await cleanupTemporarySyncTab(old,runId);
+      // A lost disposable tab can only be replaced by another disposable
+      // tab. Never fall back to the user's existing Capitales page.
       const found=await getActinverTabs();
-      const existing=found.matches.find(t=>t.id!==old&&isMonitorTab(t));
-      if(existing){tabId=existing.id;continue;}
-      const created=await chrome.tabs.create({url:MONITOR_URL,active:false});
-      tabId=created.id;
-      await chrome.storage.local.set({syncTemporaryTabId:tabId,syncTempRunId:runId});
-      if(!(await waitForPage(tabId))) {
-        await setStatus('Error: no cargó Monitores después de reintentar.',false);
-        await cleanupTemporarySyncTab(tabId,runId);
+      const original=found.matches.find(t=>t.active&&t.id!==old)
+        ||found.matches.find(t=>t.id!==old);
+      if(!original){
+        await setStatus('Error: no quedó una sesión de Actinver abierta.',false);
+        return;
+      }
+      try {
+        tabId=(await createIsolatedMarketTab(original,runId)).id;
+      } catch(error) {
+        await setStatus('Error: '+error.message,false);
         return;
       }
     }
@@ -99,28 +130,15 @@ async function startSync(tabId = null) {
   await chrome.storage.local.set({syncRunId:runId,syncStartedAt:Date.now(),syncRunning:true,
     syncStatus:'Sincronizando cotizaciones y cartera…'});
   try {
-    let tab=(tabId!==null?found.matches.find(t=>t.id===tabId&&isMonitorTab(t)):null)
-      ||found.matches.find(t=>isMonitorTab(t)&&t.active)
-      ||found.matches.find(isMonitorTab);
-    if(!tab){
-      // Use the already-authenticated Actinver origin for Capitales.
-      const originTab=found.matches.find(t=>t.active)||found.matches[0];
-      const origin=/^https:\/\/(?:www\.)?retoactinver\.com(?:\/|$)/i
-        .exec(originTab.url||originTab.pendingUrl||'')?.[0];
-      const host=origin&&origin.includes('www.')?
-        'https://www.retoactinver.com':'https://retoactinver.com';
-      const marketUrl=host+'/RetoActinver/#/capitales';
-      tab=await chrome.tabs.create({
-        url:marketUrl,openerTabId:originTab.id,active:false
-      });
-      await chrome.storage.local.set({syncTemporaryTabId:tab.id,syncTempRunId:runId});
-      if(!(await waitForPage(tab.id)))throw Error('No se pudo abrir Monitores.');
-    }
-    // Start the private read-only portfolio sync independently of market quotes.
-    // A delayed ETF table must never block positions or available balance.
-    // Keep the source monitor tab alive until the private navigator finishes.
-    // Otherwise the public quote uploader may close it while the portfolio
-    // reader still uses this tab as its opener, aborting Tu inversion.
+    const sourceTab=(tabId!==null?found.matches.find(t=>t.id===tabId):null)
+      ||found.matches.find(t=>t.active)
+      ||found.matches[0];
+    // Always isolate the 226-row collector. Even when Capitales is already
+    // visible, that original user tab stays completely untouched.
+    const tab=await createIsolatedMarketTab(sourceTab,runId);
+    // Finish private capture before public navigation because their temporary
+    // tabs may share the authenticated opener. All public page switching
+    // happens inside our disposable Capitales tab, never the user tab.
     void runPortfolioSync(tab.id)
       .then(result=>chrome.storage.local.set({privateSyncStatus:result?.message||'Lectura privada completada.'}))
       .catch(error=>chrome.storage.local.set({privateSyncStatus:'Cartera: '+error.message}))
