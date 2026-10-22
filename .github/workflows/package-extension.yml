@@ -8,6 +8,7 @@ on:
       - 'tests/test_portfolio_ui.js'
       - 'tests/test_portfolio_navigation.js'
       - 'tests/test_direct_portfolio.js'
+      - 'tests/test_isolated_market_capture.js'
       - '.github/workflows/package-extension.yml'
   workflow_dispatch:
 
@@ -36,6 +37,8 @@ jobs:
         run: node tests/test_portfolio_navigation.js
       - name: Regression test for exact Mi portafolio URL and domain permissions
         run: node tests/test_direct_portfolio.js
+      - name: Regression test: never change the visible Actinver page
+        run: node tests/test_isolated_market_capture.js
       - name: Build stable folder-layout installer
         run: |
           VERSION=$(python -c "import json;print(json.load(open('browser/brave-extension/manifest.json'))['version'])")
