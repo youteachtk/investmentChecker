@@ -1,6 +1,6 @@
 # Actinver research snapshot
 
-Generated UTC: 2026-10-21T18:12:36.058850+00:00
+Generated UTC: 2026-10-22T01:42:48.033958+00:00
 
 Universe: 226. Ranked: 135. Failed downloads: 0.
 Not yet mapped or special-risk: 91.
@@ -12,26 +12,26 @@ Leveraged/inverse ETFs are excluded from rankings by default.
 
 | Instrument | Type | Relative score | Risk | 20d % | 60d % | Volatility % |
 |---|---|---:|---|---:|---:|---:|
-| V | ACCIONES | 85.46 | lower | 13.13067 | 11.77332 | 18.34662 |
-| XLE | ETFs | 84.67 | lower | 9.131 | 18.93275 | 21.24157 |
-| CVX | ACCIONES | 84.34 | lower | 10.21848 | 21.80765 | 23.21269 |
-| MA | ACCIONES | 83.93 | lower | 11.4623 | 10.90177 | 18.27287 |
-| XOM | ACCIONES | 81.66 | lower | 10.19662 | 16.84555 | 23.83861 |
-| BRKB | ACCIONES | 80.77 | lower | 6.86554 | 5.78098 | 12.66432 |
-| KO | ACCIONES | 80.53 | lower | 5.1595 | 5.57129 | 14.77794 |
-| PG | ACCIONES | 80.01 | lower | 6.99111 | 5.92033 | 16.62837 |
-| XLV | ETFs | 79.18 | lower | 5.81161 | 7.19453 | 17.38252 |
-| PFE | ACCIONES | 79.07 | lower | 5.44713 | 17.68317 | 19.49499 |
-| ABBV | ACCIONES | 78.78 | lower | 7.51445 | 8.28239 | 22.0021 |
-| TMO | ACCIONES | 76.65 | lower | 4.47167 | 20.675 | 24.92717 |
-| COST | ACCIONES | 75.59 | lower | 10.11661 | 3.06699 | 17.50726 |
-| DIS | ACCIONES | 74.66 | lower | 7.71313 | 12.69087 | 24.23964 |
-| EWZ | ETFs | 74.31 | lower | 13.56703 | 17.72538 | 34.42062 |
-| LLY | ACCIONES | 73.39 | lower | 10.32415 | 4.17639 | 30.78276 |
-| SHOP N | ACCIONES | 72.96 | high | 23.77406 | 35.2318 | 61.10545 |
-| SPY | ETFs | 71.75 | lower | 0.79968 | 4.72585 | 11.0274 |
-| USO | ETFs | 71.69 | moderate | 6.63858 | 31.72065 | 43.71441 |
-| ROKU | ACCIONES | 71.55 | lower | 2.808 | 9.65187 | 14.04038 |
+| XLE | ETFs | 85.92 | lower | 9.28332 | 19.09875 | 21.23905 |
+| V | ACCIONES | 85.63 | lower | 12.81534 | 11.46177 | 18.32931 |
+| CVX | ACCIONES | 85.28 | lower | 10.34986 | 21.95284 | 23.21431 |
+| MA | ACCIONES | 83.93 | lower | 11.3666 | 10.80655 | 18.26845 |
+| XOM | ACCIONES | 82.77 | lower | 10.45711 | 17.12177 | 23.82754 |
+| KO | ACCIONES | 81.19 | lower | 5.21058 | 5.62257 | 14.76422 |
+| BRKB | ACCIONES | 80.61 | lower | 6.27403 | 5.19546 | 12.65834 |
+| PFE | ACCIONES | 80.36 | lower | 5.92619 | 18.21782 | 19.35989 |
+| ABBV | ACCIONES | 79.8 | lower | 8.09896 | 8.87109 | 21.80541 |
+| XLV | ETFs | 79.26 | lower | 6.00711 | 7.39258 | 17.35073 |
+| PG | ACCIONES | 79.18 | lower | 6.41156 | 5.34658 | 16.81807 |
+| TMO | ACCIONES | 76.76 | lower | 4.31685 | 20.49618 | 24.90873 |
+| COST | ACCIONES | 76.44 | lower | 10.34707 | 3.28271 | 17.51795 |
+| DIS | ACCIONES | 74.87 | lower | 8.09009 | 13.08525 | 24.22456 |
+| EWZ | ETFs | 73.9 | lower | 13.75435 | 17.91955 | 34.39272 |
+| LLY | ACCIONES | 73.38 | lower | 10.40496 | 4.2527 | 30.77141 |
+| SHOP N | ACCIONES | 72.96 | high | 22.44625 | 33.78108 | 61.0715 |
+| ROKU | ACCIONES | 72.26 | lower | 2.79497 | 9.63796 | 14.04045 |
+| USO | ETFs | 71.79 | moderate | 7.37083 | 32.62512 | 43.62504 |
+| SPY | ETFs | 70.93 | lower | 0.68767 | 4.60948 | 11.0056 |
 
 ## Important
 
