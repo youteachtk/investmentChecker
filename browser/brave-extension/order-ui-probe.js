@@ -1,5 +1,5 @@
-// Navigate to Visa's read-only stock detail page for structural inspection.
-// Never open operation panels or submit transactions.
+// Navigate to Visa Detail, then open only the unique paired Buy/Sell ticket launcher.
+// Never fill, calculate, confirm or submit transactions.
 // No quantity/price is entered. Do not include DOM dumps, balances or account data.
 (async () => {
   'use strict';
@@ -128,28 +128,52 @@
 
   state.detail_route_verified=true;
   state.stage='DETAIL_OPENED';
-  // Angular renders the detail view after updating the hash.
-  for(let attempt=0;attempt<24;attempt++){
-    if(elements('button,a,input,select,textarea,[role="button"],[role="link"]').length)break;
+  // Read only the structure of the detail view. The paired Comprar/Vender
+  // controls at the bottom are the ticket launchers seen in the user's image.
+  // Never click any Comprar button inside an order form or side panel.
+  let ctas=[];
+  for(let attempt=0;attempt<40;attempt++){
+    ctas=elements('button,a,[role="button"],[role="link"]');
+    if(ctas.some(el=>label(el)==='comprar')&&ctas.some(el=>label(el)==='vender'))break;
     await sleep(250);
   }
-  const controls=elements('button,a,[role="button"],[role="link"]');
+  const buys=ctas.filter(el=>label(el)==='comprar' &&
+    !el.closest?.('form,[role="dialog"],mat-dialog-container,mat-drawer,mat-sidenav,aside'));
+  const sells=ctas.filter(el=>label(el)==='vender' &&
+    !el.closest?.('form,[role="dialog"],mat-dialog-container,mat-drawer,mat-sidenav,aside'));
+  const initial=safeFields(document);
   state.detail_controls={
-    buy_control_present:controls.some(el=>label(el)==='comprar'),
-    sell_control_present:controls.some(el=>label(el)==='vender'),
-    visible_field_count:Math.min(30,elements('input,select,textarea,mat-select,[role="spinbutton"]').length)
+    buy_control_present:buys.length===1,
+    sell_control_present:sells.length===1,
+    visible_field_count:initial.length
   };
-  const regions=elements('form,app-detalle-acciones,app-detalle-accion,[class*="detalle-acciones"]');
-  for(const region of regions){
-    const descriptors=safeFields(region);
-    if(descriptors.some(item=>item.kind==='CANTIDAD')&&descriptors.length>=2){
-      state.fields=descriptors;
-      state.form_detected=true;
-      state.stage='DETAIL_FORM_DETECTED';
-      break;
-    }
+  // This is a navigation click, not an order. Refuse any ambiguous DOM or
+  // page that is already showing a form, which might contain a submit button.
+  if(buys.length!==1||sells.length!==1||initial.length){
+    state.stage='DETAIL_TICKET_LAUNCHER_UNVERIFIED';
+    return state;
   }
-  // The detail link is navigation only: never activate order submission.
-  // Do not read balances, form values, account data or arbitrary HTML.
+  if(!String(location.hash||'').includes('/capitales/detalle/DetalleAcciones')){
+    state.stage='DETAIL_NAVIGATION_NOT_CONFIRMED';
+    return state;
+  }
+  buys[0].click();
+  state.clicked_steps.push('OPEN_DETAIL_BUY_TICKET');
+  state.stage='DETAIL_BUY_TICKET_REQUESTED';
+  let descriptors=[];
+  for(let attempt=0;attempt<36;attempt++){
+    await sleep(250);
+    descriptors=safeFields(document);
+    if(descriptors.length>=2)break;
+  }
+  state.fields=descriptors;
+  state.side_panel_visible=elements('aside,[role="complementary"],mat-sidenav,mat-drawer,.mat-drawer,.mat-sidenav').length>0;
+  state.detail_controls.visible_field_count=descriptors.length;
+  if(descriptors.length>=2){
+    state.form_detected=true;
+    state.stage='DETAIL_BUY_TICKET_FIELDS_DETECTED';
+  }else state.stage='DETAIL_BUY_TICKET_NOT_DETECTED';
+  // Never enter order values or press Calculate, Comprar or any confirmation
+  // inside the ticket. Do not serialize page text, account data or input values.
   return state;
 })();
