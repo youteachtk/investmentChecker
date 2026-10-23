@@ -339,6 +339,7 @@ async function orderHistoryStatus(){
     tab=await chrome.tabs.create({url:origin+'/RetoActinver/#/portafolio',
       active:false,openerTabId:source.id});
     if(!await waitForPage(tab.id))throw Error('No cargó la página privada.');
+    diag.phase='ORDERS_READ';
     const result=await chrome.scripting.executeScript({
       target:{tabId:tab.id},files:['orders-history-probe.js'],world:'ISOLATED'
     });
