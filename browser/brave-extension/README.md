@@ -1,3 +1,14 @@
+## v2.8.14 — Preparar compra aprobada y consultar órdenes (23/oct/2026)
+
+Se restaura el recorrido por páginas de ACCIONES (el probado contra Actinver); se retira el experimento Buscar. El inspector mantiene Capitales → V → Detalle → acceso de compra y no realiza operaciones.
+
+Dos funciones nuevas y separadas:
+
+- **Ver órdenes ejecutadas y pendientes**: abre en una pestaña temporal la sección Órdenes de Actinver (si puede identificar su enlace) y lee exclusivamente tablas que contengan encabezados de Emisora y Estado/Estatus. Registra con confidencialidad en `actinver/orders-latest.json` del repositorio privado las órdenes y sus estados explícitos: ejecutadas/asignadas, parciales, pendientes, canceladas y rechazadas. Si no identifica la tabla, responde «no verificadas», nunca «cero operaciones». No pulsa Cancelar, Comprar ni Vender.
+- **Cargar compra de V aprobada (sin enviarla)**: solo para una propuesta `V` aprobada expresamente y aún vigente; abre Detalle y el panel de compra, exige identidad VISA INC. y una asociación inequívoca de las etiquetas Títulos y Precio límite con dos campos editables. De ser verificable, introduce los datos aprobados sin pulsar «Calcular orden» ni «Comprar». El usuario deberá efectuar la confirmación final en el portal. Si hay cantidad preexistente, etiquetas ambiguas o propuesta vencida, se detiene sin enviar nada. No se aceptan órdenes remotas.
+
+El lector público de 226 cotizaciones y las posiciones privadas existentes no cambian. Se añaden pruebas de clasificación de órdenes y de ausencia de clics de ejecución durante la preparación. **Pendiente validación autenticada real** de la tabla de órdenes y el llenado seguro en Detalle; las pruebas CI no equivalen a una compra realizada.
+
 ## v2.8.13 — Búsqueda directa de Visa y diagnóstico de campos (23/oct/2026)
 
 El inspector mantiene el flujo de solo lectura de Capitales → ACCIONES → Detalle de Visa → abrir formulario. Ahora intenta primero el campo nativo Buscar en la pestaña auxiliar: prueba VISA y V, exige que la celda Emisora corresponda exactamente al símbolo V y utiliza la paginación verificada solo si no localiza el símbolo. Registra en el diagnóstico privado qué método se usó, sin guardar datos de la cuenta. Los controles radio de modalidad quedan separados de los campos editables. La etapa `DETAIL_BUY_TICKET_FIELDS_MAPPED` solo se declara si se reconocen por sus etiquetas un campo editable de Títulos y uno de Precio; si no, se detiene en `DETAIL_BUY_TICKET_FIELDS_DETECTED`, sin adivinar qué control llenar. Sin transacciones, sin rellenar importes ni confirmar compras. El recolector de las 226 cotizaciones permanece intacto. Pruebas automatizadas incluyen búsqueda con Visa ausente de las páginas visibles y paginación de respaldo. La detección precisa de etiquetas aún requiere validación en Brave real.
