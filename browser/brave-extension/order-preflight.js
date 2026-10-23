@@ -206,22 +206,32 @@ async function orderInspectUi(){
       target:{tabId:tab.id},files:['order-ui-probe.js'],world:'ISOLATED'
     });
     const raw=result?.[0]?.result;
-    if(!raw||raw.schema_version!==1||raw.inspected_without_clicks!==true)
-      throw Error('No fue posible inspeccionar la interfaz de operaciones.');
-    // Whitelist only non-sensitive structural counters and known generic kinds.
-    const allowed=new Set(['COMPRAR_O_VENDER','COMPRAR','VENDER','OPERAR','DETALLE']);
-    const counts={};
-    for(const [key,value] of Object.entries(raw.action_kinds||{})){
-      if(allowed.has(key)&&Number.isInteger(value)&&value>=0&&value<=500)
-        counts[key]=value;
-    }
-    const probe={schema_version:1,captured_at:new Date().toISOString(),
-      area:raw.area==='CAPITALES'?'CAPITALES':'OTHER',
+    if(!raw||raw.schema_version!==2||raw.inspected_without_submission!==true ||
+       raw.submitted_orders!==0)
+      throw Error('No se pudo verificar que la inspección evitó enviar operaciones.');
+    const stages=new Set(['MARKET_NOT_READY','NO_MARKET_ACTIONS',
+      'TARGET_ROW_NOT_FOUND','ACTION_LAUNCHER_AMBIGUOUS','ACTIONS_OPENED',
+      'BUY_FORM_REQUESTED','BUY_ACTION_AMBIGUOUS','BUY_MENU_NOT_FOUND',
+      'BUY_FORM_DETECTED']);
+    const allowedKinds=new Set(['CANTIDAD','PRECIO','TIPO_ORDEN','VIGENCIA','OTRO']);
+    const allowedControls=new Set(['INPUT','SELECT','TEXTAREA','MAT-SELECT']);
+    const fields=Array.isArray(raw.fields)?raw.fields.slice(0,15)
+      .filter(item=>allowedKinds.has(item?.kind))
+      .map(item=>({
+        kind:item.kind,
+        control:allowedControls.has(item?.control)?item.control:'OTRO',
+        type:/^(text|number|tel|radio|checkbox|select-one)?$/.test(item?.type||'')?
+          (item.type||''):'other'
+      })):[];
+    const steps=Array.isArray(raw.clicked_steps)?raw.clicked_steps.filter(step=>
+      ['OPEN_MARKET_ACTIONS','OPEN_BUY_FORM'].includes(step)).slice(0,2):[];
+    const probe={schema_version:2,captured_at:new Date().toISOString(),
+      target_symbol:'V',selected_symbol:raw.selected_symbol==='V'?'V':null,
+      stage:stages.has(raw.stage)?raw.stage:'MARKET_NOT_READY',
       action_widget_count:Number.isInteger(raw.action_widget_count)?
         Math.min(500,Math.max(0,raw.action_widget_count)):null,
-      visible_form_count:Number.isInteger(raw.visible_form_count)?
-        Math.min(50,Math.max(0,raw.visible_form_count)):null,
-      action_kinds:counts,inspected_without_clicks:true,submitted_orders:0};
+      form_detected:raw.form_detected===true,fields,
+      clicked_steps:steps,inspected_without_submission:true,submitted_orders:0};
     const {privateRepo,privateToken,privateEnabled}=await chrome.storage.local.get([
       'privateRepo','privateToken','privateEnabled']);
     if(!privateEnabled)throw Error('Repositorio privado no configurado.');
@@ -243,9 +253,12 @@ async function orderInspectUi(){
     if(sha)body.sha=sha;
     const saved=await fetch(url,{method:'PUT',headers,body:JSON.stringify(body)});
     if(!saved.ok)throw Error('No se pudo guardar el diagnóstico privado.');
-    return {ok:true,status:'UI_DISCOVERED',action_widget_count:probe.action_widget_count,
-      order_form_verified:false,submitted_orders:0,
-      message:'Estructura de compra registrada solo en GitHub privado. No se abrió ni envió ninguna orden.'};
+    return {ok:true,status:probe.stage,action_widget_count:probe.action_widget_count,
+      order_form_verified:probe.form_detected,submitted_orders:0,
+      message:probe.form_detected?
+        'Se abrió el formulario de compra de V en pestaña secundaria; se identificaron '+
+        probe.fields.length+' controles. Diagnóstico privado guardado. No se envió ninguna compra.':
+        'Inspección parcial de V ('+probe.stage+'). Guardé el diagnóstico privado; falta reconocer el formulario real. No se envió ninguna compra.'};
   }catch(error){
     return {ok:false,error:String(error?.message||'No se pudo inspeccionar la interfaz.')};
   }finally{

@@ -1,47 +1,115 @@
-// Structural read-only broker order-form reconnaissance.
-// NO clicks, NO orders, NO symbols, NO financial figures, NO DOM dumps.
+// Guided, read-only discovery of a REAL buy ticket for one market instrument.
+// May open a market action menu and a BUY FORM launcher; NEVER submits a trade.
+// No quantity/price is entered. Do not include DOM dumps, balances or account data.
 (async () => {
   'use strict';
-  // Angular may load its market shell after the browser reports "complete".
-  // Wait only for the public action widgets, never for private account data.
-  for(let attempt=0;attempt<45;attempt++){
-    if(document.querySelector('app-capitales') &&
-       document.querySelectorAll('gt-btn-operar').length>0)break;
-    if(attempt<44)await new Promise(resolve=>setTimeout(resolve,300));
-  }
-  const visible=e=>!!e?.getClientRects?.().length;
-  const actionRoot=[...document.querySelectorAll(
-    'gt-btn-operar,app-componente-dinamico,app-capitales button'
-  )].filter(visible);
-  const normalized=s=>String(s||'').normalize('NFD')
-    .replace(/[\u0300-\u036f]/g,'').trim().toLowerCase();
-  const generic=t=>{
-    const label=normalized(t).replace(/\s+/g,' ');
-    if(/comprar o vender/.test(label))return 'COMPRAR_O_VENDER';
-    if(/^comprar$/.test(label))return 'COMPRAR';
-    if(/^vender$/.test(label))return 'VENDER';
-    if(/^operar$/.test(label))return 'OPERAR';
-    if(/ver detalle|detalles/.test(label))return 'DETALLE';
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const visible = el => !!(el && typeof el.getClientRects === 'function' &&
+    el.getClientRects().length && !el.disabled);
+  const norm = value => String(value || '').normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+  const label = el => norm(el && (el.innerText || el.textContent));
+  const elements = selector => [...document.querySelectorAll(selector)].filter(visible);
+  const recognized = selector => elements(selector).slice(0, 100);
+  const dialogs = () => elements('[role="dialog"],mat-dialog-container,dialog');
+  const menus = () => elements('[role="menu"],mat-menu-panel,.mat-menu-panel,.cdk-overlay-pane');
+  const fields = region => [...region.querySelectorAll('input,select,textarea,[role="spinbutton"],mat-select')]
+    .filter(visible).filter(el => !['hidden','password','email'].includes(String(el.type || '').toLowerCase()));
+  const fieldKind = field => {
+    const labels = elements('label').filter(el => field.id && el.htmlFor === field.id);
+    const parent = field.closest?.('mat-form-field,.mat-form-field,.form-group,[class*="form-field"]') || field.parentElement;
+    const semantic = norm([
+      field.getAttribute?.('aria-label'),field.getAttribute?.('placeholder'),
+      field.getAttribute?.('name'),...labels.map(label),parent?.textContent?.slice(0,100)
+    ].filter(Boolean).join(' '));
+    if (/cantidad|titulos|volumen|unidades|numero de titulos|numero de acciones/.test(semantic))return 'CANTIDAD';
+    if (/precio|limite|limit/.test(semantic))return 'PRECIO';
+    if (/tipo de orden|modalidad|tipo de operacion/.test(semantic))return 'TIPO_ORDEN';
+    if (/vigencia|duracion|fecha/.test(semantic))return 'VIGENCIA';
+    return 'OTRO';
+  };
+  const safeFields = region => fields(region).slice(0,15).map(el=>({
+    kind:fieldKind(el),
+    control:String(el.tagName||'').toUpperCase().slice(0,15),
+    type:String(el.type||'').toLowerCase().slice(0,20)
+  }));
+  const appearsForm = () => {
+    const regions=[...dialogs(),...elements('form')];
+    for(const region of regions){
+      const descriptors=safeFields(region);
+      if(descriptors.some(x=>x.kind==='CANTIDAD') &&
+         (descriptors.some(x=>x.kind==='PRECIO'||x.kind==='TIPO_ORDEN') ||
+          descriptors.length>=2))
+        return {region,descriptors};
+    }
     return null;
   };
-  const forms=[...document.querySelectorAll('form,[role="dialog"],mat-dialog-container')]
-    .filter(visible);
-  const components=[...document.querySelectorAll('gt-btn-operar')].filter(visible);
-  const buttonKinds=new Map();
-  for(const root of actionRoot){
-    for(const node of [root,...root.querySelectorAll?.('button,[role="button"]')||[]]){
-      const kind=generic(node.innerText||node.textContent);
-      if(kind)buttonKinds.set(kind,(buttonKinds.get(kind)||0)+1);
-    }
+  const state={schema_version:2,stage:'MARKET_NOT_READY',
+    target_symbol:'V',selected_symbol:null,
+    clicked_steps:[],form_detected:false,fields:[],
+    action_widget_count:0,submitted_orders:0,
+    inspected_without_submission:true};
+  for(let attempt=0;attempt<45;attempt++){
+    if(elements('gt-btn-operar').length)break;
+    await sleep(300);
   }
-  return {schema_version:1,captured_at:new Date().toISOString(),
-    area:location.hash.startsWith('#/capitales')?'CAPITALES':'OTHER',
-    action_widget_count:Math.min(500,components.length),
-    visible_form_count:Math.min(50,forms.length),
-    action_kinds:Object.fromEntries([...buttonKinds].slice(0,10)),
-    // Only aggregate tag names, never classes, selectors, hrefs, values.
-    visible_dialog_count:Math.min(50,[...document.querySelectorAll(
-      '[role="dialog"],mat-dialog-container'
-    )].filter(visible).length),
-    inspected_without_clicks:true,submitted_orders:0};
+  const widgets=recognized('gt-btn-operar');
+  state.action_widget_count=widgets.length;
+  if(!widgets.length)return {...state,stage:'NO_MARKET_ACTIONS'};
+  // Strict row selection: do not accidentally open a different instrument.
+  const rows=elements('tr,[role="row"],mat-row,.mat-row');
+  const row=rows.find(el=>el.querySelector?.('gt-btn-operar') &&
+    [...el.querySelectorAll('td,[role="cell"],mat-cell,.mat-cell')]
+      .some(cell=>label(cell)==='v'));
+  if(!row)return {...state,stage:'TARGET_ROW_NOT_FOUND'};
+  state.selected_symbol='V';
+  const widget=row.querySelector('gt-btn-operar');
+  const launch=[...widget.querySelectorAll('button,[role="button"],a')].filter(visible)
+    .filter(el=>/^(comprar o vender|operar)$/.test(label(el)));
+  if(launch.length!==1)return {...state,stage:'ACTION_LAUNCHER_AMBIGUOUS'};
+  // Only the market-row launcher is allowed; never a submit/confirm control.
+  launch[0].click();
+  state.clicked_steps.push('OPEN_MARKET_ACTIONS');
+  state.stage='ACTIONS_OPENED';
+  for(let attempt=0;attempt<15;attempt++){
+    if(appearsForm())break;
+    const exposed=menus().some(menu=>{
+      const actions=[...menu.querySelectorAll('button,[role="menuitem"],a')].filter(visible);
+      return actions.some(el=>label(el)==='comprar') &&
+        actions.some(el=>label(el)==='vender');
+    });
+    if(exposed)break;
+    await sleep(250);
+  }
+  let form=appearsForm();
+  if(!form){
+    // A BUY action is safe to open ONLY when it is an item in an explicit
+    // COMPRAR/VENDER chooser and there are no form fields in that chooser.
+    const choices=[];
+    for(const menu of menus()){
+      if(fields(menu).length)continue;
+      const actions=[...menu.querySelectorAll('button,[role="menuitem"],a')].filter(visible);
+      if(!actions.some(el=>label(el)==='vender'))continue;
+      choices.push(...actions.filter(el=>label(el)==='comprar' &&
+        !el.closest?.('form,[role="dialog"],mat-dialog-container')));
+    }
+    if(choices.length===1){
+      choices[0].click();
+      state.clicked_steps.push('OPEN_BUY_FORM');
+      state.stage='BUY_FORM_REQUESTED';
+      for(let attempt=0;attempt<24;attempt++){
+        form=appearsForm();
+        if(form)break;
+        await sleep(250);
+      }
+    }else state.stage=choices.length?'BUY_ACTION_AMBIGUOUS':'BUY_MENU_NOT_FOUND';
+  }
+  if(form){
+    state.form_detected=true;
+    state.fields=form.descriptors;
+    state.stage='BUY_FORM_DETECTED';
+  }
+  // Never click confirm, send, preview, finalize, submit, buy-order buttons.
+  // No transactions, no account values and no order form values are transmitted.
+  return state;
 })();

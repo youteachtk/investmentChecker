@@ -1,3 +1,7 @@
+## v2.8.6 — inspección guiada de un formulario real (23/oct/2026)
+
+El botón de inspección ahora busca la fila de Visa (V) en Capitales dentro de una pestaña temporal. Únicamente abre el menú «Comprar o vender» y, si encuentra una opción «Comprar» inequívoca dentro de un menú de compra/venta, abre ese formulario sin completar ni enviar órdenes. Identifica de manera estructurada controles de cantidad, precio, tipo y vigencia; no captura valores, números de cuenta ni saldos. Guarda únicamente resultado y tipos de controles en `actinver/order-ui-probe.json` del repositorio privado. Si un control es ambiguo detiene la prueba; si el formulario no se abre registra su etapa exacta. Nunca pulsa enviar, confirmar o finalizar. No se ha validado aún contra una sesión autenticada real; el envío automático de órdenes sigue deshabilitado.
+
 ## v2.8.5 — cotizaciones independientes de la cartera (23/oct/2026)
 
 El recolector de 145 ACCIONES, 56 ETFs y 25 FONDOS y el envio al workflow publico permanecen iguales a la version verificada. Se corrige el acoplamiento de arranque: antes, las cotizaciones esperaban a que finalizara la lectura de cartera privada; si GitHub privado o la navegacion fallaba, el popup podia quedar eternamente en "trabajando". Ahora la captura publica comienza en su propia pestaña temporal de Brave inmediatamente y la cartera privada se lee en paralelo desde la pestana original, sin modificarla. No se ejecutan operaciones. Prueba nueva: la lectura privada queda deliberadamente suspendida mientras debe arrancar la publica.

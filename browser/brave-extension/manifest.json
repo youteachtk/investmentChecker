@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.8.5",
-  "description": "2.8.5: inicia las 226 cotizaciones sin esperar la cartera privada, conserva lector 2.7.1, propuestas y permisos.",
+  "version": "2.8.6",
+  "description": "2.8.6: inspeccion guiada de formulario real de compra de V sin enviar ordenes; mantiene la captura de 226 activos.",
   "permissions": [
     "storage",
     "scripting",
