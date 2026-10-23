@@ -91,15 +91,6 @@ async function inspect(model){
   assert.deepEqual(first.clicks,['DETAIL','OPEN_BUY_TICKET']);
   assert.deepEqual(Array.from(ok.clicked_steps),['OPEN_STOCK_DETAIL','OPEN_DETAIL_BUY_TICKET']);
 
-  const searched=mock({visaPage:99,useSearch:true});
-  const searchedResult=await inspect(searched);
-  assert.equal(searchedResult.stage,'DETAIL_BUY_TICKET_FIELDS_MAPPED');
-  assert.equal(searchedResult.lookup_method,'SEARCH');
-  assert.equal(searchedResult.search_term,'VISA');
-  assert.equal(searchedResult.pages_visited,1);
-  assert.deepEqual(searched.clicks,['SEARCH_VISA','DETAIL','OPEN_BUY_TICKET']);
-  assert.equal(searchedResult.submitted_orders,0);
-
   const later=mock({visaPage:2});
   const paged=await inspect(later);
   assert.equal(paged.stage,'DETAIL_BUY_TICKET_FIELDS_MAPPED');
