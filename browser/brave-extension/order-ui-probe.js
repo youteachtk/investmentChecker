@@ -1,7 +1,14 @@
 // Structural read-only broker order-form reconnaissance.
 // NO clicks, NO orders, NO symbols, NO financial figures, NO DOM dumps.
-(() => {
+(async () => {
   'use strict';
+  // Angular may load its market shell after the browser reports "complete".
+  // Wait only for the public action widgets, never for private account data.
+  for(let attempt=0;attempt<45;attempt++){
+    if(document.querySelector('app-capitales') &&
+       document.querySelectorAll('gt-btn-operar').length>0)break;
+    if(attempt<44)await new Promise(resolve=>setTimeout(resolve,300));
+  }
   const visible=e=>!!e?.getClientRects?.().length;
   const actionRoot=[...document.querySelectorAll(
     'gt-btn-operar,app-componente-dinamico,app-capitales button'
