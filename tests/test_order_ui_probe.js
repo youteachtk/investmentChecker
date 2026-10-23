@@ -4,8 +4,8 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
 const source=fs.readFileSync('browser/brave-extension/order-ui-probe.js','utf8');
-function mock({visaPage=1,link=true,navigate=true}={}){
-  let page=1;
+function mock({visaPage=1,link=true,navigate=true,ticketOpens=true,startingForm=false}={}){
+  let page=1,ticketOpen=false;
   const clicks=[];
   const location={hash:'#/capitales'};
   const el=(value='',extra={})=>({
@@ -48,12 +48,16 @@ function mock({visaPage=1,link=true,navigate=true}={}){
       return [];
     }
   });
-  const buy=el('Comprar',{tagName:'BUTTON',click:()=>{clicks.push('WRONG_BUY')}});
+  const buy=el('Comprar',{tagName:'BUTTON',click:()=>{ticketOpen=true;clicks.push('OPEN_BUY_TICKET')}});
   const sell=el('Vender',{tagName:'BUTTON',click:()=>{clicks.push('WRONG_SELL')}});
+  const qty=el('',{tagName:'INPUT',type:'number',id:'quantity',getAttribute:k=>k==='aria-label'?'Títulos':null});
+  const price=el('',{tagName:'INPUT',type:'number',id:'limit',getAttribute:k=>k==='aria-label'?'Precio límite':null});
   const document={
     querySelector:s=>s==='app-capitales'?root:null,
     querySelectorAll:s=>{
       if(s==='gt-btn-operar')return [widget];
+      if(s==='input,select,textarea,[role="spinbutton"],mat-select')
+        return startingForm||(ticketOpen&&ticketOpens)?[qty,price]:[];
       if(s==='button,a,input,select,textarea,[role="button"],[role="link"]' ||
          s==='button,a,[role="button"],[role="link"]')
         return location.hash.includes('DetalleAcciones')?[buy,sell]:[];
@@ -71,22 +75,22 @@ async function inspect(model){
 (async()=>{
   const first=mock();
   const ok=await inspect(first);
-  assert.equal(ok.stage,'DETAIL_OPENED');
+  assert.equal(ok.stage,'DETAIL_BUY_TICKET_FIELDS_DETECTED');
   assert.equal(ok.detail_route_verified,true);
   assert.equal(ok.selected_symbol,'V');
-  assert.equal(ok.form_detected,false);
+  assert.equal(ok.form_detected,true);
   assert.equal(ok.detail_controls.buy_control_present,true);
   assert.equal(ok.detail_controls.sell_control_present,true);
   assert.equal(ok.submitted_orders,0);
-  assert.deepEqual(first.clicks,['DETAIL']);
-  assert.deepEqual(Array.from(ok.clicked_steps),['OPEN_STOCK_DETAIL']);
+  assert.deepEqual(first.clicks,['DETAIL','OPEN_BUY_TICKET']);
+  assert.deepEqual(Array.from(ok.clicked_steps),['OPEN_STOCK_DETAIL','OPEN_DETAIL_BUY_TICKET']);
 
   const later=mock({visaPage:2});
   const paged=await inspect(later);
-  assert.equal(paged.stage,'DETAIL_OPENED');
+  assert.equal(paged.stage,'DETAIL_BUY_TICKET_FIELDS_DETECTED');
   assert.equal(paged.located_page,2);
   assert.equal(paged.pages_visited,2);
-  assert.deepEqual(later.clicks,['PAGE_2','DETAIL']);
+  assert.deepEqual(later.clicks,['PAGE_2','DETAIL','OPEN_BUY_TICKET']);
 
   const absent=mock({visaPage:99});
   const notFound=await inspect(absent);
@@ -104,5 +108,16 @@ async function inspect(model){
   assert.equal(failResult.detail_route_verified,false);
   assert.equal(failResult.submitted_orders,0);
   assert.deepEqual(failed.clicks,['DETAIL']);
-  console.log('PASS Visa Detail navigation with correct row, pagination and zero order submissions');
+
+  const alreadyHasForm=mock({startingForm:true});
+  const guard=await inspect(alreadyHasForm);
+  assert.equal(guard.stage,'DETAIL_TICKET_LAUNCHER_UNVERIFIED');
+  assert.deepEqual(alreadyHasForm.clicks,['DETAIL']);
+
+  const noTicket=mock({ticketOpens:false});
+  const unknown=await inspect(noTicket);
+  assert.equal(unknown.stage,'DETAIL_BUY_TICKET_NOT_DETECTED');
+  assert.deepEqual(noTicket.clicks,['DETAIL','OPEN_BUY_TICKET']);
+  assert.equal(unknown.submitted_orders,0);
+  console.log('PASS Visa Detail buy-ticket launcher, field detection and zero order submissions');
 })().catch(error=>{console.error(error);process.exitCode=1});
