@@ -1,7 +1,7 @@
 # Actinver — vigilancia automática de oportunidades
 
-Captura validada (UTC): **2026-10-23T11:45:51.868Z**
-Generado (UTC): **2026-10-23T11:46:00.255266+00:00**
+Captura validada (UTC): **2026-10-23T12:13:07.425Z**
+Generado (UTC): **2026-10-23T12:13:14.842571+00:00**
 Edad de la captura al generar: 0.1 min
 
 **No son órdenes ni precios en vivo.** Reconfirmar profundidad y precios en Actinver antes de operar.
