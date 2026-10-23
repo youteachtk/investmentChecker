@@ -3,6 +3,47 @@ const WORKFLOW_URL = 'https://api.github.com/repos/youteachtk/investmentChecker/
 const ACTINVER = /^https:\/\/(?:www\.)?retoactinver\.com(?:[\/:#?]|$)/i;
 const stamp = () => new Date().toLocaleString('es-MX');
 const MAX_RUN_AGE_MS = 7 * 60 * 1000;
+const MANUAL_SYNC_ALARM='investmentchecker_manual_sync';
+const MANUAL_SYNC_MAX_AGE_MS=2*60*1000;
+async function startQueuedManualSync(){
+  const state=await chrome.storage.local.get([
+    'manualSyncRequest','manualSyncHandledId','syncRunning','syncStartedAt'
+  ]);
+  const request=state.manualSyncRequest;
+  if(!request || typeof request.id!=='string' ||
+     !/^[a-z0-9-]{8,65}$/i.test(request.id) ||
+     !Number.isFinite(request.at) ||
+     Date.now()-request.at<0 || Date.now()-request.at>MANUAL_SYNC_MAX_AGE_MS){
+    return {ok:false,error:'No hay solicitud manual reciente.'};
+  }
+  if(state.manualSyncHandledId===request.id)return {ok:true,alreadyHandled:true};
+  // Only one worker can accept the exact request ID.
+  await chrome.storage.local.set({
+    manualSyncHandledId:request.id,manualSyncStartedAt:Date.now()
+  });
+  try{
+    const result=await startSync();
+    if(!result?.ok){
+      await setStatus('Sincronización no iniciada: '+
+        (result?.error||'El proceso no aceptó la solicitud.'),false);
+      await chrome.storage.local.set({manualSyncLastResult:{
+        id:request.id,ok:false,at:Date.now(),error:String(result?.error||'Inicio rechazado').slice(0,180)
+      }});
+    }else{
+      await chrome.storage.local.set({manualSyncLastResult:{
+        id:request.id,ok:true,at:Date.now(),stage:'INICIADA'
+      }});
+    }
+    return result;
+  }catch(error){
+    await setStatus('Error al iniciar sincronización: '+
+      String(error?.message||error),false);
+    await chrome.storage.local.set({manualSyncLastResult:{
+      id:request.id,ok:false,at:Date.now(),error:String(error?.message||error).slice(0,180)
+    }});
+    return {ok:false,error:String(error?.message||error)};
+  }
+}
 
 async function setStatus(message, running) {
   await chrome.storage.local.set({syncStatus:message, syncRunning:running});
@@ -331,6 +372,10 @@ chrome.runtime.onMessage.addListener((msg,sender,reply)=>{
   return true;
 });
 chrome.alarms.onAlarm.addListener(async alarm=>{
+  if(alarm.name===MANUAL_SYNC_ALARM){
+    await startQueuedManualSync();
+    return;
+  }
   if(alarm.name!=='quote_sync') return;
   const s=await chrome.storage.local.get(['autoSync','lastSync']);
   if(!s.autoSync || Date.now()-(s.lastSync||0)<28*60000) return;
