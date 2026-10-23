@@ -197,7 +197,7 @@ async function orderInspectUi(){
   const found=await getActinverTabs();
   const source=found.matches.find(t=>t.active)||found.matches[0];
   if(!source)return {ok:false,error:'No hay sesión de Actinver abierta en Brave.'};
-  let tab=null;
+  let tab=null,keepDetailTab=false;
   try{
     tab=await chrome.tabs.create({url:marketUrlForSession(source),
       openerTabId:source.id,active:false});
@@ -212,7 +212,9 @@ async function orderInspectUi(){
     const stages=new Set(['MARKET_NOT_READY','NO_MARKET_ACTIONS',
       'TARGET_ROW_NOT_FOUND','ACTION_LAUNCHER_AMBIGUOUS','ACTIONS_OPENED',
       'BUY_FORM_REQUESTED','BUY_ACTION_AMBIGUOUS','BUY_MENU_NOT_FOUND',
-      'BUY_FORM_DETECTED']);
+      'BUY_FORM_DETECTED','DETAIL_COLUMN_NOT_FOUND','DETAIL_LINK_NOT_FOUND',
+      'DETAIL_LINK_AMBIGUOUS','DETAIL_REQUESTED','DETAIL_NAVIGATION_NOT_CONFIRMED',
+      'DETAIL_OPENED','DETAIL_FORM_DETECTED']);
     const allowedKinds=new Set(['CANTIDAD','PRECIO','TIPO_ORDEN','VIGENCIA','OTRO']);
     const allowedControls=new Set(['INPUT','SELECT','TEXTAREA','MAT-SELECT']);
     const fields=Array.isArray(raw.fields)?raw.fields.slice(0,15)
@@ -224,13 +226,20 @@ async function orderInspectUi(){
           (item.type||''):'other'
       })):[];
     const steps=Array.isArray(raw.clicked_steps)?raw.clicked_steps.filter(step=>
-      ['OPEN_MARKET_ACTIONS','OPEN_BUY_FORM'].includes(step)).slice(0,2):[];
+      ['OPEN_STOCK_DETAIL'].includes(step)).slice(0,2):[];
     const probe={schema_version:2,captured_at:new Date().toISOString(),
       target_symbol:'V',selected_symbol:raw.selected_symbol==='V'?'V':null,
       stage:stages.has(raw.stage)?raw.stage:'MARKET_NOT_READY',
       action_widget_count:Number.isInteger(raw.action_widget_count)?
         Math.min(500,Math.max(0,raw.action_widget_count)):null,
       form_detected:raw.form_detected===true,fields,
+      detail_route_verified:raw.detail_route_verified===true,
+      detail_controls:{
+        buy_control_present:raw.detail_controls?.buy_control_present===true,
+        sell_control_present:raw.detail_controls?.sell_control_present===true,
+        visible_field_count:Number.isInteger(raw.detail_controls?.visible_field_count)?
+          Math.min(30,Math.max(0,raw.detail_controls.visible_field_count)):0
+      },
       side_panel_visible:raw.side_panel_visible===true,
       pages_visited:Number.isInteger(raw.pages_visited)?
         Math.min(15,Math.max(0,raw.pages_visited)):null,
@@ -258,16 +267,24 @@ async function orderInspectUi(){
     if(sha)body.sha=sha;
     const saved=await fetch(url,{method:'PUT',headers,body:JSON.stringify(body)});
     if(!saved.ok)throw Error('No se pudo guardar el diagnóstico privado.');
+    if(probe.detail_route_verified){
+      // The user's actual Detail page should remain visible after inspection.
+      keepDetailTab=true;
+      try{await chrome.tabs.update(tab.id,{active:true});}catch(_){}
+    }
     return {ok:true,status:probe.stage,action_widget_count:probe.action_widget_count,
-      order_form_verified:probe.form_detected,submitted_orders:0,
-      message:probe.form_detected?
-        'Se abrió el formulario de compra de V en pestaña secundaria; se identificaron '+
-        probe.fields.length+' controles. Diagnóstico privado guardado. No se envió ninguna compra.':
-        'Inspección parcial de V ('+probe.stage+'). Panel lateral visible: '+(probe.side_panel_visible?'sí':'no')+'. Diagnóstico guardado en GitHub privado. No se envió ninguna compra.'};
+      detail_opened:probe.detail_route_verified,order_form_verified:probe.form_detected,
+      submitted_orders:0,
+      message:probe.detail_route_verified?
+        'Se abrió Detalle de V en Brave. '+(probe.form_detected?
+          'Se identificaron controles del formulario.':
+          'Se reconoció la página; todavía no se identificó un formulario de compra.')+
+          ' Diagnóstico privado guardado. No se envió ninguna orden.':
+        'Inspección parcial de V ('+probe.stage+'). Se guardó el diagnóstico privado. No se envió ninguna orden.'};
   }catch(error){
     return {ok:false,error:String(error?.message||'No se pudo inspeccionar la interfaz.')};
   }finally{
-    if(tab)try{await chrome.tabs.remove(tab.id);}catch(_){}
+    if(tab&&!keepDetailTab)try{await chrome.tabs.remove(tab.id);}catch(_){}
   }
 }
 
