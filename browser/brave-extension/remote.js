@@ -18,7 +18,7 @@ async function checkInstalledFileUpdate() {
     const response=await fetch(localUrl,{cache:'no-store'});
     if(!response.ok)return;
     const disk=await response.json();
-    if(!disk||!/^\\d+\\.\\d+\\.\\d+$/.test(disk.version||''))return;
+    if(!disk||!/^\d+\.\d+\.\d+$/.test(disk.version||''))return;
     const parts=v=>v.split('.').map(Number);
     const a=parts(disk.version),b=parts(loaded);
     const newer=a.some((n,i)=>n!==b[i] && a.slice(0,i).every((p,j)=>p===b[j]) && n>b[i]);
