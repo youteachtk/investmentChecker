@@ -1,5 +1,5 @@
 // This module accepts ONLY short-lived read-only quote captures or a structural
-// broker-interface inspection. No orders, arbitrary scripts, or trading commands.
+// broker-interface and order-history inspection. No trade instructions or scripts.
 'use strict';
 const REMOTE_REQUEST_URL = 'https://raw.githubusercontent.com/youteachtk/investmentChecker/main/browser/remote-request.json';
 const REMOTE_ALARM = 'investmentchecker_remote_capture';
@@ -101,7 +101,7 @@ async function checkRemoteRequest() {
       await updateIfPublished(request.latest_version);
     // Both approved remote actions are READ-ONLY. Never accept buy/sell,
     // click instructions, scripts, freeform URLs or financial data payloads.
-    if (!request || !['capture_public_quotes','inspect_order_ui'].includes(request.action) ||
+    if (!request || !['capture_public_quotes','inspect_order_ui','inspect_order_history'].includes(request.action) ||
         typeof request.id !== 'string' || !/^[A-Za-z0-9._:-]{8,100}$/.test(request.id)) return;
     const requestedAt = Date.parse(request.issued_at);
     if (!Number.isFinite(requestedAt) || requestedAt>Date.now()+60_000 ||
@@ -125,6 +125,15 @@ async function checkRemoteRequest() {
         orderUiInspectionStatus:inspected?.message||inspected?.error||
           'Inspección no completada',
         lastRemoteOrderInspectionAt:new Date().toISOString()
+      });
+      return;
+    }
+    if(request.action==='inspect_order_history'){
+      const inspected=await orderHistoryStatus();
+      await chrome.storage.local.set({
+        orderHistoryLastRemoteStatus:inspected?.status||inspected?.error||
+          'No se completó la lectura de órdenes.',
+        orderHistoryLastRemoteAt:new Date().toISOString()
       });
       return;
     }
