@@ -231,6 +231,7 @@ async function orderInspectUi(){
       action_widget_count:Number.isInteger(raw.action_widget_count)?
         Math.min(500,Math.max(0,raw.action_widget_count)):null,
       form_detected:raw.form_detected===true,fields,
+      side_panel_visible:raw.side_panel_visible===true,
       pages_visited:Number.isInteger(raw.pages_visited)?
         Math.min(15,Math.max(0,raw.pages_visited)):null,
       located_page:Number.isInteger(raw.located_page)&&raw.located_page>=1&&raw.located_page<=15?
@@ -262,7 +263,7 @@ async function orderInspectUi(){
       message:probe.form_detected?
         'Se abrió el formulario de compra de V en pestaña secundaria; se identificaron '+
         probe.fields.length+' controles. Diagnóstico privado guardado. No se envió ninguna compra.':
-        'Inspección parcial de V ('+probe.stage+'). Guardé el diagnóstico privado; falta reconocer el formulario real. No se envió ninguna compra.'};
+        'Inspección parcial de V ('+probe.stage+'). Panel lateral visible: '+(probe.side_panel_visible?'sí':'no')+'. Diagnóstico guardado en GitHub privado. No se envió ninguna compra.'};
   }catch(error){
     return {ok:false,error:String(error?.message||'No se pudo inspeccionar la interfaz.')};
   }finally{
