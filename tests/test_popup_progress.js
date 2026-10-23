@@ -23,8 +23,6 @@ const state={
   privateRepo:'example/private',privateToken:'MOCK',
   syncRunning:true,syncStartedAt:Date.now(),
   syncStatus:'Capitales: ACCIONES página 2 · 20/145',
-  syncProgress:{stage:'READ_PAGE',category:'ACCIONES',page:2,
-    captured:20,total:226,updatedAt:Date.now()},
   lastSync:Date.now()-60_000
 };
 const document={getElementById:node,activeElement:null,createElement:()=>node('created')};
@@ -50,21 +48,18 @@ const flush=async()=>{
   assert.equal(node('syncProgress').value,20);
   assert.match(node('syncStage').textContent,/ACCIONES/);
   assert.match(node('syncStage').textContent,/página 2/);
-  state.syncProgress={stage:'READ_PAGE',category:'ETFs',page:3,
-    captured:175,total:226,updatedAt:Date.now()};
   state.syncStatus='Capitales: ETFs página 3 · 30/56';
   assert.equal(typeof callback,'function');
-  callback({syncProgress:{newValue:state.syncProgress}},'local');
+  callback({syncStatus:{newValue:state.syncStatus}},'local');
   await flush();
   assert.equal(node('syncProgress').value,175);
   assert.match(node('syncCount').textContent,/175 \/ 226/);
   assert.match(node('syncStage').textContent,/ETFs/);
   state.syncRunning=false;
-  state.syncProgress={stage:'Enviado a GitHub, validación pendiente',
-    captured:226,total:226,updatedAt:Date.now()};
+  state.syncStatus='226 cotizaciones enviadas a GitHub · prueba.';
   windowCtx.interval();
   await flush();
   assert.equal(node('syncProgress').value,226);
   assert.match(node('syncFreshness').textContent,/Último envío/);
-  console.log('PASS popup live progress listener, pagination and snapshot freshness labels');
+  console.log('PASS 2.8 popup progress derived only from field-proven collector status');
 })().catch(error=>{console.error(error);process.exitCode=1});
