@@ -1,3 +1,11 @@
+## v2.8.3 — Recuperación de inicio en Brave (23/oct/2026)
+
+Corrige el bloqueo de la 2.8.2 que dejaba el popup diciendo «Brave no confirmó el inicio después de 12 segundos» mientras los contadores permanecían en 0/226. El usuario ya verificó en Brave que la vía antigua `START_SYNC` podía dejar la promesa de `chrome.runtime.sendMessage` sin respuesta. Ahora el popup escribe una solicitud persistente con un identificador único y activa DOS mecanismos del navegador: `WAKE_MANUAL_SYNC` para despertar inmediatamente al proceso de fondo, y `chrome.alarms` como vía de recuperación cuando el mensaje no recibe respuesta. Ambos leen y procesan el mismo identificador; un bloqueo en memoria y un identificador consumido impiden iniciar dos capturas.
+
+El estado diferencia claramente `Esperando proceso de fondo de Brave`, `Solicitud aceptada`, `Sincronización no iniciada` y `Proceso de fondo no respondió`. El panel ya no depende de que el servicio conteste a `START_SYNC` para registrar el clic, ni afirma que sincronizó hasta que el flujo de captura y GitHub confirma su trabajo. El fallo de un sistema de alarmas también produce un error visible. No cambia el manejo de Capitales o Mi portafolio ni la cartera privada. No ejecuta órdenes.
+
+Nuevas pruebas automatizadas: `tests/test_manual_sync_recovery.js` fuerza que `sendMessage` no responda y comprueba que la solicitud persista para el alarm; `tests/test_worker_boot.js` carga juntos el trabajador y los módulos importados, prueba la activación inmediata y verifica que el evento de recuperación no duplica la lectura. **Todavía es necesario comprobar la versión instalada en el Brave real**; las pruebas de GitHub no equivalen a controlar ese navegador desde aquí.
+
 ## v2.8.2 — Inicio de sincronización confirmado y visible (23/oct/2026)
 
 Se corrigió el problema de popup en la 2.8.1: «Iniciando sincronización completa…» se mostraba ANTES de que el servicio de fondo confirmara el arranque. Abrir la pestaña de Capitales podía tardar hasta 25 segundos, y la extensión no respondía al popup mientras esperaba la carga. Si el arranque se detenía, el indicador podía permanecer en 0/226 sin explicar el punto exacto.
