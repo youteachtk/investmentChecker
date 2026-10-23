@@ -1,5 +1,5 @@
-// This module accepts ONLY short-lived read-only market-quote capture requests.
-// It does not accept arbitrary scripts, account data requests, or trading commands.
+// This module accepts ONLY short-lived read-only quote captures or a structural
+// broker-interface inspection. No orders, arbitrary scripts, or trading commands.
 'use strict';
 const REMOTE_REQUEST_URL = 'https://raw.githubusercontent.com/youteachtk/investmentChecker/main/browser/remote-request.json';
 const REMOTE_ALARM = 'investmentchecker_remote_capture';
@@ -20,7 +20,9 @@ async function checkRemoteRequest() {
     const response = await fetch(url, {cache:'no-store'});
     if (!response.ok) throw Error('Error consultando solicitudes GitHub: HTTP '+response.status);
     const request = await response.json();
-    if (!request || request.action !== 'capture_public_quotes' ||
+    // Both approved remote actions are READ-ONLY. Never accept buy/sell,
+    // click instructions, scripts, freeform URLs or financial data payloads.
+    if (!request || !['capture_public_quotes','inspect_order_ui'].includes(request.action) ||
         typeof request.id !== 'string' || !/^[A-Za-z0-9._:-]{8,100}$/.test(request.id)) return;
     const requestedAt = Date.parse(request.issued_at);
     if (!Number.isFinite(requestedAt) || requestedAt>Date.now()+60_000 ||
@@ -38,7 +40,16 @@ async function checkRemoteRequest() {
     }
     // One read-only request now starts both public quotes and private portfolio capture.
     await chrome.storage.local.set({lastRemoteRequestId:request.id,remotePendingRequestId:null});
-    const result = await startSync(tab.id);
+    if(request.action==='inspect_order_ui'){
+      const inspected=await orderInspectUi();
+      await chrome.storage.local.set({
+        orderUiInspectionStatus:inspected?.message||inspected?.error||
+          'Inspección no completada',
+        lastRemoteOrderInspectionAt:new Date().toISOString()
+      });
+      return;
+    }
+    const result=await startSync(tab.id);
     if (!result.ok) {
       await setStatus('No se pudo iniciar la solicitud de ChatGPT: '+(result.error||'error desconocido'),false);
     } else {
