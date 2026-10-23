@@ -3,52 +3,6 @@ const WORKFLOW_URL = 'https://api.github.com/repos/youteachtk/investmentChecker/
 const ACTINVER = /^https:\/\/(?:www\.)?retoactinver\.com(?:[\/:#?]|$)/i;
 const stamp = () => new Date().toLocaleString('es-MX');
 const MAX_RUN_AGE_MS = 7 * 60 * 1000;
-const MANUAL_SYNC_ALARM='investmentchecker_manual_sync';
-const MANUAL_SYNC_MAX_AGE_MS=2*60*1000;
-let manualSyncProcessing=false;
-async function startQueuedManualSync(){
-  if(manualSyncProcessing)return {ok:true,alreadyProcessing:true};
-  manualSyncProcessing=true;
-  try{
-  const state=await chrome.storage.local.get([
-    'manualSyncRequest','manualSyncHandledId','syncRunning','syncStartedAt'
-  ]);
-  const request=state.manualSyncRequest;
-  if(!request || typeof request.id!=='string' ||
-     !/^[a-z0-9-]{8,65}$/i.test(request.id) ||
-     !Number.isFinite(request.at) ||
-     Date.now()-request.at<0 || Date.now()-request.at>MANUAL_SYNC_MAX_AGE_MS){
-    return {ok:false,error:'No hay solicitud manual reciente.'};
-  }
-  if(state.manualSyncHandledId===request.id)return {ok:true,alreadyHandled:true};
-  // Only one worker can accept the exact request ID.
-  await chrome.storage.local.set({
-    manualSyncHandledId:request.id,manualSyncStartedAt:Date.now()
-  });
-  try{
-    const result=await startSync();
-    if(!result?.ok){
-      await setStatus('Sincronización no iniciada: '+
-        (result?.error||'El proceso no aceptó la solicitud.'),false);
-      await chrome.storage.local.set({manualSyncLastResult:{
-        id:request.id,ok:false,at:Date.now(),error:String(result?.error||'Inicio rechazado').slice(0,180)
-      }});
-    }else{
-      await chrome.storage.local.set({manualSyncLastResult:{
-        id:request.id,ok:true,at:Date.now(),stage:'INICIADA'
-      }});
-    }
-    return result;
-  }catch(error){
-    await setStatus('Error al iniciar sincronización: '+
-      String(error?.message||error),false);
-    await chrome.storage.local.set({manualSyncLastResult:{
-      id:request.id,ok:false,at:Date.now(),error:String(error?.message||error).slice(0,180)
-    }});
-    return {ok:false,error:String(error?.message||error)};
-  }
-  }finally{manualSyncProcessing=false;}
-}
 
 async function setStatus(message, running) {
   await chrome.storage.local.set({syncStatus:message, syncRunning:running});
@@ -94,7 +48,7 @@ function marketUrlForSession(tab) {
     'https://www.retoactinver.com':'https://retoactinver.com';
   return host+'/RetoActinver/#/capitales';
 }
-async function createIsolatedMarketTab(sourceTab,runId,{waitForReady=true}={}) {
+async function createIsolatedMarketTab(sourceTab,runId) {
   if(!Number.isInteger(sourceTab?.id)||
      !ACTINVER.test(sourceTab.url||sourceTab.pendingUrl||''))
     throw Error('No se encontró una sesión Actinver para la pestaña de lectura.');
@@ -106,7 +60,7 @@ async function createIsolatedMarketTab(sourceTab,runId,{waitForReady=true}={}) {
   await chrome.storage.local.set({
     syncTemporaryTabId:tab.id,syncTempRunId:runId
   });
-  if(waitForReady && !(await waitForPage(tab.id))){
+  if(!(await waitForPage(tab.id))){
     await cleanupTemporarySyncTab(tab.id,runId);
     throw Error('No se pudo cargar Capitales en la pestaña secundaria.');
   }
@@ -196,62 +150,22 @@ async function startSync(tabId = null) {
   await recoverMisplacedPrivateToken();
   const runId='sync-'+Date.now()+'-'+Math.floor(Math.random()*100000);
   await chrome.storage.local.set({syncRunId:runId,syncStartedAt:Date.now(),syncRunning:true,
-    syncStatus:'Iniciando sincronización privada y pública en segundo plano…',
-    syncProgress:{stage:'Preparando la cartera privada',captured:0,total:226,
-      category:null,page:null,updatedAt:Date.now()}});
+    syncStatus:'Recopilando cotizaciones y cartera en pestañas secundarias…'});
   try {
     const sourceTab=(tabId!==null?found.matches.find(t=>t.id===tabId):null)
       ||found.matches.find(t=>t.active)
       ||found.matches[0];
     // Always isolate the 226-row collector. Even when Capitales is already
     // visible, that original user tab stays completely untouched.
-    // Opening a tab is fast, but loading the Angular app can take 25 seconds.
-    // Acknowledge the popup immediately after creating the isolated tab.
-    // Continue navigation/read/upload asynchronously with explicit status.
-    await chrome.storage.local.set({
-      syncProgress:{stage:'Abriendo pestaña secundaria de Capitales',
-        captured:0,total:226,category:null,page:null,updatedAt:Date.now()},
-      syncStatus:'Abriendo Capitales en segundo plano…'
-    });
-    const tab=await createIsolatedMarketTab(sourceTab,runId,{waitForReady:false});
-    void (async()=>{
-      await chrome.storage.local.set({
-        syncProgress:{stage:'Esperando carga de Capitales',
-          captured:0,total:226,category:null,page:null,updatedAt:Date.now()},
-        syncStatus:'Esperando carga de Capitales en segundo plano…'
-      });
-      if(!(await waitForPage(tab.id)))
-        throw Error('Capitales no terminó de cargar en la pestaña secundaria.');
-      await chrome.storage.local.set({
-        syncProgress:{stage:'Leyendo cartera privada',
-          captured:0,total:226,category:null,page:null,updatedAt:Date.now()},
-        syncStatus:'Leyendo cartera y posiciones privadas…'
-      });
-      try{
-        const result=await runPortfolioSync(tab.id);
-        await chrome.storage.local.set({
-          privateSyncStatus:result?.message||'Lectura privada completada.'
-        });
-      }catch(error){
-        await chrome.storage.local.set({
-          privateSyncStatus:'Cartera: '+String(error?.message||error)
-        });
-      }
-      await chrome.storage.local.set({
-        syncProgress:{stage:'Preparando las 226 cotizaciones',
-          captured:0,total:226,category:null,page:null,updatedAt:Date.now()},
-        syncStatus:'Preparando lectura de las 226 cotizaciones…'
-      });
-      await injectQuotesWithRetry(tab.id,runId);
-    })().catch(async error=>{
-      await setStatus('Error al iniciar la lectura: '+String(error?.message||error),false);
-      await chrome.storage.local.set({
-        syncProgress:{stage:'Fallo al abrir Capitales',captured:0,
-          total:226,category:null,page:null,updatedAt:Date.now()}
-      });
-      await cleanupTemporarySyncTab(null,runId);
-    });
-    return {ok:true,stage:'INICIADA',temporaryTabId:tab.id};
+    const tab=await createIsolatedMarketTab(sourceTab,runId);
+    // Finish private capture before public navigation because their temporary
+    // tabs may share the authenticated opener. All public page switching
+    // happens inside our disposable Capitales tab, never the user tab.
+    void runPortfolioSync(tab.id)
+      .then(result=>chrome.storage.local.set({privateSyncStatus:result?.message||'Lectura privada completada.'}))
+      .catch(error=>chrome.storage.local.set({privateSyncStatus:'Cartera: '+error.message}))
+      .finally(()=>{void injectQuotesWithRetry(tab.id,runId);});
+    return {ok:true};
   }catch(error){
     await setStatus('Error al iniciar lectura: '+error.message,false);
     await cleanupTemporarySyncTab(null,runId);
@@ -277,28 +191,22 @@ async function upload(payload) {
   }
 }
 async function route(msg,sender) {
-  if (msg?.type==='WAKE_MANUAL_SYNC'){
-    // Lightweight wake signal; the durable alarm remains the fallback.
-    // The in-memory lock and persisted request ID prevent duplicate capture.
-    void startQueuedManualSync();
-    return {ok:true,queued:true};
+  // These read-only additions are independent of the proven public
+  // collection path. Do not modify startSync/injectQuotesWithRetry.
+  if(msg?.type==='CHECK_QUOTES'){
+    const response=await fetch(
+      'https://raw.githubusercontent.com/youteachtk/investmentChecker/main/output/actinver_quotes.json?check='+Date.now(),
+      {cache:'no-store'});
+    if(!response.ok)return {ok:false,error:'GitHub no respondió.'};
+    const doc=await response.json();
+    if(doc?.total!==226||!Array.isArray(doc?.quotes)||
+       doc.quotes.length!==226||typeof doc.validated_at!=='string')
+      return {ok:false,error:'GitHub aún no validó las 226 cotizaciones.'};
+    return {ok:true,total:226,captured_at:doc.captured_at,validated_at:doc.validated_at};
   }
-  if (msg?.type==='CHECK_QUOTES') {
-    // Public snapshot only, never expose the private portfolio or token.
-    const url='https://raw.githubusercontent.com/youteachtk/investmentChecker/main/output/actinver_quotes.json?check='+Date.now();
-    const response=await fetch(url,{cache:'no-store'});
-    if(!response.ok)return {ok:false,error:'GitHub no respondió a la comprobación pública.'};
-    const snapshot=await response.json();
-    const valid=snapshot?.total===226 &&
-      Array.isArray(snapshot?.quotes)&&snapshot.quotes.length===226 &&
-      typeof snapshot?.validated_at==='string';
-    if(!valid)return {ok:false,error:'GitHub no confirma una captura válida de 226 instrumentos.'};
-    return {ok:true,total:226,captured_at:snapshot.captured_at,
-      validated_at:snapshot.validated_at};
-  }
-  if (msg?.type==='ORDER_PREVIEW') return await orderPreview();
-  if (msg?.type==='ORDER_APPROVE') return await orderApprove(msg);
-  if (msg?.type==='ORDER_INSPECT_UI') return await orderInspectUi();
+  if(msg?.type==='ORDER_PREVIEW')return await orderPreview();
+  if(msg?.type==='ORDER_APPROVE')return await orderApprove(msg);
+  if(msg?.type==='ORDER_INSPECT_UI')return await orderInspectUi();
   if (msg?.type==='PRIVATE_CONFIG') return await configurePrivatePortfolio(msg);
   if (msg?.type==='PRIVATE_START') return await capturePrivatePortfolio();
   if (msg?.type==='PRIVATE_CAPTURE') return await acceptPrivateCapture(msg,sender);
@@ -316,30 +224,12 @@ async function route(msg,sender) {
     const {syncTabId,syncRunning,syncRunId}=await chrome.storage.local.get(['syncTabId','syncRunning','syncRunId']);
     if (sender.tab?.id!==syncTabId || !syncRunning) return {ok:false,error:'Captura no reconocida'};
     if (msg.type==='PROGRESS') {
-      const d=msg.detail||{};
-      const phases=new Set(['START','CATEGORY','FIRST_PAGE','READ_PAGE','NEXT_PAGE','UPLOAD']);
-      const categories=new Set(['ACCIONES','ETFs','FONDOS']);
-      const value=Number.isInteger(d.captured)&&d.captured>=0&&d.captured<=226?
-        d.captured:0;
-      const progress={
-        stage:phases.has(d.phase)?d.phase:'READ_PAGE',
-        category:categories.has(d.category)?d.category:null,
-        page:Number.isInteger(d.page)&&d.page>=1&&d.page<=30?d.page:null,
-        captured:value,total:226,updatedAt:Date.now()
-      };
-      await chrome.storage.local.set({
-        syncStatus:typeof msg.status==='string'?msg.status.slice(0,200):
-          'Recopilando cotizaciones…',
-        syncRunning:true,syncProgress:progress
-      });
+      await setStatus(msg.status,true);
       return {ok:true};
     }
     if (msg.type==='COLLECT_FAILED') {
       await setStatus('Cotizaciones pendientes: '+(msg.reason||'lectura incompleta')+
         '. Guardando diagnóstico privado; la cartera se procesa por separado.',false);
-      await chrome.storage.local.set({syncProgress:{
-        stage:'Error de captura',captured:0,total:226,category:null,
-        page:null,updatedAt:Date.now()}});
       let diagnosticStatus='unavailable';
       try {
         const saved=await uploadPrivateDiagnostic(msg.diagnostic);
@@ -354,16 +244,9 @@ async function route(msg,sender) {
     try {
       await setStatus('226 cotizaciones capturadas. Validando en GitHub…',true);
       await upload(msg.payload);
-      await chrome.storage.local.set({lastSync:Date.now(),orderReviewAttempts:0});
-      // GitHub Actions validates the new snapshot asynchronously. Recheck the
-      // confirmed public file shortly afterward, then stage local proposals.
-      await chrome.alarms.create('order_review_refresh',{delayInMinutes:0.5});
+      await chrome.storage.local.set({lastSync:Date.now()});
       await setStatus('226 cotizaciones enviadas a GitHub · '+stamp()+
-        '. Pendiente de validación por GitHub.',false);
-      await chrome.storage.local.set({syncProgress:{
-        stage:'Enviado a GitHub, validación pendiente',captured:226,total:226,
-        category:'FONDOS',page:null,updatedAt:Date.now()
-      }});
+        '. Consulta también el estado de la cartera privada.',false);
       // Background injector closes its own tab after collector.js completes.
       return {ok:true};
     }catch(err) {
@@ -376,17 +259,13 @@ async function route(msg,sender) {
   return {ok:false,error:'Comando no reconocido'};
 }
 chrome.runtime.onMessage.addListener((msg,sender,reply)=>{
-  route(msg,sender).then(result=>reply({...result,version:'2.8.3'})).catch(async err=>{
+  route(msg,sender).then(result=>reply({...result,version:'2.8.4'})).catch(async err=>{
     await setStatus('Error: '+err.message,false);
     reply({ok:false,error:err.message});
   });
   return true;
 });
 chrome.alarms.onAlarm.addListener(async alarm=>{
-  if(alarm.name===MANUAL_SYNC_ALARM){
-    await startQueuedManualSync();
-    return;
-  }
   if(alarm.name!=='quote_sync') return;
   const s=await chrome.storage.local.get(['autoSync','lastSync']);
   if(!s.autoSync || Date.now()-(s.lastSync||0)<28*60000) return;
