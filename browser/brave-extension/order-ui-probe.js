@@ -74,7 +74,7 @@
   const findV=()=>rows().find(tr=>ticker(tr)==='v'&&tr.querySelector('gt-btn-operar'));
   const pager=()=>root?.querySelector('app-paginator');
   const buttons=()=>[...(pager()?.querySelectorAll('button')||[])].filter(visible);
-  const pageNumber=()=>{const b=buttons().filter(e=>e.classList.contains('active')&&/^\\d+$/.test(label(e)));
+  const pageNumber=()=>{const b=buttons().filter(e=>e.classList.contains('active')&&/^\d+$/.test(label(e)));
     return b.length===1?Number(label(b[0])):null;};
   let row=findV(),page=pageNumber()||1;
   state.pages_visited=1;
@@ -86,7 +86,7 @@
       const group=pager().querySelector('.btn-pages');
       const groupButtons=[...(group?.querySelectorAll('button')||[])].filter(visible);
       const arrow=groupButtons[groupButtons.length-1];
-      if(!arrow||arrow.disabled||/^\\d+$/.test(label(arrow)))break;
+      if(!arrow||arrow.disabled||/^\d+$/.test(label(arrow)))break;
       arrow.click();
       for(let i=0;i<40&&!buttons().some(e=>label(e)===String(nextPage));i++)await sleep(250);
       next=buttons().find(e=>label(e)===String(nextPage));
