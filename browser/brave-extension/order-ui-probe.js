@@ -1,5 +1,5 @@
-// Guided, read-only discovery of a REAL buy ticket for one market instrument.
-// May open a market action menu and a BUY FORM launcher; NEVER submits a trade.
+// Navigate to Visa's read-only stock detail page for structural inspection.
+// Never open operation panels or submit transactions.
 // No quantity/price is entered. Do not include DOM dumps, balances or account data.
 (async () => {
   'use strict';
@@ -47,6 +47,7 @@
   const state={schema_version:2,stage:'MARKET_NOT_READY',
     target_symbol:'V',selected_symbol:null,
     clicked_steps:[],form_detected:false,fields:[],side_panel_visible:false,
+    detail_route_verified:false,detail_controls:null,
     action_widget_count:0,submitted_orders:0,
     inspected_without_submission:true};
   for(let attempt=0;attempt<45;attempt++){
@@ -103,55 +104,52 @@
   if(!row)return {...state,stage:'TARGET_ROW_NOT_FOUND'};
   state.located_page=page;
   state.selected_symbol='V';
-  const widget=row.querySelector('gt-btn-operar');
-  const launch=[...widget.querySelectorAll('button,[role="button"],a')].filter(visible)
-    .filter(el=>/^(comprar o vender|operar)$/.test(label(el)));
-  if(launch.length!==1)return {...state,stage:'ACTION_LAUNCHER_AMBIGUOUS'};
-  // Only the market-row launcher is allowed; never a submit/confirm control.
-  launch[0].click();
-  state.clicked_steps.push('OPEN_MARKET_ACTIONS');
-  state.stage='ACTIONS_OPENED';
-  for(let attempt=0;attempt<15;attempt++){
-    if(appearsForm())break;
-    const exposed=menus().some(menu=>{
-      const actions=[...menu.querySelectorAll('button,[role="menuitem"],a')].filter(visible);
-      return actions.some(el=>label(el)==='comprar') &&
-        actions.some(el=>label(el)==='vender');
-    });
-    if(exposed)break;
+  // Navigate using the DETAIL link within V's own Información column.
+  // The side panel opened by Operar is intentionally not used.
+  const headers=[...(table()?.querySelectorAll('thead th')||[])].map(label);
+  const infoIndex=headers.indexOf('informacion');
+  const cells=[...row.querySelectorAll('td')];
+  if(infoIndex<0||!cells[infoIndex])
+    return {...state,stage:'DETAIL_COLUMN_NOT_FOUND'};
+  const detailLinks=[...cells[infoIndex].querySelectorAll('a,button,[role="link"],[role="button"]')]
+    .filter(visible).filter(el=>label(el)==='detalle');
+  if(detailLinks.length!==1)
+    return {...state,stage:detailLinks.length?'DETAIL_LINK_AMBIGUOUS':'DETAIL_LINK_NOT_FOUND'};
+
+  detailLinks[0].click();
+  state.clicked_steps.push('OPEN_STOCK_DETAIL');
+  state.stage='DETAIL_REQUESTED';
+  for(let attempt=0;attempt<70;attempt++){
+    if(String(location.hash||'').includes('/capitales/detalle/DetalleAcciones'))break;
     await sleep(250);
   }
-  let form=appearsForm();
-  if(!form){
-    // A BUY action is safe to open ONLY when it is an item in an explicit
-    // COMPRAR/VENDER chooser and there are no form fields in that chooser.
-    const choices=[];
-    for(const menu of menus()){
-      if(fields(menu).length)continue;
-      const actions=[...menu.querySelectorAll('button,[role="menuitem"],a')].filter(visible);
-      if(!actions.some(el=>label(el)==='vender'))continue;
-      choices.push(...actions.filter(el=>label(el)==='comprar' &&
-        !el.closest?.('form,[role="dialog"],mat-dialog-container')));
+  if(!String(location.hash||'').includes('/capitales/detalle/DetalleAcciones'))
+    return {...state,stage:'DETAIL_NAVIGATION_NOT_CONFIRMED'};
+
+  state.detail_route_verified=true;
+  state.stage='DETAIL_OPENED';
+  // Angular renders the detail view after updating the hash.
+  for(let attempt=0;attempt<24;attempt++){
+    if(elements('button,a,input,select,textarea,[role="button"],[role="link"]').length)break;
+    await sleep(250);
+  }
+  const controls=elements('button,a,[role="button"],[role="link"]');
+  state.detail_controls={
+    buy_control_present:controls.some(el=>label(el)==='comprar'),
+    sell_control_present:controls.some(el=>label(el)==='vender'),
+    visible_field_count:Math.min(30,elements('input,select,textarea,mat-select,[role="spinbutton"]').length)
+  };
+  const regions=elements('form,app-detalle-acciones,app-detalle-accion,[class*="detalle-acciones"]');
+  for(const region of regions){
+    const descriptors=safeFields(region);
+    if(descriptors.some(item=>item.kind==='CANTIDAD')&&descriptors.length>=2){
+      state.fields=descriptors;
+      state.form_detected=true;
+      state.stage='DETAIL_FORM_DETECTED';
+      break;
     }
-    if(choices.length===1){
-      choices[0].click();
-      state.clicked_steps.push('OPEN_BUY_FORM');
-      state.stage='BUY_FORM_REQUESTED';
-      for(let attempt=0;attempt<24;attempt++){
-        form=appearsForm();
-        if(form)break;
-        await sleep(250);
-      }
-    }else state.stage=choices.length?'BUY_ACTION_AMBIGUOUS':'BUY_MENU_NOT_FOUND';
   }
-  if(form){
-    state.form_detected=true;
-    state.fields=form.descriptors;
-    state.stage='BUY_FORM_DETECTED';
-  }
-  // Structural diagnostic only; never store panel text or input values.
-  state.side_panel_visible=elements('aside,[role="complementary"],mat-sidenav,mat-drawer,.mat-drawer,.mat-sidenav').length>0;
-  // Never click confirm, send, preview, finalize, submit, buy-order buttons.
-  // No transactions, no account values and no order form values are transmitted.
+  // The detail link is navigation only: never activate order submission.
+  // Do not read balances, form values, account data or arbitrary HTML.
   return state;
 })();
