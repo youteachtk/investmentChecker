@@ -1,70 +1,93 @@
-// Real buy-form launcher inspection, with mock DOM. No trading submissions.
+// Inspect a real-looking paginated Capitales table, without submitting trades.
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const source=fs.readFileSync('browser/brave-extension/order-ui-probe.js','utf8');
-function mock(openBuy=true){
-  const clicks=[];
-  const el=(text='',extras={})=>({
-    innerText:text,textContent:text,tagName:'BUTTON',
-    getClientRects:()=>[1],getAttribute:()=>null,
-    querySelectorAll:()=>[],closest:()=>null,click:()=>{clicks.push(text)},
-    ...extras
+const src=fs.readFileSync('browser/brave-extension/order-ui-probe.js','utf8');
+function setup({visaPage=1,form=true}={}){
+  const clicks=[];let page=1,menuOpen=false,buyOpen=false;
+  const node=(value='',extra={})=>({
+    innerText:value,textContent:value,tagName:'BUTTON',getClientRects:()=>[1],
+    getAttribute:()=>null,querySelector:()=>null,querySelectorAll:()=>[],
+    closest:()=>null,classList:{contains:()=>false},disabled:false,
+    click:()=>{clicks.push(value)},...extra
   });
-  let clickedLauncher=false,clickedBuy=false;
-  const buyButton=el('Comprar',{click:()=>{clickedBuy=true;clicks.push('OPEN_BUY_FORM')}});
-  const sellButton=el('Vender');
-  const menu=el('Comprar Vender',{querySelectorAll:selector=>
-    selector.startsWith('input,select,textarea')?[]:[buyButton,sellButton]});
-  const operateButton=el('Comprar o vender',{click:()=>{clickedLauncher=true;clicks.push('OPEN_ACTIONS')}});
-  const widget=el('',{querySelectorAll:()=>[operateButton]});
-  const cell=el('V');
-  const row=el('',{querySelector:()=>widget,querySelectorAll:()=>[cell]});
-  const qty=el('',{tagName:'INPUT',type:'number',id:'q',getAttribute:k=>k==='aria-label'?'Cantidad':null});
-  const price=el('',{tagName:'INPUT',type:'number',id:'p',getAttribute:k=>k==='aria-label'?'Precio límite':null});
-  const dialog=el('Comprar',{querySelectorAll:()=>[qty,price]});
+  const buy=node('Comprar',{click:()=>{buyOpen=true;clicks.push('BUY_MENU')}});
+  const sell=node('Vender');
+  const menu=node('Comprar Vender',{querySelectorAll:s=>
+    s.startsWith('input,select,textarea')?[]:[buy,sell]});
+  const launcher=node('Operar',{click:()=>{menuOpen=true;clicks.push('OPEN_ACTION')}});
+  const widget=node('',{querySelectorAll:()=>[launcher]});
+  const row=symbol=>node('',{querySelector:s=>s==='gt-btn-operar'?widget:null,
+    querySelectorAll:s=>s.startsWith('td')?[node(symbol)]:[]});
+  const head=node('Emisora');
+  const table=node('',{querySelectorAll:s=>{
+    if(s==='thead th')return [head];
+    if(s==='tbody tr')return [row(page===visaPage?'V':'AA1')];
+    return [];
+  }});
+  const number=n=>node(String(n),{
+    classList:{contains:c=>c==='active'&&page===n},
+    click:()=>{page=n;clicks.push('PAGE_'+n)}
+  });
+  const first=number(1),second=number(2);
+  const paginator=node('',{querySelectorAll:s=>s==='button'?[first,second]:[],
+    querySelector:()=>null});
+  const root=node('',{querySelectorAll:s=>{
+    if(s==='app-tabla-material table.table-capitales')return [table];
+    if(s==='div.tab-btn')return [];
+    return [];
+  },querySelector:s=>s==='app-paginator'?paginator:null});
+  const qty=node('',{tagName:'INPUT',type:'number',id:'q',
+    getAttribute:key=>key==='aria-label'?'Cantidad':null});
+  const price=node('',{tagName:'INPUT',type:'number',id:'p',
+    getAttribute:key=>key==='aria-label'?'Precio límite':null});
+  const dialog=node('Compra',{querySelectorAll:()=>[qty,price]});
   const document={
-    querySelectorAll(selector){
-      if(selector==='gt-btn-operar')return [widget];
-      if(selector==='tr,[role="row"],mat-row,.mat-row')return [row];
-      if(selector==='label')return [];
-      if(selector.includes('mat-menu-panel')||selector.includes('[role="menu"]'))
-        return clickedLauncher&&!clickedBuy?[menu]:[];
-      if(selector==='[role="dialog"],mat-dialog-container,dialog')
-        return clickedBuy&&openBuy?[dialog]:[];
-      if(selector==='form')return [];
+    querySelector:s=>s==='app-capitales'?root:null,
+    querySelectorAll:s=>{
+      if(s==='gt-btn-operar')return [widget];
+      if(s==='label')return [];
+      if(s==='[role="dialog"],mat-dialog-container,dialog')
+        return buyOpen&&form?[dialog]:[];
+      if(s==='form')return [];
+      if(s.includes('[role="menu"]')||s.includes('mat-menu-panel'))
+        return menuOpen&&!buyOpen?[menu]:[];
       return [];
     }
   };
-  return {clicks,document};
+  return {document,clicks,getPage:()=>page};
+}
+async function run(model){
+  return vm.runInNewContext(src,{document:model.document,Date,setTimeout:fn=>fn()});
 }
 (async()=>{
-  const success=mock();
-  const first=await vm.runInNewContext(source,{
-    document:success.document,Date,setTimeout:cb=>cb()
-  });
-  assert.equal(first.schema_version,2);
-  assert.equal(first.stage,'BUY_FORM_DETECTED');
-  assert.equal(first.selected_symbol,'V');
-  assert.equal(first.form_detected,true);
-  assert.equal(first.submitted_orders,0);
-  assert.deepEqual(Array.from(first.clicked_steps),['OPEN_MARKET_ACTIONS','OPEN_BUY_FORM']);
-  assert.equal(first.fields.some(f=>f.kind==='CANTIDAD'),true);
-  assert.equal(first.fields.some(f=>f.kind==='PRECIO'),true);
-  assert.deepEqual(success.clicks,['OPEN_ACTIONS','OPEN_BUY_FORM']);
-  const noForm=mock(false);
-  const second=await vm.runInNewContext(source,{
-    document:noForm.document,Date,setTimeout:cb=>cb()
-  });
-  assert.equal(second.form_detected,false);
-  assert.equal(second.submitted_orders,0);
-  const unsafe=mock();
-  unsafe.document.querySelectorAll=(function(original){
-    return selector=>selector==='tr,[role="row"],mat-row,.mat-row'?[]:original(selector);
-  })(unsafe.document.querySelectorAll.bind(unsafe.document));
-  const third=await vm.runInNewContext(source,{
-    document:unsafe.document,Date,setTimeout:cb=>cb()
-  });
-  assert.equal(third.stage,'TARGET_ROW_NOT_FOUND');
-  assert.deepEqual(unsafe.clicks,[]);
-  console.log('PASS guided V buy-form discovery and zero order submission');
+  const first=setup();
+  const ok=await run(first);
+  assert.equal(ok.schema_version,2);
+  assert.equal(ok.stage,'BUY_FORM_DETECTED');
+  assert.equal(ok.selected_symbol,'V');
+  assert.equal(ok.form_detected,true);
+  assert.equal(ok.submitted_orders,0);
+  assert.equal(ok.located_page,1);
+  assert.deepEqual(first.clicks,['OPEN_ACTION','BUY_MENU']);
+  assert.deepEqual(Array.from(ok.clicked_steps),['OPEN_MARKET_ACTIONS','OPEN_BUY_FORM']);
+  assert.equal(ok.fields.some(f=>f.kind==='CANTIDAD'),true);
+  assert.equal(ok.fields.some(f=>f.kind==='PRECIO'),true);
+  const second=setup({visaPage:2});
+  const paged=await run(second);
+  assert.equal(paged.stage,'BUY_FORM_DETECTED');
+  assert.equal(paged.located_page,2);
+  assert.equal(paged.pages_visited,2);
+  assert.equal(second.getPage(),2);
+  assert.deepEqual(second.clicks,['PAGE_2','OPEN_ACTION','BUY_MENU']);
+  const absent=setup({visaPage:99});
+  const notFound=await run(absent);
+  assert.equal(notFound.stage,'TARGET_ROW_NOT_FOUND');
+  assert.equal(notFound.submitted_orders,0);
+  assert.deepEqual(absent.clicks,['PAGE_2']);
+  const unfilled=setup({form:false});
+  const partial=await run(unfilled);
+  assert.equal(partial.form_detected,false);
+  assert.equal(partial.submitted_orders,0);
+  assert.ok(!JSON.stringify(partial).includes('password'));
+  console.log('PASS Capitales pagination to V and zero purchase submissions');
 })().catch(e=>{console.error(e);process.exitCode=1});
