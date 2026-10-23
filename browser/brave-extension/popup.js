@@ -35,13 +35,14 @@ async function refresh(){
   // No modification to the working 226-row collector is needed.
   const message=String(s.syncStatus||'');
   const match=/Capitales:\s*(ACCIONES|ETFs|FONDOS)\s+página\s+(\d+)\s*[·•-]\s*(\d+)\s*\/\s*(\d+)/i.exec(message);
-  const offsets={ACCIONES:0,ETFs:145,FONDOS:201};
+  const offsets={ACCIONES:0,ETFS:145,FONDOS:201};
   const category=match?.[1]?.toUpperCase();
+  const categoryLabel=category==='ETFS'?'ETFs':category;
   const count=match?Math.min(226,offsets[category]+Number(match[3])):
     /226 cotizaciones (?:enviadas|capturadas)/i.test(message)?226:0;
   $('syncProgress').value=count;
   $('syncCount').textContent=count+' / 226 instrumentos'+
-    (match?' · '+category+', página '+match[2]:'');
+    (match?' · '+categoryLabel+', página '+match[2]:'');
   $('syncStage').textContent=s.syncRunning&&!running?
     'La captura superó siete minutos. Revisa el estado antes de reintentar.':
     (message||'Sin sincronización activa.');
