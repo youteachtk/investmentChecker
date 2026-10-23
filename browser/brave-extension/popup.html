@@ -17,6 +17,16 @@ summary{font-weight:700;cursor:pointer;user-select:none;padding:6px 0}
 label{display:block;margin:12px 0 6px;font-weight:650}
 input{width:100%;border:1px solid #606b7b;border-radius:8px;padding:11px;background:#0b0e13;color:#fff}
 a{color:#a2d9ff}
+.trade{margin-top:14px;border:1px solid #55616d;border-radius:10px;padding:12px}
+.trade h2{font-size:16px;margin:0 0 8px}
+.trade .order-line{padding:9px 0;border-bottom:1px solid #485160}
+.trade .order-line label{display:flex;gap:8px;align-items:flex-start;margin:0}
+.trade input[type="checkbox"]{width:auto;min-width:17px;accent-color:#22c55e;margin-top:3px}
+.trade .order-detail{display:block;color:#cbd5e1;font-size:12px;line-height:1.5}
+.trade .confirm{display:flex;align-items:flex-start;gap:9px;font-size:12px;line-height:1.5;font-weight:400}
+.trade .confirm input{margin:3px 0 0 0}
+.trade .message{white-space:pre-wrap;font-size:12px;line-height:1.5;color:#d8e0e9}
+.trade button.secondary{margin:8px 0}
 </style></head><body>
 <h1>InvestmentChecker <small id="version"></small></h1>
 <p>Mercado y cartera unidos. Se sincronizan automáticamente mientras Actinver esté abierto en Brave.</p>
@@ -24,6 +34,20 @@ a{color:#a2d9ff}
 <button id="run">Sincronizar todo ahora</button>
 <div id="status" class="status" role="status">Preparando sincronización…</div>
 <p class="minor">Cotizaciones → GitHub público. Saldos y posiciones → GitHub privado. Nunca ejecuta compras ni ventas.</p>
+<section class="trade" aria-labelledby="tradeHeader">
+  <h2 id="tradeHeader">Propuestas para el Reto Actinver</h2>
+  <p class="minor">Importes en actipesos virtuales. Una propuesta no es una orden.</p>
+  <button id="orderPreview" class="secondary">Calcular compras con datos recientes</button>
+  <div id="orderMessage" class="message" role="status">Sin propuestas revisadas.</div>
+  <div id="orderList"></div>
+  <label class="confirm" for="orderConsent">
+    <input id="orderConsent" type="checkbox">
+    Apruebo únicamente preparar las operaciones seleccionadas, con los límites y cantidades mostrados.
+  </label>
+  <button id="orderApprove" disabled>Aprobar lote para preparación</button>
+  <button id="orderInspect" class="secondary">Inspeccionar interfaz de compra (sin operar)</button>
+  <p class="minor">Por seguridad, el envío a Actinver permanece deshabilitado hasta verificar el formulario real de órdenes y su confirmación.</p>
+</section>
 <details id="settings">
   <summary>Configuración y diagnóstico</summary>
   <label for="token">Token PÚBLICO — cotizaciones (Actions)</label>
