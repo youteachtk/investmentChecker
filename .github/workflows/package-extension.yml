@@ -12,6 +12,7 @@ on:
       - 'tests/test_frame_lifecycle.js'
       - 'tests/test_order_preflight.js'
       - 'tests/test_order_ui_probe.js'
+      - 'tests/test_popup_progress.js'
       - '.github/workflows/package-extension.yml'
   workflow_dispatch:
 
@@ -48,6 +49,8 @@ jobs:
         run: node tests/test_order_preflight.js
       - name: Regression test for read-only Actinver order UI inspection
         run: node tests/test_order_ui_probe.js
+      - name: Regression test for live popup telemetry and verified snapshots
+        run: node tests/test_popup_progress.js
       - name: Build stable folder-layout installer
         run: |
           VERSION=$(python -c "import json;print(json.load(open('browser/brave-extension/manifest.json'))['version'])")
