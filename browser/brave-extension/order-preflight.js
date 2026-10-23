@@ -281,6 +281,7 @@ async function orderInspectUi(){
     }
     return {ok:true,status:probe.stage,action_widget_count:probe.action_widget_count,
       detail_opened:probe.detail_route_verified,order_form_verified:probe.form_detected,
+      detail_tab_id:keepDetailTab?tab.id:null,
       submitted_orders:0,
       message:probe.detail_route_verified?
         'Se abrió Detalle de V en Brave. '+(probe.form_detected?
@@ -397,4 +398,118 @@ async function orderHistoryStatus(){
   }finally{
     if(tab)try{await chrome.tabs.remove(tab.id)}catch(_){}
   }
+}
+
+
+// This Chrome-injected function only fills a prepared virtual Reto order.
+// The actual Comprar/Calcular orden controls are NEVER activated here.
+async function orderFillFieldsOnVisaDetail(order){
+  const result={ok:false,stage:'UNVERIFIED',submitted_orders:0};
+  const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/\s+/g,' ').trim().toLowerCase();
+  const visible=el=>!!(el&&typeof el.getClientRects==='function'&&
+    el.getClientRects().length&&!el.disabled);
+  if(!location.hash.includes('/capitales/detalle/DetalleAcciones'))
+    return {...result,stage:'WRONG_ROUTE'};
+  if(order?.symbol!=='V'||!Number.isInteger(order.quantity)||
+    order.quantity<1||order.quantity>1000||
+    !Number.isFinite(order.limit_mxn)||order.limit_mxn<=0)
+    return {...result,stage:'INVALID_APPROVED_DRAFT'};
+  const company=[...document.querySelectorAll('h1,h2,h3,h4,span,div,strong')]
+    .filter(visible).some(el=>norm(el.innerText)==='visa inc.');
+  if(!company)return {...result,stage:'VISA_IDENTITY_NOT_VERIFIED'};
+  const panels=[...document.querySelectorAll(
+    'aside,[role="complementary"],mat-sidenav,mat-drawer,.mat-drawer,.mat-sidenav')]
+    .filter(visible).filter(el=>{
+      const t=norm(el.innerText);
+      return t.includes('titulos')&&t.includes('precio limite')&&
+        t.includes('calcular orden');
+    });
+  if(panels.length!==1)return {...result,stage:'ORDER_PANEL_AMBIGUOUS'};
+  const panel=panels[0];
+  const inputs=[...panel.querySelectorAll('input')]
+    .filter(visible).filter(el=>['text','number','tel'].includes(
+      String(el.type||'text').toLowerCase())&&!el.readOnly);
+  if(inputs.length!==2)return {...result,stage:'ORDER_INPUTS_AMBIGUOUS'};
+  const candidates=[...panel.querySelectorAll('label,span,small,strong,div')]
+    .filter(visible).filter(el=>{
+      const t=norm(el.innerText);
+      return t==='titulos'||t==='precio limite';
+    });
+  const nearest=(name)=>{
+    const labels=candidates.filter(el=>norm(el.innerText)===name);
+    if(labels.length===0)return null;
+    const possible=[];
+    for(const lab of labels){
+      const r=lab.getBoundingClientRect?.();
+      if(!r)continue;
+      for(const input of inputs){
+        const b=input.getBoundingClientRect?.();
+        if(!b)continue;
+        const dx=Math.abs(b.left-r.left),dy=b.top-r.bottom;
+        if(dx<=125&&dy>=-15&&dy<=95)
+          possible.push({input,score:dx+Math.abs(dy)*2});
+      }
+    }
+    possible.sort((a,b)=>a.score-b.score);
+    return possible.length&&(possible.length===1||
+      possible[0].score+15<possible[1].score)?possible[0].input:null;
+  };
+  const qtyInput=nearest('titulos'),priceInput=nearest('precio limite');
+  if(!qtyInput||!priceInput||qtyInput===priceInput)
+    return {...result,stage:'ORDER_LABEL_MAPPING_UNVERIFIED'};
+  // Refuse to replace any already-entered quantity.
+  if(qtyInput.value&&qtyInput.value!=='0')
+    return {...result,stage:'QUANTITY_ALREADY_ENTERED'};
+  const parse=x=>Number(String(x||'').replace(/[^\d.-]/g,''));
+  const setter=(field,value)=>{
+    const proto=Object.getPrototypeOf(field);
+    const descriptor=Object.getOwnPropertyDescriptor(proto,'value')||
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value');
+    if(descriptor?.set)descriptor.set.call(field,value);
+    else field.value=value;
+    field.dispatchEvent(new Event('input',{bubbles:true}));
+    field.dispatchEvent(new Event('change',{bubbles:true}));
+  };
+  setter(qtyInput,String(order.quantity));
+  setter(priceInput,order.limit_mxn.toFixed(2));
+  if(parse(qtyInput.value)!==order.quantity||
+    Math.abs(parse(priceInput.value)-order.limit_mxn)>.02)
+    return {...result,stage:'FORM_DID_NOT_ACCEPT_VALUES'};
+  return {ok:true,stage:'DRAFT_FILLED_FOR_MANUAL_CONFIRMATION',
+    symbol:'V',quantity:order.quantity,limit_mxn:order.limit_mxn,
+    submitted_orders:0,final_confirmation_required:true};
+}
+async function orderStageApprovedVisa(){
+  const data=(await chrome.storage.local.get('orderDraftCache')).orderDraftCache;
+  if(!data||data.approved!==true||
+    !Array.isArray(data.approved_symbols)||!data.approved_symbols.includes('V')||
+    Date.now()>Date.parse(data.expires_at))
+    return {ok:false,error:'No hay propuesta vigente de V aprobada para preparación.'};
+  const order=data.orders.find(x=>x.symbol==='V'&&x.side==='BUY');
+  if(!order)return {ok:false,error:'La aprobación no incluye una compra de Visa.'};
+  // An approved draft is valid only for 5 minutes; never use stale limits.
+  if(!Number.isFinite(order.limit_mxn)||!Number.isInteger(order.quantity))
+    return {ok:false,error:'Cantidad o precio del borrador no verificables.'};
+  const inspected=await orderInspectUi();
+  if(!inspected?.ok||!inspected?.order_form_verified||!inspected.detail_tab_id)
+    return {ok:false,error:inspected?.message||inspected?.error||
+      'No se verificó el formulario real de Visa.'};
+  if(Date.now()>Date.parse(data.expires_at))
+    return {ok:false,error:'La propuesta venció durante la navegación. Sin cambios al formulario.'};
+  const rows=await chrome.scripting.executeScript({
+    target:{tabId:inspected.detail_tab_id},func:orderFillFieldsOnVisaDetail,
+    args:[{symbol:'V',quantity:order.quantity,limit_mxn:order.limit_mxn}],
+    world:'ISOLATED'
+  });
+  const response=rows?.[0]?.result;
+  if(response?.ok&&response.submitted_orders===0){
+    await chrome.storage.local.set({orderReviewStatus:
+      'Formulario de V preparado; confirma personalmente en Actinver.'});
+    return {ok:true,stage:response.stage,submitted_orders:0,
+      message:'Se cargaron los títulos y precio límite de V. Revisa y confirma personalmente en Actinver. No se envió la orden.'};
+  }
+  return {ok:false,status:response?.stage||'STAGE_UNVERIFIED',
+    error:'La interfaz no permitió identificar con seguridad los campos ('+
+      (response?.stage||'SIN_DATOS')+'). No se envió ninguna orden.'};
 }
