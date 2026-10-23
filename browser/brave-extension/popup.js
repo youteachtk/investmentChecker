@@ -60,3 +60,89 @@ chrome.storage.onChanged.addListener((changes,area)=>{
   }
 });
 void refresh();
+
+
+// Batch trade preparation. Approval NEVER submits a transaction to Actinver.
+let orderDraft=null;
+const fmtMX=n=>Number(n).toLocaleString('es-MX',{
+  minimumFractionDigits:2,maximumFractionDigits:2
+});
+function resetOrderSelection(){
+  orderDraft=null;
+  $('orderList').replaceChildren();
+  $('orderConsent').checked=false;
+  $('orderApprove').disabled=true;
+}
+function refreshOrderApproval(){
+  const checked=[...$('orderList').querySelectorAll('input[type="checkbox"]')]
+    .some(x=>x.checked);
+  $('orderApprove').disabled=!orderDraft||!$('orderConsent').checked||!checked;
+}
+function renderOrders(result){
+  resetOrderSelection();
+  if(!result?.ok){
+    $('orderMessage').textContent=result?.reason||result?.error||
+      'Sin propuestas válidas. Actualiza cotizaciones y cartera.';
+    return;
+  }
+  if(result.execution_enabled!==false || !Array.isArray(result.orders)) {
+    $('orderMessage').textContent='No se pudo verificar que la ejecución esté bloqueada.';
+    return;
+  }
+  orderDraft=result;
+  $('orderMessage').textContent=
+    'Datos recientes verificados. Vigencia hasta: '+
+    new Date(result.expires_at).toLocaleTimeString('es-MX')+
+    '. Efectivo disponible: $'+fmtMX(result.buying_power_mxn)+
+    '. Importe estimado del lote: $'+fmtMX(result.estimated_spend_mxn)+'.';
+  for(const o of result.orders){
+    const container=document.createElement('div');container.className='order-line';
+    const label=document.createElement('label');
+    const input=document.createElement('input');input.type='checkbox';
+    input.value=o.symbol;
+    input.addEventListener('change',refreshOrderApproval);
+    const text=document.createElement('span');
+    const ticker=document.createElement('strong');
+    ticker.textContent=o.symbol+' · '+o.quantity+' títulos';
+    const detail=document.createElement('span');detail.className='order-detail';
+    detail.textContent='Límite $'+fmtMX(o.limit_mxn)+
+      ' · máximo estimado $'+fmtMX(o.estimated_total_mxn)+
+      ' · diferencial '+Number(o.spread_pct).toFixed(3)+'%';
+    text.append(ticker,detail);label.append(input,text);
+    container.append(label);$('orderList').append(container);
+  }
+}
+$('orderPreview').addEventListener('click',async()=>{
+  $('orderPreview').disabled=true;
+  $('orderMessage').textContent='Contrastando precios y cartera privada…';
+  const result=await send({type:'ORDER_PREVIEW'});
+  renderOrders(result);
+  $('orderPreview').disabled=false;
+});
+$('orderConsent').addEventListener('change',refreshOrderApproval);
+$('orderApprove').addEventListener('click',async()=>{
+  if(!orderDraft||!$('orderConsent').checked)return;
+  const selected=[...$('orderList').querySelectorAll('input[type="checkbox"]')]
+    .filter(x=>x.checked).map(x=>x.value);
+  if(!selected.length)return;
+  $('orderApprove').disabled=true;
+  const result=await send({type:'ORDER_APPROVE',
+    draft_id:orderDraft.draft_id,symbols:selected,confirmed:true});
+  if(!result?.ok){
+    $('orderMessage').textContent=result?.error||'No se aceptó la revisión del lote.';
+    resetOrderSelection();
+    return;
+  }
+  $('orderMessage').textContent='Lote revisado y preparado: '+
+    result.orders.map(o=>o.symbol+' ('+o.quantity+')').join(', ')+
+    '. Ninguna orden fue enviada a Actinver.';
+  resetOrderSelection();
+});
+$('orderInspect').addEventListener('click',async()=>{
+  $('orderInspect').disabled=true;
+  $('orderMessage').textContent='Inspeccionando controles de compra sin realizar operaciones…';
+  const response=await send({type:'ORDER_INSPECT_UI'});
+  $('orderMessage').textContent=response?.message||response?.error||
+    'No se pudo inspeccionar la pantalla.';
+  $('orderInspect').disabled=false;
+});
