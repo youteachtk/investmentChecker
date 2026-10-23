@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.8.12",
-  "description": "2.8.12: inspector abre panel de compra de V desde Detalle, sin cantidades ni ejecutar órdenes.",
+  "version": "2.8.13",
+  "description": "2.8.13: busca Visa desde Buscar de Capitales y diferencia Títulos de Precio límite; solo inspección.",
   "permissions": [
     "storage",
     "scripting",
