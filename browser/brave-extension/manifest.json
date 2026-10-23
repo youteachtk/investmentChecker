@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.8.15",
-  "description": "2.8.15: consulta remota y privada de órdenes ejecutadas/pendientes; preparación de Visa sin envío automático.",
+  "version": "2.8.16",
+  "description": "2.8.16: diagnóstico privado verificable del historial de órdenes, aun cuando falle navegación o lectura.",
   "permissions": [
     "storage",
     "scripting",
