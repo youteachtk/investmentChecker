@@ -9,7 +9,8 @@ async function send(msg) {
 }
 async function refresh(){
   const s=await chrome.storage.local.get(['githubToken','privateToken','privateRepo','privateEnabled',
-    'syncStatus','syncRunning','privateSyncStatus','autoSync','lastSync','privateLastSync','remoteControlEnabled']);
+    'syncStatus','syncRunning','privateSyncStatus','autoSync','lastSync','privateLastSync',
+    'remoteControlEnabled','orderDraftCache','orderReviewStatus']);
   const publicOk=!!s.githubToken,privateOk=!!(s.privateEnabled && s.privateRepo && s.privateToken);
   $('connection').textContent=(publicOk?'✓ Token de cotizaciones guardado':'⚠ Sin token público')+'  ·  '+
     (privateOk?'✓ Acceso a cartera privada verificado':'⚠ Cartera privada pendiente');
@@ -26,6 +27,9 @@ async function refresh(){
     if(privateOk && s.privateSyncStatus && (!s.syncRunning)) lines.push(s.privateSyncStatus);
     show(lines.join('\n'));
   }
+  const draft=s.orderDraftCache;
+  if(draft?.ok && !draft.approved && Date.parse(draft.expires_at)>Date.now() &&
+     draft.draft_id!==orderDraft?.draft_id)renderOrders(draft);
 }
 $('run').addEventListener('click',async()=>{
   localMessage='Iniciando sincronización completa…';show(localMessage);
@@ -55,9 +59,10 @@ $('remote').addEventListener('click',async()=>{
 $('diagnose').addEventListener('click',async()=>{const r=await send({type:'DIAGNOSE'});show(r?.diagnostic||r?.error||'No se completó el diagnóstico.');});
 chrome.storage.onChanged.addListener((changes,area)=>{
   if(area!=='local')return;
-  if(changes.syncStatus||changes.syncRunning||changes.privateSyncStatus||changes.privateEnabled||changes.privateLastSync){
-    localMessage=null;void refresh();
-  }
+  if(changes.syncStatus||changes.syncRunning||changes.privateSyncStatus||
+     changes.privateEnabled||changes.privateLastSync||
+     changes.orderDraftCache||changes.orderReviewStatus){
+    localMessage=null;  }
 });
 void refresh();
 
@@ -146,3 +151,5 @@ $('orderInspect').addEventListener('click',async()=>{
     'No se pudo inspeccionar la pantalla.';
   $('orderInspect').disabled=false;
 });
+
+void refresh();
