@@ -9,6 +9,7 @@ on:
       - 'tests/test_portfolio_navigation.js'
       - 'tests/test_direct_portfolio.js'
       - 'tests/test_isolated_market_capture.js'
+      - 'tests/test_frame_lifecycle.js'
       - '.github/workflows/package-extension.yml'
   workflow_dispatch:
 
@@ -39,6 +40,8 @@ jobs:
         run: node tests/test_direct_portfolio.js
       - name: Regression test for background-only market collection
         run: node tests/test_isolated_market_capture.js
+      - name: Regression test for frame lifecycle after successful upload
+        run: node tests/test_frame_lifecycle.js
       - name: Build stable folder-layout installer
         run: |
           VERSION=$(python -c "import json;print(json.load(open('browser/brave-extension/manifest.json'))['version'])")
