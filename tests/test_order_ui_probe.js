@@ -4,8 +4,8 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
 const source=fs.readFileSync('browser/brave-extension/order-ui-probe.js','utf8');
-function mock({visaPage=1,link=true,navigate=true,ticketOpens=true,startingForm=false}={}){
-  let page=1,ticketOpen=false;
+function mock({visaPage=1,link=true,navigate=true,ticketOpens=true,startingForm=false,useSearch=false}={}){
+  let page=1,ticketOpen=false,searchValue='';
   const clicks=[];
   const location={hash:'#/capitales'};
   const el=(value='',extra={})=>({
@@ -30,7 +30,7 @@ function mock({visaPage=1,link=true,navigate=true,ticketOpens=true,startingForm=
   const th2=el('Emisora',{tagName:'TH'});
   const table=el('',{querySelectorAll:selector=>{
     if(selector==='thead th')return [th1,th2];
-    if(selector==='tbody tr')return [row(page===visaPage?'V':'AA1')];
+    if(selector==='tbody tr')return [row((useSearch&&searchValue==='VISA')||page===visaPage?'V':'AA1')];
     return [];
   }});
   const nav=n=>el(String(n),{tagName:'BUTTON',
@@ -40,11 +40,16 @@ function mock({visaPage=1,link=true,navigate=true,ticketOpens=true,startingForm=
   const buttons=[nav(1),nav(2)];
   const paginator=el('',{querySelectorAll:selector=>selector==='button'?buttons:[],
     querySelector:()=>null});
+  const search=el('',{tagName:'INPUT',value:'',
+    getAttribute:key=>key==='placeholder'?'Buscar':null,
+    dispatchEvent:()=>{searchValue=search.value;clicks.push('SEARCH_'+searchValue)}
+  });
   const root=el('',{
     querySelector:selector=>selector==='app-paginator'?paginator:null,
     querySelectorAll:selector=>{
       if(selector==='app-tabla-material table.table-capitales')return [table];
       if(selector==='div.tab-btn')return [];
+      if(selector==='input')return useSearch?[search]:[];
       return [];
     }
   });
@@ -69,13 +74,14 @@ function mock({visaPage=1,link=true,navigate=true,ticketOpens=true,startingForm=
 async function inspect(model){
   return vm.runInNewContext(source,{
     document:model.document,location:model.location,
-    Date,setTimeout:callback=>callback()
+    Date,Event:class{constructor(type,options){this.type=type;this.bubbles=options?.bubbles}},
+    setTimeout:callback=>callback()
   });
 }
 (async()=>{
   const first=mock();
   const ok=await inspect(first);
-  assert.equal(ok.stage,'DETAIL_BUY_TICKET_FIELDS_DETECTED');
+  assert.equal(ok.stage,'DETAIL_BUY_TICKET_FIELDS_MAPPED');
   assert.equal(ok.detail_route_verified,true);
   assert.equal(ok.selected_symbol,'V');
   assert.equal(ok.form_detected,true);
@@ -85,9 +91,18 @@ async function inspect(model){
   assert.deepEqual(first.clicks,['DETAIL','OPEN_BUY_TICKET']);
   assert.deepEqual(Array.from(ok.clicked_steps),['OPEN_STOCK_DETAIL','OPEN_DETAIL_BUY_TICKET']);
 
+  const searched=mock({visaPage:99,useSearch:true});
+  const searchedResult=await inspect(searched);
+  assert.equal(searchedResult.stage,'DETAIL_BUY_TICKET_FIELDS_MAPPED');
+  assert.equal(searchedResult.lookup_method,'SEARCH');
+  assert.equal(searchedResult.search_term,'VISA');
+  assert.equal(searchedResult.pages_visited,1);
+  assert.deepEqual(searched.clicks,['SEARCH_VISA','DETAIL','OPEN_BUY_TICKET']);
+  assert.equal(searchedResult.submitted_orders,0);
+
   const later=mock({visaPage:2});
   const paged=await inspect(later);
-  assert.equal(paged.stage,'DETAIL_BUY_TICKET_FIELDS_DETECTED');
+  assert.equal(paged.stage,'DETAIL_BUY_TICKET_FIELDS_MAPPED');
   assert.equal(paged.located_page,2);
   assert.equal(paged.pages_visited,2);
   assert.deepEqual(later.clicks,['PAGE_2','DETAIL','OPEN_BUY_TICKET']);
