@@ -252,3 +252,27 @@ async function orderInspectUi(){
     if(tab)try{await chrome.tabs.remove(tab.id);}catch(_){}
   }
 }
+
+const ORDER_REVIEW_ALARM='order_review_refresh';
+chrome.alarms.onAlarm.addListener(alarm=>{
+  if(alarm.name!==ORDER_REVIEW_ALARM)return;
+  void (async()=>{
+    const result=await orderPreview();
+    await chrome.storage.local.set({
+      orderReviewStatus:result.status,
+      orderReviewUpdatedAt:new Date().toISOString()
+    });
+    if(result.ok){
+      await chrome.storage.local.remove('orderReviewAttempts');
+      return;
+    }
+    const state=await chrome.storage.local.get('orderReviewAttempts');
+    const count=Number(state.orderReviewAttempts)||0;
+    if(count<4 && ['STALE_QUOTES','STALE_PORTFOLIO'].includes(result.status)){
+      await chrome.storage.local.set({orderReviewAttempts:count+1});
+      await chrome.alarms.create(ORDER_REVIEW_ALARM,{delayInMinutes:.5});
+    }
+  })().catch(err=>{
+    console.warn('[investmentChecker order draft]',String(err?.message||'unavailable'));
+  });
+});
