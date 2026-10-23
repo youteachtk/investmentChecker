@@ -83,6 +83,8 @@ jobs:
           for attempt in 1 2 3 4 5; do
             git fetch origin main
             git reset --mixed origin/main
+            # Preserve the latest remote action; do not parse a stale worktree copy.
+            git show origin/main:browser/remote-request.json > browser/remote-request.json
             python - <<'PY'
           import json
           from pathlib import Path
