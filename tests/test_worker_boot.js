@@ -18,7 +18,8 @@ const tabs=new Map([[51,{id:51,url:
 const store={githubToken:'github_pat_TEST',privateEnabled:false};
 const tracking={created:[],removed:[],injected:[],alarms:[]};
 const chrome={
-  runtime:{onMessage:ev(),onInstalled:ev(),onStartup:ev()},
+  runtime:{onMessage:ev(),onInstalled:ev(),onStartup:ev(),
+    getManifest:()=>({version:JSON.parse(fs.readFileSync(folder+'manifest.json','utf8')).version})},
   tabs:{
     onUpdated:ev(),onRemoved:ev(),
     query:async()=>[...tabs.values()],
