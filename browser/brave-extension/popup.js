@@ -189,6 +189,15 @@ $('orderInspect').addEventListener('click',async()=>{
   $('orderInspect').disabled=false;
 });
 
+
+$('orderHistory').addEventListener('click',async()=>{
+  $('orderHistory').disabled=true;
+  $('orderHistoryMessage').textContent='Consultando la sección Órdenes de Actinver…';
+  const result=await send({type:'ORDER_HISTORY'});
+  $('orderHistoryMessage').textContent=result?.message||result?.error||
+    'No se pudo verificar el historial de órdenes.';
+  $('orderHistory').disabled=false;
+});
 $('verifyQuotes').addEventListener('click',async()=>{
   $('verifyQuotes').disabled=true;
   $('syncVerified').textContent='Comprobando cotizaciones públicas en GitHub…';
