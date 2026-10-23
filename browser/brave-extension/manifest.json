@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.7.0",
-  "description": "Sincroniza las 226 cotizaciones en una pestaña secundaria inactiva, sin cambiar Capitales, Mi portafolio ni ninguna pantalla visible.",
+  "version": "2.7.1",
+  "description": "Evita Frame with ID 0 was removed al terminar cotizaciones: cierra la pestaña temporal después del script y recupera recargas de Brave.",
   "permissions": [
     "storage",
     "scripting",
