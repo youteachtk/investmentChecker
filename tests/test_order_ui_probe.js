@@ -13,7 +13,8 @@ function mock(openBuy=true){
   let clickedLauncher=false,clickedBuy=false;
   const buyButton=el('Comprar',{click:()=>{clickedBuy=true;clicks.push('OPEN_BUY_FORM')}});
   const sellButton=el('Vender');
-  const menu=el('Comprar Vender',{querySelectorAll:()=>[buyButton,sellButton]});
+  const menu=el('Comprar Vender',{querySelectorAll:selector=>
+    selector.startsWith('input,select,textarea')?[]:[buyButton,sellButton]});
   const operateButton=el('Comprar o vender',{click:()=>{clickedLauncher=true;clicks.push('OPEN_ACTIONS')}});
   const widget=el('',{querySelectorAll:()=>[operateButton]});
   const cell=el('V');
