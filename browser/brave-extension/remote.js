@@ -13,7 +13,7 @@ let remoteCheckInProgress = false;
 // Windows. No new polling alarm or hourly task is required.
 let nativeUpdateInProgress=false;
 function publishedVersionNewer(published,loaded){
-  const pattern=/^\\d+\\.\\d+\\.\\d+$/;
+  const pattern=/^\d+\.\d+\.\d+$/;
   if(!pattern.test(String(published||''))||!pattern.test(String(loaded||'')))return false;
   const a=published.split('.').map(Number),b=loaded.split('.').map(Number);
   for(let i=0;i<3;i++){if(a[i]!==b[i])return a[i]>b[i]}
