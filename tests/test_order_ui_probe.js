@@ -30,7 +30,7 @@ function mock({visaPage=1,link=true,navigate=true,ticketOpens=true,startingForm=
   const th2=el('Emisora',{tagName:'TH'});
   const table=el('',{querySelectorAll:selector=>{
     if(selector==='thead th')return [th1,th2];
-    if(selector==='tbody tr')return [row((useSearch&&searchValue==='VISA')||page===visaPage?'V':'AA1')];
+    if(selector==='tbody tr')return [row((useSearch&&searchValue==='V')||page===visaPage?'V':'AA1')];
     return [];
   }});
   const nav=n=>el(String(n),{tagName:'BUTTON',
@@ -95,9 +95,9 @@ async function inspect(model){
   const searchedResult=await inspect(searched);
   assert.equal(searchedResult.stage,'DETAIL_BUY_TICKET_FIELDS_MAPPED');
   assert.equal(searchedResult.lookup_method,'SEARCH');
-  assert.equal(searchedResult.search_term,'VISA');
+  assert.equal(searchedResult.search_term,'V');
   assert.equal(searchedResult.pages_visited,1);
-  assert.deepEqual(searched.clicks,['SEARCH_VISA','DETAIL','OPEN_BUY_TICKET']);
+  assert.deepEqual(searched.clicks,['SEARCH_V','DETAIL','OPEN_BUY_TICKET']);
   assert.equal(searchedResult.submitted_orders,0);
 
   const later=mock({visaPage:2});
