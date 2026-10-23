@@ -1,3 +1,11 @@
+## v2.8.2 — Inicio de sincronización confirmado y visible (23/oct/2026)
+
+Se corrigió el problema de popup en la 2.8.1: «Iniciando sincronización completa…» se mostraba ANTES de que el servicio de fondo confirmara el arranque. Abrir la pestaña de Capitales podía tardar hasta 25 segundos, y la extensión no respondía al popup mientras esperaba la carga. Si el arranque se detenía, el indicador podía permanecer en 0/226 sin explicar el punto exacto.
+
+Ahora la tarea confirma `{ok:true,stage:'INICIADA'}` inmediatamente después de crear su pestaña secundaria inactiva y continúa la carga/lectura en segundo plano, guardando estados separados de apertura, carga Angular, lectura privada, cotizaciones y envío. Si falla la carga, el estado visible muestra un error concreto; si Brave no responde a la solicitud de inicio durante 12 segundos, el popup muestra un error de confirmación en vez de mantener «Iniciando…» sin límite. Continúan funcionando los detalles de categoría, página y contador del 0 al 226 de 2.8.1 y la verificación manual de la fecha del archivo validado por GitHub. `test_sync_fast_ack.js` garantiza en CI que el arranque retorna antes de que termine de cargar Capitales.
+
+No cambia los selectores ni la paginación verificada de los 226 instrumentos; la pantalla principal permanece intacta. No envía ni ejecuta órdenes. **La versión necesita prueba real en Brave para confirmar la sincronización, además de las pruebas automáticas.**
+
 ## v2.8.1 — Progreso visible y verificación real de GitHub (23/oct/2026)
 
 Se restauró el evento `chrome.storage.onChanged` del popup: en 2.8.0 se borró accidentalmente la llamada `refresh()`, por lo que el mensaje podía quedar congelado incluso con actividad de fondo. El popup ahora actualiza en vivo y también cada 1.5 segundos mientras esté abierto. El lector de Capitales transmite solamente indicadores inocuos (categoría ACCIONES/ETFs/FONDOS, número de página, cantidad capturada y etapa), que se guardan en `syncProgress` y se muestran junto a una barra 0–226. La UI avisa si pasan tres minutos sin actualizaciones o si una sincronización supera siete minutos, para evitar un estado eterno «trabajando».
