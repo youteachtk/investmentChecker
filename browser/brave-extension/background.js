@@ -5,7 +5,11 @@ const stamp = () => new Date().toLocaleString('es-MX');
 const MAX_RUN_AGE_MS = 7 * 60 * 1000;
 const MANUAL_SYNC_ALARM='investmentchecker_manual_sync';
 const MANUAL_SYNC_MAX_AGE_MS=2*60*1000;
+let manualSyncProcessing=false;
 async function startQueuedManualSync(){
+  if(manualSyncProcessing)return {ok:true,alreadyProcessing:true};
+  manualSyncProcessing=true;
+  try{
   const state=await chrome.storage.local.get([
     'manualSyncRequest','manualSyncHandledId','syncRunning','syncStartedAt'
   ]);
@@ -43,6 +47,7 @@ async function startQueuedManualSync(){
     }});
     return {ok:false,error:String(error?.message||error)};
   }
+  }finally{manualSyncProcessing=false;}
 }
 
 async function setStatus(message, running) {
@@ -272,6 +277,12 @@ async function upload(payload) {
   }
 }
 async function route(msg,sender) {
+  if (msg?.type==='WAKE_MANUAL_SYNC'){
+    // Lightweight wake signal; the durable alarm remains the fallback.
+    // The in-memory lock and persisted request ID prevent duplicate capture.
+    void startQueuedManualSync();
+    return {ok:true,queued:true};
+  }
   if (msg?.type==='CHECK_QUOTES') {
     // Public snapshot only, never expose the private portfolio or token.
     const url='https://raw.githubusercontent.com/youteachtk/investmentChecker/main/output/actinver_quotes.json?check='+Date.now();
