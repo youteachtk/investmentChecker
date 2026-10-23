@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.8.4",
-  "description": "Restaura el motor de lectura 226/226 probado en Brave, conserva propuestas y aprobación 2.8, y blinda la captura contra cambios accidentales.",
+  "version": "2.8.5",
+  "description": "2.8.5: inicia las 226 cotizaciones sin esperar la cartera privada, conserva lector 2.7.1, propuestas y permisos.",
   "permissions": [
     "storage",
     "scripting",

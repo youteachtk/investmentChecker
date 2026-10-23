@@ -6,9 +6,21 @@ const loc='browser/brave-extension/';
 const fixture='tests/fixtures/';
 const original=fs.readFileSync(fixture+'verified_2_7_1_background.js.txt','utf8');
 const current=fs.readFileSync(loc+'background.js','utf8');
-const cut=s=>s.slice(0,s.indexOf('async function route(msg,sender) {'));
-assert.equal(cut(current),cut(original),
-  'The proven quote uploader, temporary tabs or startSync were modified.');
+const section=(s,from,to)=>{
+  const a=s.indexOf(from),b=s.indexOf(to,a);
+  assert.ok(a>=0&&b>a,'Missing stable public quote section');
+  return s.slice(a,b);
+};
+// Lock the proven collector, isolated tab creation, retry and GitHub upload.
+// The new startSync orchestration is separately tested with a hung private task.
+assert.equal(
+  section(current,'async function createIsolatedMarketTab','async function startSync'),
+  section(original,'async function createIsolatedMarketTab','async function startSync'),
+  'The proven temporary-tab and quote injection lifecycle was modified.');
+assert.equal(
+  section(current,'async function upload','async function route'),
+  section(original,'async function upload','async function route'),
+  'The verified 226-instrument public uploader was modified.');
 const originalCollector=fs.readFileSync(fixture+'verified_2_7_1_collector.js.txt','utf8');
 const collector=fs.readFileSync(loc+'collector.js','utf8');
 assert.equal(collector,originalCollector,

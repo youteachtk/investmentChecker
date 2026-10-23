@@ -57,12 +57,15 @@ async function scenario(path,failFirst=false){
   });
   const result=await app.startSync(91);
   assert.equal(result.ok,true);
-  assert.ok(!events.some(x=>x.kind==='inject'),'Public capture began before private read');
-  finishPrivate({message:'test complete'});
-  // Let the extension's asynchronous retry cross an event-loop turn;
-  // microtask-only polling can inspect events before the retry is scheduled.
+  // The private portfolio test deliberately does not resolve until AFTER
+  // public injection: no private/navigation/API hang can freeze quotations.
   for(let i=0;i<50 && events.filter(x=>x.kind==='inject').length<(failFirst?2:1);i++)
     await new Promise(resolve=>setImmediate(resolve));
+  assert.ok(events.some(x=>x.kind==='inject'),
+    'Public collector was blocked by pending private portfolio read');
+  assert.ok(events.some(x=>x.kind==='private'&&x.id===91),
+    'Private reading should use original tab, not the public collector frame');
+  finishPrivate({message:'test complete'});
   const created=events.filter(x=>x.kind==='create');
   const injected=events.filter(x=>x.kind==='inject');
   assert.equal(created.length,failFirst?2:1);

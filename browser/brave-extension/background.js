@@ -145,9 +145,8 @@ async function startSync(tabId = null) {
     return {ok:false,error:'Ya hay una sincronización en curso.'};
   const found=await getActinverTabs();
   if(!found.matches.length)return {ok:false,error:'Abre Actinver con sesión iniciada; se sincronizará automáticamente.'};
-  // If a private-only token was put in the public box, recover it before
-  // attempting both independent channels.
-  await recoverMisplacedPrivateToken();
+  // A slow or unavailable private GitHub connection must never block
+  // the verified 226-row public collector. Private recovery runs in its own flow.
   const runId='sync-'+Date.now()+'-'+Math.floor(Math.random()*100000);
   await chrome.storage.local.set({syncRunId:runId,syncStartedAt:Date.now(),syncRunning:true,
     syncStatus:'Recopilando cotizaciones y cartera en pestañas secundarias…'});
@@ -158,13 +157,17 @@ async function startSync(tabId = null) {
     // Always isolate the 226-row collector. Even when Capitales is already
     // visible, that original user tab stays completely untouched.
     const tab=await createIsolatedMarketTab(sourceTab,runId);
-    // Finish private capture before public navigation because their temporary
-    // tabs may share the authenticated opener. All public page switching
-    // happens inside our disposable Capitales tab, never the user tab.
-    void runPortfolioSync(tab.id)
+    // Public quotes have their own disposable Capitales tab. Do not wait for
+    // portfolio navigation or private GitHub, which can stall indefinitely.
+    // The private reader starts from the original user's Actinver tab (read
+    // only), opening its own disposable portfolio tab if needed.
+    void runPortfolioSync(sourceTab.id)
       .then(result=>chrome.storage.local.set({privateSyncStatus:result?.message||'Lectura privada completada.'}))
-      .catch(error=>chrome.storage.local.set({privateSyncStatus:'Cartera: '+error.message}))
-      .finally(()=>{void injectQuotesWithRetry(tab.id,runId);});
+      .catch(error=>chrome.storage.local.set({privateSyncStatus:'Cartera: '+error.message}));
+    void injectQuotesWithRetry(tab.id,runId).catch(async error=>{
+      await setStatus('Error inesperado en cotizaciones: '+error.message,false);
+      await cleanupTemporarySyncTab(null,runId);
+    });
     return {ok:true};
   }catch(error){
     await setStatus('Error al iniciar lectura: '+error.message,false);
@@ -259,7 +262,7 @@ async function route(msg,sender) {
   return {ok:false,error:'Comando no reconocido'};
 }
 chrome.runtime.onMessage.addListener((msg,sender,reply)=>{
-  route(msg,sender).then(result=>reply({...result,version:'2.8.4'})).catch(async err=>{
+  route(msg,sender).then(result=>reply({...result,version:'2.8.5'})).catch(async err=>{
     await setStatus('Error: '+err.message,false);
     reply({ok:false,error:err.message});
   });
