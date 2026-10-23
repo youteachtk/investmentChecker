@@ -11,6 +11,9 @@ async function refresh(){
   const s=await chrome.storage.local.get(['githubToken','privateToken','privateRepo','privateEnabled',
     'syncStatus','syncRunning','privateSyncStatus','autoSync','lastSync','privateLastSync',
     'remoteControlEnabled','orderDraftCache','orderReviewStatus',
+    'orderHistoryLastRemoteStatus','orderHistoryLastRemoteAt',
+    'orderHistoryDiagnosticCode','orderHistoryDiagnosticPhase',
+    'orderHistoryDiagnosticUploaded','orderHistoryLastCheckedAt','orderHistoryCounts',
     'syncProgress','syncStartedAt','manualSyncRequest','manualSyncHandledId',
     'manualSyncStartedAt','manualSyncLastResult']);
   const publicOk=!!s.githubToken,privateOk=!!(s.privateEnabled && s.privateRepo && s.privateToken);
@@ -50,6 +53,19 @@ async function refresh(){
     'Último envío iniciado en GitHub: '+
       new Date(s.lastSync).toLocaleString('es-MX'):
     'Aún no hay un envío registrado.';
+  if(s.orderHistoryLastRemoteAt || s.orderHistoryLastCheckedAt){
+    const when=s.orderHistoryLastRemoteAt||s.orderHistoryLastCheckedAt;
+    const stamp=Number.isFinite(Date.parse(when))?
+      new Date(when).toLocaleString('es-MX'):'';
+    const code=s.orderHistoryDiagnosticCode||
+      s.orderHistoryLastRemoteStatus||'ORDERS_NOT_VERIFIED';
+    $('orderHistoryMessage').textContent=
+      'Última comprobación de órdenes: '+stamp+
+      '. Estado: '+code+
+      (s.orderHistoryDiagnosticUploaded===true?
+        '. Diagnóstico guardado en GitHub privado.':
+        '. Diagnóstico privado todavía no confirmado.');
+  }
   const draft=s.orderDraftCache;
   $('orderStageVisa').disabled=!(draft?.approved===true &&
     draft.approved_symbols?.includes('V')&&
