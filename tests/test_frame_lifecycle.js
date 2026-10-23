@@ -19,6 +19,7 @@ assert.ok(start>0&&end>start&&routeStart>0&&routeEnd>routeStart);
   let route,tempId,releaseScript;
   const pending=new Promise(resolve=>{releaseScript=resolve});
   const chrome={
+    alarms:{create:async()=>events.push('draft-check-scheduled')},
     storage:{local:{
       get:async ks=>Object.fromEntries((Array.isArray(ks)?ks:[ks]).map(k=>[k,store[k]])),
       set:async obj=>Object.assign(store,obj),
