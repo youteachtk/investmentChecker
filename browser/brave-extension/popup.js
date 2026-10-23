@@ -182,7 +182,7 @@ $('orderApprove').addEventListener('click',async()=>{
 });
 $('orderInspect').addEventListener('click',async()=>{
   $('orderInspect').disabled=true;
-  $('orderMessage').textContent='Buscando V en Capitales y abriendo su página Detalle; no se enviarán órdenes…';
+  $('orderMessage').textContent='Buscando V, abriendo Detalle y el formulario de compra sin enviar órdenes…';
   const response=await send({type:'ORDER_INSPECT_UI'});
   $('orderMessage').textContent=response?.message||response?.error||
     'No se pudo inspeccionar la pantalla.';
