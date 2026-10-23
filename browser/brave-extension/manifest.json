@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.8.9",
-  "description": "2.8.9: inspector compatible con panel lateral derecho de Capitales; conserva búsqueda de V y sin envíos de compras.",
+  "version": "2.8.10",
+  "description": "2.8.10: inspector navega al Detalle de V desde ACCIONES y deja la página visible, sin operaciones.",
   "permissions": [
     "storage",
     "scripting",
