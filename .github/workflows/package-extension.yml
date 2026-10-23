@@ -90,7 +90,7 @@ jobs:
           file=Path('browser/remote-request.json')
           control=json.loads(file.read_text())
           control['latest_version']=manifest['version']
-          file.write_text(json.dumps(control,ensure_ascii=False,indent=2)+'\\n')
+          file.write_text(json.dumps(control,ensure_ascii=False,indent=2))
           PY
             git add browser/investmentChecker-brave-v*.zip browser/investmentChecker-brave-latest.zip browser/remote-request.json
             if git diff --cached --quiet; then exit 0; fi
