@@ -57,11 +57,51 @@
   state.action_widget_count=widgets.length;
   if(!widgets.length)return {...state,stage:'NO_MARKET_ACTIONS'};
   // Strict row selection: do not accidentally open a different instrument.
-  const rows=elements('tr,[role="row"],mat-row,.mat-row');
-  const row=rows.find(el=>el.querySelector?.('gt-btn-operar') &&
-    [...el.querySelectorAll('td,[role="cell"],mat-cell,.mat-cell')]
-      .some(cell=>label(cell)==='v'));
+  const root=document.querySelector('app-capitales');
+  const stockTabs=root?[...root.querySelectorAll('div.tab-btn')].filter(visible):[];
+  if(stockTabs.length===3 && !stockTabs[0].classList.contains('active')){
+    stockTabs[0].querySelector('button')?.click();
+    for(let n=0;n<40&&!stockTabs[0].classList.contains('active');n++)await sleep(250);
+  }
+  const table=()=>[...(root?.querySelectorAll('app-tabla-material table.table-capitales')||[])].find(visible);
+  const rows=()=>[...(table()?.querySelectorAll('tbody tr')||[])].filter(visible);
+  const ticker=tr=>{
+    const h=[...(table()?.querySelectorAll('thead th')||[])].map(label);
+    const col=h.indexOf('emisora');
+    const cells=[...tr.querySelectorAll('td')];
+    return col>=0?label(cells[col]).replace(/[?*ⓘℹ]/g,'').trim():'';
+  };
+  const findV=()=>rows().find(tr=>ticker(tr)==='v'&&tr.querySelector('gt-btn-operar'));
+  const pager=()=>root?.querySelector('app-paginator');
+  const buttons=()=>[...(pager()?.querySelectorAll('button')||[])].filter(visible);
+  const pageNumber=()=>{const b=buttons().filter(e=>e.classList.contains('active')&&/^\\d+$/.test(label(e)));
+    return b.length===1?Number(label(b[0])):null;};
+  let row=findV(),page=pageNumber()||1;
+  state.pages_visited=1;
+  for(let n=0;!row&&n<14;n++){
+    if(!pager())break;
+    const nextPage=page+1, before=rows().map(ticker).join('|');
+    let next=buttons().find(e=>label(e)===String(nextPage));
+    if(!next){
+      const group=pager().querySelector('.btn-pages');
+      const groupButtons=[...(group?.querySelectorAll('button')||[])].filter(visible);
+      const arrow=groupButtons[groupButtons.length-1];
+      if(!arrow||arrow.disabled||/^\\d+$/.test(label(arrow)))break;
+      arrow.click();
+      for(let i=0;i<40&&!buttons().some(e=>label(e)===String(nextPage));i++)await sleep(250);
+      next=buttons().find(e=>label(e)===String(nextPage));
+    }
+    if(!next||next.disabled)break;
+    next.click();
+    for(let i=0;i<50;i++){
+      await sleep(250);
+      if(pageNumber()===nextPage&&rows().map(ticker).join('|')!==before)break;
+    }
+    if(pageNumber()!==nextPage||rows().map(ticker).join('|')===before)break;
+    page=nextPage;state.pages_visited++;row=findV();
+  }
   if(!row)return {...state,stage:'TARGET_ROW_NOT_FOUND'};
+  state.located_page=page;
   state.selected_symbol='V';
   const widget=row.querySelector('gt-btn-operar');
   const launch=[...widget.querySelectorAll('button,[role="button"],a')].filter(visible)
