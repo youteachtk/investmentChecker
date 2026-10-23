@@ -328,10 +328,13 @@ async function orderHistoryStatus(){
   const source=session.matches.find(t=>t.active)||session.matches[0];
   if(!source)return {ok:false,error:'No hay sesión de Actinver en Brave.'};
   let tab=null;
+  const diag={order_history:true,phase:'ORDERS_START',code:'ORDERS_ERROR',
+    probe_step:'INITIAL',orders_page_seen:false};
   try{
     const origin=new URL(source.url).origin;
     if(!/^https:\/\/(?:www\.)?retoactinver\.com$/.test(origin))
       return {ok:false,error:'Origen de Actinver no autorizado.'};
+    diag.phase='ORDERS_NAV';
     tab=await chrome.tabs.create({url:origin+'/RetoActinver/#/portafolio',
       active:false,openerTabId:source.id});
     if(!await waitForPage(tab.id))throw Error('No cargó la página privada.');
@@ -339,6 +342,14 @@ async function orderHistoryStatus(){
       target:{tabId:tab.id},files:['orders-history-probe.js'],world:'ISOLATED'
     });
     const raw=result?.[0]?.result;
+    if(raw&&typeof raw==='object'){
+      diag.probe_step=raw.probe_step;
+      diag.orders_page_seen=raw.orders_page_seen===true;
+      for(const key of ['visible_table_count','visible_control_count',
+        'order_nav_candidate_count','investment_menu_candidate_count']){
+        diag[key]=raw[key];
+      }
+    }
     if(!raw||raw.schema_version!==1||raw.read_only!==true||raw.submitted_orders!==0)
       throw Error('Inspección de órdenes no verificable.');
     const statuses=new Set(['executed','partial','pending','cancelled','rejected','unknown']);
@@ -358,11 +369,16 @@ async function orderHistoryStatus(){
     const counts={executed:0,partial:0,pending:0,cancelled:0,rejected:0,unknown:0};
     for(const order of orders)counts[order.status]++;
     const stage=stages.has(raw.stage)?raw.stage:'ORDERS_TABLE_NOT_VERIFIED';
+    diag.phase='ORDERS_READ';
+    diag.code=stage==='ORDERS_TABLE_READ'||stage==='ORDERS_TABLE_EMPTY'?
+      'ORDERS_OK':stage==='ORDERS_SECTION_NOT_FOUND'||stage==='ORDERS_NAV_AMBIGUOUS'?
+      'ORDERS_NAV_FAILED':'ORDERS_TABLE_MISSING';
     const report={schema_version:1,captured_at:new Date().toISOString(),
       stage,orders_page_seen:raw.orders_page_seen===true,
       rows_scanned:Number.isInteger(raw.rows_scanned)?
         Math.min(100,Math.max(0,raw.rows_scanned)):0,
       counts,orders,read_only:true,submitted_orders:0};
+    diag.phase='ORDERS_SAVE';
     const config=await chrome.storage.local.get(['privateEnabled','privateRepo','privateToken']);
     if(!config.privateEnabled)throw Error('GitHub privado no configurado.');
     await verifyPrivateRepo(config.privateRepo,config.privateToken);
@@ -381,6 +397,7 @@ async function orderHistoryStatus(){
     if(sha)data.sha=sha;
     const saved=await fetch(endpoint,{method:'PUT',headers,body:JSON.stringify(data)});
     if(!saved.ok)throw Error('No se pudo guardar historial privado.');
+    diag.phase='ORDERS_DONE';
     const verified=stage==='ORDERS_TABLE_READ'||stage==='ORDERS_TABLE_EMPTY';
     await chrome.storage.local.set({orderHistoryLastStatus:stage,
       orderHistoryLastCheckedAt:report.captured_at,
@@ -394,9 +411,19 @@ async function orderHistoryStatus(){
         'La sección de órdenes aún no se reconoció ('+stage+
         '). No se puede afirmar que haya cero órdenes.'};
   }catch(error){
+    diag.code=diag.phase==='ORDERS_SAVE'?'ORDERS_SAVE_FAILED':'ORDERS_ERROR';
     return {ok:false,error:String(error?.message||'Error consultando órdenes.')};
   }finally{
     if(tab)try{await chrome.tabs.remove(tab.id)}catch(_){}
+    try{
+      const saved=await uploadPrivateDiagnostic(diag);
+      await chrome.storage.local.set({orderHistoryDiagnosticUploaded:saved?.ok===true,
+        orderHistoryDiagnosticCode:diag.code,orderHistoryDiagnosticPhase:diag.phase});
+    }catch(error){
+      await chrome.storage.local.set({orderHistoryDiagnosticUploaded:false,
+        orderHistoryDiagnosticCode:'ORDERS_SAVE_FAILED',
+        orderHistoryDiagnosticPhase:diag.phase});
+    }
   }
 }
 
