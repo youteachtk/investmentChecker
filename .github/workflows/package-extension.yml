@@ -13,9 +13,10 @@ on:
       - 'tests/test_order_preflight.js'
       - 'tests/test_order_ui_probe.js'
       - 'tests/test_popup_progress.js'
-      - 'tests/test_sync_fast_ack.js'
-      - 'tests/test_manual_sync_recovery.js'
       - 'tests/test_worker_boot.js'
+      - 'tests/test_stable_collector_contract.js'
+      - 'tests/fixtures/verified_2_7_1_background.js.txt'
+      - 'tests/fixtures/verified_2_7_1_collector.js.txt'
       - '.github/workflows/package-extension.yml'
   workflow_dispatch:
 
@@ -54,11 +55,9 @@ jobs:
         run: node tests/test_order_ui_probe.js
       - name: Regression test for live popup telemetry and verified snapshots
         run: node tests/test_popup_progress.js
-      - name: Regression test for immediate sync acknowledgement with slow page load
-        run: node tests/test_sync_fast_ack.js
-      - name: Regression test for manual sync alarm recovery and duplicate protection
-        run: node tests/test_manual_sync_recovery.js
-      - name: Smoke test for complete worker boot and manual alarm dispatch
+      - name: Lock proven 2.7.1 market collector and background capture lifecycle
+        run: node tests/test_stable_collector_contract.js
+      - name: Smoke test complete 2.8 worker with stable direct capture startup
         run: node tests/test_worker_boot.js
       - name: Build stable folder-layout installer
         run: |
