@@ -10,7 +10,8 @@ async function send(msg) {
 async function refresh(){
   const s=await chrome.storage.local.get(['githubToken','privateToken','privateRepo','privateEnabled',
     'syncStatus','syncRunning','privateSyncStatus','autoSync','lastSync','privateLastSync',
-    'remoteControlEnabled','orderDraftCache','orderReviewStatus']);
+    'remoteControlEnabled','orderDraftCache','orderReviewStatus',
+    'syncProgress','syncStartedAt']);
   const publicOk=!!s.githubToken,privateOk=!!(s.privateEnabled && s.privateRepo && s.privateToken);
   $('connection').textContent=(publicOk?'✓ Token de cotizaciones guardado':'⚠ Sin token público')+'  ·  '+
     (privateOk?'✓ Acceso a cartera privada verificado':'⚠ Cartera privada pendiente');
@@ -18,8 +19,10 @@ async function refresh(){
   if(document.activeElement!==$('privateRepo'))$('privateRepo').value=s.privateRepo||'';
   $('token').placeholder=publicOk?'Guardado; dejar vacío para conservar':'github_pat_…';
   $('privateToken').placeholder=privateOk?'Guardado; dejar vacío para conservar':'github_pat_…';
-  $('run').disabled=!!s.syncRunning || !publicOk;
-  $('run').textContent=s.syncRunning?'Sincronización en curso…':'Sincronizar todo ahora';
+  const running=!!s.syncRunning &&
+    Date.now()-(Number(s.syncStartedAt)||0)<7*60*1000;
+  $('run').disabled=running || !publicOk;
+  $('run').textContent=running?'Sincronización en curso…':'Sincronizar todo ahora';
   $('auto').textContent=s.autoSync?'Pausar sincronización automática':'Activar sincronización automática';
   $('remote').textContent=s.remoteControlEnabled===false?'Activar solicitudes desde ChatGPT':'Pausar solicitudes desde ChatGPT';
   if(!localMessage){
@@ -27,6 +30,30 @@ async function refresh(){
     if(privateOk && s.privateSyncStatus && (!s.syncRunning)) lines.push(s.privateSyncStatus);
     show(lines.join('\n'));
   }
+  // Read local telemetry instead of inferring success from hidden tabs.
+  const progress=s.syncProgress||{};
+  const count=Number.isInteger(progress.captured)?
+    Math.min(226,Math.max(0,progress.captured)):0;
+  $('syncProgress').value=count;
+  $('syncCount').textContent=count+' / 226 instrumentos capturados en esta ejecución';
+  const category=['ACCIONES','ETFs','FONDOS'].includes(progress.category)?
+    progress.category:null;
+  const phase=String(progress.stage||'');
+  const stage=category?
+    'Leyendo '+category+(Number.isInteger(progress.page)?
+      ' · página '+progress.page:''):
+    (phase||'Sin sincronización activa.');
+  const inactivity=running && Number(progress.updatedAt)>0 &&
+    Date.now()-progress.updatedAt>3*60*1000;
+  $('syncStage').textContent=inactivity?
+    'Sin avance confirmado desde hace más de 3 minutos. '+stage:stage;
+  if(s.syncRunning&&!running){
+    $('syncStage').textContent='La sincronización anterior perdió contacto o superó 7 minutos. Puedes reintentar.';
+  }
+  $('syncFreshness').textContent=s.lastSync?
+    'Último envío iniciado en GitHub: '+
+      new Date(s.lastSync).toLocaleString('es-MX'):
+    'Aún no hay un envío registrado.';
   const draft=s.orderDraftCache;
   if(draft?.ok && !draft.approved && Date.parse(draft.expires_at)>Date.now() &&
      draft.draft_id!==orderDraft?.draft_id)renderOrders(draft);
@@ -155,5 +182,19 @@ $('orderInspect').addEventListener('click',async()=>{
   $('orderInspect').disabled=false;
 });
 
+$('verifyQuotes').addEventListener('click',async()=>{
+  $('verifyQuotes').disabled=true;
+  $('syncVerified').textContent='Comprobando cotizaciones públicas en GitHub…';
+  const result=await send({type:'CHECK_QUOTES'});
+  if(!result?.ok){
+    $('syncVerified').textContent=result?.error||'No se pudo verificar el archivo.';
+  }else{
+    const when=new Date(result.validated_at);
+    $('syncVerified').textContent='GitHub confirma '+result.total+
+      ' cotizaciones validadas el '+when.toLocaleString('es-MX')+
+      '. Esta fecha demuestra si la captura realmente se actualizó.';
+  }
+  $('verifyQuotes').disabled=false;
+});
 void refresh();
 setInterval(()=>{void refresh();},1500);
