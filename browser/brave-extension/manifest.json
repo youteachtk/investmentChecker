@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.7.1",
-  "description": "Evita Frame with ID 0 was removed al terminar cotizaciones: cierra la pestaña temporal después del script y recupera recargas de Brave.",
+  "version": "2.8.0",
+  "description": "Prepara lotes de compras virtuales con límites, aprobación explícita y revisión de la interfaz real. No envía operaciones sin adaptador verificado.",
   "permissions": [
     "storage",
     "scripting",
