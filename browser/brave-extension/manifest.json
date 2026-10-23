@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.8.2",
-  "description": "Confirma al instante el arranque y muestra apertura/carga de Capitales, progreso 0–226 y errores de inicio sin espera indefinida.",
+  "version": "2.8.3",
+  "description": "Recupera la sincronización cuando Brave no responde al botón: activación inmediata más alarma, sin duplicar lecturas y con diagnóstico de arranque.",
   "permissions": [
     "storage",
     "scripting",
