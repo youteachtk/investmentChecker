@@ -61,12 +61,13 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Refresh the base before staging binary ZIPs. Rebasing two
+          # competing binary archives causes unresolvable add/add conflicts.
+          # Keep the workflow-owned generated archives in the worktree.
+          git fetch origin main
+          git reset --mixed origin/main
           git add browser/investmentChecker-brave-v*.zip browser/investmentChecker-brave-latest.zip
           if ! git diff --cached --quiet; then
             git commit -m "Package InvestmentChecker Brave updated extension"
-            for i in 1 2 3; do
-              git pull --rebase origin main && git push && exit 0
-              sleep 4
-            done
-            exit 1
+            git push origin HEAD:main
           fi
