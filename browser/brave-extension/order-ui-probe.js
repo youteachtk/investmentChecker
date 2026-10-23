@@ -11,8 +11,8 @@
   const label = el => norm(el && (el.innerText || el.textContent));
   const elements = selector => [...document.querySelectorAll(selector)].filter(visible);
   const recognized = selector => elements(selector).slice(0, 100);
-  const dialogs = () => elements('[role="dialog"],mat-dialog-container,dialog');
-  const menus = () => elements('[role="menu"],mat-menu-panel,.mat-menu-panel,.cdk-overlay-pane');
+  const dialogs = () => elements('[role="dialog"],mat-dialog-container,dialog,aside,[role="complementary"],mat-sidenav,mat-drawer,.mat-drawer,.mat-sidenav');
+  const menus = () => elements('[role="menu"],mat-menu-panel,.mat-menu-panel,.cdk-overlay-pane,aside,[role="complementary"],mat-sidenav,mat-drawer,.mat-drawer,.mat-sidenav');
   const fields = region => [...region.querySelectorAll('input,select,textarea,[role="spinbutton"],mat-select')]
     .filter(visible).filter(el => !['hidden','password','email'].includes(String(el.type || '').toLowerCase()));
   const fieldKind = field => {
