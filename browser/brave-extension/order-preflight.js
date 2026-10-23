@@ -231,6 +231,10 @@ async function orderInspectUi(){
       action_widget_count:Number.isInteger(raw.action_widget_count)?
         Math.min(500,Math.max(0,raw.action_widget_count)):null,
       form_detected:raw.form_detected===true,fields,
+      pages_visited:Number.isInteger(raw.pages_visited)?
+        Math.min(15,Math.max(0,raw.pages_visited)):null,
+      located_page:Number.isInteger(raw.located_page)&&raw.located_page>=1&&raw.located_page<=15?
+        raw.located_page:null,
       clicked_steps:steps,inspected_without_submission:true,submitted_orders:0};
     const {privateRepo,privateToken,privateEnabled}=await chrome.storage.local.get([
       'privateRepo','privateToken','privateEnabled']);
