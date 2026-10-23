@@ -92,6 +92,9 @@ $('run').addEventListener('click',async()=>{
     await chrome.alarms.create('investmentchecker_manual_sync',{
       when:Date.now()+1000
     });
+    // Try an immediate wake without awaiting it. If the message stalls,
+    // Brave's own durable alarm will still dispatch the exact same request.
+    void send({type:'WAKE_MANUAL_SYNC'});
     localMessage=null;
     await refresh();
   }catch(error){
