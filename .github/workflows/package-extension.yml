@@ -12,6 +12,7 @@ on:
       - 'tests/test_frame_lifecycle.js'
       - 'tests/test_order_preflight.js'
       - 'tests/test_order_ui_probe.js'
+      - 'tests/test_orders_history.js'
       - 'tests/test_auto_reload.js'
       - 'tests/test_event_update.js'
       - 'tests/test_popup_progress.js'
@@ -55,6 +56,8 @@ jobs:
         run: node tests/test_order_preflight.js
       - name: Regression test for read-only Actinver order UI inspection
         run: node tests/test_order_ui_probe.js
+      - name: Verify private order execution status inspection
+        run: node tests/test_orders_history.js
       - name: Verify new local-file auto reload without interrupting sync
         run: node tests/test_auto_reload.js
       - name: Check event-based Windows update notification
@@ -69,7 +72,7 @@ jobs:
         run: |
           VERSION=$(python -c "import json;print(json.load(open('browser/brave-extension/manifest.json'))['version'])")
           mkdir -p /tmp/ics-dist/investmentChecker
-          cp browser/brave-extension/{manifest.json,background.js,popup.html,popup.js,collector.js,remote.js,private-sync.js,portfolio-collector.js,portfolio-navigator.js,order-preflight.js,order-ui-probe.js,README.md} /tmp/ics-dist/investmentChecker/
+          cp browser/brave-extension/{manifest.json,background.js,popup.html,popup.js,collector.js,remote.js,private-sync.js,portfolio-collector.js,portfolio-navigator.js,order-preflight.js,order-ui-probe.js,orders-history-probe.js,README.md} /tmp/ics-dist/investmentChecker/
           cp browser/brave-extension/{ACTUALIZAR.cmd,ACTUALIZAR.ps1} /tmp/ics-dist/
           cd /tmp/ics-dist
           zip -q -r "${GITHUB_WORKSPACE}/browser/investmentChecker-brave-v${VERSION}.zip" .
