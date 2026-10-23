@@ -60,7 +60,14 @@ async function refresh(){
 }
 $('run').addEventListener('click',async()=>{
   localMessage='Iniciando sincronización completa…';show(localMessage);
-  const r=await send({type:'START_SYNC'});
+  // A disabled or stalled Brave worker must not leave "Iniciando…" forever.
+  // This timeout only affects the UI confirmation, never cancels a capture.
+  const r=await Promise.race([
+    send({type:'START_SYNC'}),
+    new Promise(resolve=>setTimeout(()=>resolve({
+      ok:false,error:'Brave no confirmó el inicio después de 12 segundos. Verifica el diagnóstico; no hay captura confirmada.'
+    }),12000))
+  ]);
   if(!r?.ok){localMessage=r?.error||'No se pudo iniciar.';show(localMessage);}
   else {localMessage=null;await refresh();}
 });
