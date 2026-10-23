@@ -12,7 +12,9 @@
   const state={schema_version:1,captured_at:new Date().toISOString(),
     stage:'ORDERS_NOT_OPEN',orders_page_seen:false,rows_scanned:0,
     orders:[],counts:{executed:0,partial:0,pending:0,cancelled:0,rejected:0,unknown:0},
-    submitted_orders:0,read_only:true};
+    submitted_orders:0,read_only:true,
+    probe_step:'INITIAL',visible_table_count:0,visible_control_count:0,
+    order_nav_candidate_count:0,investment_menu_candidate_count:0};
   const statusKind=text=>{
     const t=norm(text);
     if(/^(asignada|asignado|ejecutada|ejecutado|completada|completado|filled)$/.test(t))
@@ -64,6 +66,9 @@
     }
     return null;
   };
+  state.probe_step='READ_CURRENT_TABLE';
+  state.visible_table_count=[...document.querySelectorAll('table,[role="table"]')].filter(visible).length;
+  state.visible_control_count=Math.min(1000,controls().length);
   let info=tableData();
   if(!info){
     const isOrders=e=>{
@@ -73,9 +78,12 @@
         (/ordenes/.test(href)&&t.length>0&&t.length<65)) &&
         !/cancelar|eliminar|modificar/.test(t);
     };
+    state.probe_step='FIND_ORDER_NAVIGATION';
     let found=controls().filter(isOrders);
+    state.order_nav_candidate_count=Math.min(100,found.length);
     if(found.length===0){
       const menu=controls().filter(e=>/^(tu inversion|tu inversion ⌄)$/.test(label(e)));
+      state.investment_menu_candidate_count=Math.min(100,menu.length);
       if(menu.length===1){
         menu[0].click(); // expand navigation, no order action
         for(let i=0;i<20;i++){
@@ -89,18 +97,26 @@
       state.stage=found.length>1?'ORDERS_NAV_AMBIGUOUS':'ORDERS_SECTION_NOT_FOUND';
       return state;
     }
+    state.probe_step='OPEN_ORDER_NAVIGATION';
     found[0].click(); // navigate to orders only
     state.orders_page_seen=true;
+    state.probe_step='WAIT_ORDERS_TABLE';
     for(let i=0;i<48;i++){
       await sleep(250);
       info=tableData();
       if(info)break;
     }
   }else state.orders_page_seen=true;
-  if(!info){state.stage='ORDERS_TABLE_NOT_VERIFIED';return state}
+  if(!info){
+    state.probe_step='NO_MATCHING_TABLE';
+    state.visible_table_count=[...document.querySelectorAll('table,[role="table"]')].filter(visible).length;
+    state.stage='ORDERS_TABLE_NOT_VERIFIED';return state;
+  }
+  state.probe_step='CLASSIFY_ORDER_ROWS';
   state.rows_scanned=Math.min(info.rows,100);
   state.orders=info.orders;
   for(const o of info.orders)state.counts[o.status]++;
+  state.probe_step='COMPLETED';
   state.stage=info.rows===0?'ORDERS_TABLE_EMPTY':
     info.orders.length?'ORDERS_TABLE_READ':'ORDERS_ROWS_UNRECOGNIZED';
   return state;
