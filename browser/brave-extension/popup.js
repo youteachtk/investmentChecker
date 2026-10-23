@@ -11,7 +11,8 @@ async function refresh(){
   const s=await chrome.storage.local.get(['githubToken','privateToken','privateRepo','privateEnabled',
     'syncStatus','syncRunning','privateSyncStatus','autoSync','lastSync','privateLastSync',
     'remoteControlEnabled','orderDraftCache','orderReviewStatus',
-    'syncProgress','syncStartedAt']);
+    'syncProgress','syncStartedAt','manualSyncRequest','manualSyncHandledId',
+    'manualSyncStartedAt','manualSyncLastResult']);
   const publicOk=!!s.githubToken,privateOk=!!(s.privateEnabled && s.privateRepo && s.privateToken);
   $('connection').textContent=(publicOk?'✓ Token de cotizaciones guardado':'⚠ Sin token público')+'  ·  '+
     (privateOk?'✓ Acceso a cartera privada verificado':'⚠ Cartera privada pendiente');
@@ -50,6 +51,22 @@ async function refresh(){
   if(s.syncRunning&&!running){
     $('syncStage').textContent='La sincronización anterior perdió contacto o superó 7 minutos. Puedes reintentar.';
   }
+  const request=s.manualSyncRequest,result=s.manualSyncLastResult;
+  const pending=request && request.id!==result?.id &&
+    !running && Date.now()-request.at>=12000 &&
+    Date.now()-request.at<2*60*1000;
+  if(pending){
+    const acknowledged=s.manualSyncHandledId===request.id;
+    const diagnosis=acknowledged?
+      'Brave recibió la solicitud, pero no confirmó el arranque.':
+      'El proceso de fondo de Brave no respondió a la solicitud.';
+    $('syncStage').textContent=diagnosis;
+    show(diagnosis+' Revisa Configuración y diagnóstico; no hay nueva captura confirmada.');
+  }else if(result && request?.id===result.id && result.ok===false && !running){
+    const error='Inicio rechazado: '+(result.error||'error desconocido');
+    $('syncStage').textContent=error;
+    if(!localMessage)show(error);
+  }
   $('syncFreshness').textContent=s.lastSync?
     'Último envío iniciado en GitHub: '+
       new Date(s.lastSync).toLocaleString('es-MX'):
@@ -59,17 +76,30 @@ async function refresh(){
      draft.draft_id!==orderDraft?.draft_id)renderOrders(draft);
 }
 $('run').addEventListener('click',async()=>{
-  localMessage='Iniciando sincronización completa…';show(localMessage);
-  // A disabled or stalled Brave worker must not leave "Iniciando…" forever.
-  // This timeout only affects the UI confirmation, never cancels a capture.
-  const r=await Promise.race([
-    send({type:'START_SYNC'}),
-    new Promise(resolve=>setTimeout(()=>resolve({
-      ok:false,error:'Brave no confirmó el inicio después de 12 segundos. Verifica el diagnóstico; no hay captura confirmada.'
-    }),12000))
-  ]);
-  if(!r?.ok){localMessage=r?.error||'No se pudo iniciar.';show(localMessage);}
-  else {localMessage=null;await refresh();}
+  // START_SYNC used to wait for an asynchronous service-worker reply, which
+  // sometimes never reached this popup even though the worker was alive.
+  // A browser alarm is durable and wakes the worker independently.
+  $('run').disabled=true;
+  const id='manual-'+Date.now().toString(36)+'-'+
+    Math.random().toString(36).slice(2,10);
+  try{
+    await chrome.storage.local.set({
+      manualSyncRequest:{id,at:Date.now()},
+      syncStatus:'Solicitud recibida. Esperando a Brave para iniciar la lectura…',
+      syncProgress:{stage:'Esperando proceso de fondo de Brave',
+        category:null,page:null,captured:0,total:226,updatedAt:Date.now()}
+    });
+    await chrome.alarms.create('investmentchecker_manual_sync',{
+      when:Date.now()+1000
+    });
+    localMessage=null;
+    await refresh();
+  }catch(error){
+    localMessage='No se pudo programar la lectura: '+
+      String(error?.message||error);
+    show(localMessage);
+    $('run').disabled=false;
+  }
 });
 $('save').addEventListener('click',async()=>{
   const value=$('token').value.trim();
@@ -96,7 +126,9 @@ chrome.storage.onChanged.addListener((changes,area)=>{
   if(changes.syncStatus||changes.syncRunning||changes.privateSyncStatus||
      changes.privateEnabled||changes.privateLastSync||
      changes.orderDraftCache||changes.orderReviewStatus||
-     changes.syncProgress||changes.lastSync||changes.syncStartedAt){
+     changes.syncProgress||changes.lastSync||changes.syncStartedAt||
+     changes.manualSyncRequest||changes.manualSyncHandledId||
+     changes.manualSyncStartedAt||changes.manualSyncLastResult){
     localMessage=null;
     void refresh();
   }
