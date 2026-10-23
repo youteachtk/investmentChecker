@@ -150,7 +150,9 @@ async function startSync(tabId = null) {
   await recoverMisplacedPrivateToken();
   const runId='sync-'+Date.now()+'-'+Math.floor(Math.random()*100000);
   await chrome.storage.local.set({syncRunId:runId,syncStartedAt:Date.now(),syncRunning:true,
-    syncStatus:'Recopilando cotizaciones y cartera en pestañas secundarias…'});
+    syncStatus:'Iniciando sincronización privada y pública en segundo plano…',
+    syncProgress:{stage:'Preparando la cartera privada',captured:0,total:226,
+      category:null,page:null,updatedAt:Date.now()}});
   try {
     const sourceTab=(tabId!==null?found.matches.find(t=>t.id===tabId):null)
       ||found.matches.find(t=>t.active)
@@ -164,7 +166,19 @@ async function startSync(tabId = null) {
     void runPortfolioSync(tab.id)
       .then(result=>chrome.storage.local.set({privateSyncStatus:result?.message||'Lectura privada completada.'}))
       .catch(error=>chrome.storage.local.set({privateSyncStatus:'Cartera: '+error.message}))
-      .finally(()=>{void injectQuotesWithRetry(tab.id,runId);});
+      .finally(()=>{
+        void (async()=>{
+          await chrome.storage.local.set({
+            syncProgress:{stage:'Abriendo Capitales en segundo plano',
+              captured:0,total:226,category:null,page:null,updatedAt:Date.now()},
+            syncStatus:'Preparando captura de las 226 cotizaciones…'
+          });
+          await injectQuotesWithRetry(tab.id,runId);
+        })().catch(async error=>{
+          await setStatus('Error al iniciar Capitales: '+String(error?.message||error),false);
+          await cleanupTemporarySyncTab(null,runId);
+        });
+      });
     return {ok:true};
   }catch(error){
     await setStatus('Error al iniciar lectura: '+error.message,false);
@@ -211,12 +225,30 @@ async function route(msg,sender) {
     const {syncTabId,syncRunning,syncRunId}=await chrome.storage.local.get(['syncTabId','syncRunning','syncRunId']);
     if (sender.tab?.id!==syncTabId || !syncRunning) return {ok:false,error:'Captura no reconocida'};
     if (msg.type==='PROGRESS') {
-      await setStatus(msg.status,true);
+      const d=msg.detail||{};
+      const phases=new Set(['START','CATEGORY','FIRST_PAGE','READ_PAGE','NEXT_PAGE','UPLOAD']);
+      const categories=new Set(['ACCIONES','ETFs','FONDOS']);
+      const value=Number.isInteger(d.captured)&&d.captured>=0&&d.captured<=226?
+        d.captured:0;
+      const progress={
+        stage:phases.has(d.phase)?d.phase:'READ_PAGE',
+        category:categories.has(d.category)?d.category:null,
+        page:Number.isInteger(d.page)&&d.page>=1&&d.page<=30?d.page:null,
+        captured:value,total:226,updatedAt:Date.now()
+      };
+      await chrome.storage.local.set({
+        syncStatus:typeof msg.status==='string'?msg.status.slice(0,200):
+          'Recopilando cotizaciones…',
+        syncRunning:true,syncProgress:progress
+      });
       return {ok:true};
     }
     if (msg.type==='COLLECT_FAILED') {
       await setStatus('Cotizaciones pendientes: '+(msg.reason||'lectura incompleta')+
         '. Guardando diagnóstico privado; la cartera se procesa por separado.',false);
+      await chrome.storage.local.set({syncProgress:{
+        stage:'Error de captura',captured:0,total:226,category:null,
+        page:null,updatedAt:Date.now()}});
       let diagnosticStatus='unavailable';
       try {
         const saved=await uploadPrivateDiagnostic(msg.diagnostic);
@@ -236,7 +268,11 @@ async function route(msg,sender) {
       // confirmed public file shortly afterward, then stage local proposals.
       await chrome.alarms.create('order_review_refresh',{delayInMinutes:0.5});
       await setStatus('226 cotizaciones enviadas a GitHub · '+stamp()+
-        '. Consulta también el estado de la cartera privada.',false);
+        '. Pendiente de validación por GitHub.',false);
+      await chrome.storage.local.set({syncProgress:{
+        stage:'Enviado a GitHub, validación pendiente',captured:226,total:226,
+        category:'FONDOS',page:null,updatedAt:Date.now()
+      }});
       // Background injector closes its own tab after collector.js completes.
       return {ok:true};
     }catch(err) {
