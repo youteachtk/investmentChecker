@@ -320,3 +320,81 @@ chrome.alarms.onAlarm.addListener(alarm=>{
     console.warn('[investmentChecker order draft]',String(err?.message||'unavailable'));
   });
 });
+
+
+async function orderHistoryStatus(){
+  const session=await getActinverTabs();
+  const source=session.matches.find(t=>t.active)||session.matches[0];
+  if(!source)return {ok:false,error:'No hay sesión de Actinver en Brave.'};
+  let tab=null;
+  try{
+    const origin=new URL(source.url).origin;
+    if(!/^https:\/\/(?:www\.)?retoactinver\.com$/.test(origin))
+      return {ok:false,error:'Origen de Actinver no autorizado.'};
+    tab=await chrome.tabs.create({url:origin+'/RetoActinver/#/portafolio',
+      active:false,openerTabId:source.id});
+    if(!await waitForPage(tab.id))throw Error('No cargó la página privada.');
+    const result=await chrome.scripting.executeScript({
+      target:{tabId:tab.id},files:['orders-history-probe.js'],world:'ISOLATED'
+    });
+    const raw=result?.[0]?.result;
+    if(!raw||raw.schema_version!==1||raw.read_only!==true||raw.submitted_orders!==0)
+      throw Error('Inspección de órdenes no verificable.');
+    const statuses=new Set(['executed','partial','pending','cancelled','rejected','unknown']);
+    const stages=new Set(['ORDERS_SECTION_NOT_FOUND','ORDERS_NAV_AMBIGUOUS',
+      'ORDERS_TABLE_NOT_VERIFIED','ORDERS_TABLE_EMPTY','ORDERS_TABLE_READ',
+      'ORDERS_ROWS_UNRECOGNIZED']);
+    const orders=(Array.isArray(raw.orders)?raw.orders:[]).slice(0,100)
+      .filter(o=>typeof o?.symbol==='string'&&/^[A-Z0-9 .&+/-]{1,35}$/.test(o.symbol)&&statuses.has(o.status))
+      .map(o=>{
+        const item={symbol:o.symbol,status:o.status};
+        if(['BUY','SELL'].includes(o.side))item.side=o.side;
+        if(Number.isInteger(o.quantity)&&o.quantity>=1&&o.quantity<=10000000)item.quantity=o.quantity;
+        if(typeof o.folio==='string'&&/^[a-zA-Z0-9-]{1,48}$/.test(o.folio))item.folio=o.folio;
+        if(typeof o.date==='string'&&/^[\d\s:/.-]{6,32}$/.test(o.date))item.date=o.date;
+        return item;
+      });
+    const counts={executed:0,partial:0,pending:0,cancelled:0,rejected:0,unknown:0};
+    for(const order of orders)counts[order.status]++;
+    const stage=stages.has(raw.stage)?raw.stage:'ORDERS_TABLE_NOT_VERIFIED';
+    const report={schema_version:1,captured_at:new Date().toISOString(),
+      stage,orders_page_seen:raw.orders_page_seen===true,
+      rows_scanned:Number.isInteger(raw.rows_scanned)?
+        Math.min(100,Math.max(0,raw.rows_scanned)):0,
+      counts,orders,read_only:true,submitted_orders:0};
+    const config=await chrome.storage.local.get(['privateEnabled','privateRepo','privateToken']);
+    if(!config.privateEnabled)throw Error('GitHub privado no configurado.');
+    await verifyPrivateRepo(config.privateRepo,config.privateToken);
+    const endpoint='https://api.github.com/repos/'+config.privateRepo+
+      '/contents/actinver/orders-latest.json';
+    const headers={Authorization:'Bearer '+config.privateToken,
+      Accept:'application/vnd.github+json','Content-Type':'application/json',
+      'X-GitHub-Api-Version':'2022-11-28'};
+    const old=await fetch(endpoint,{headers,cache:'no-store'});
+    if(!old.ok&&old.status!==404)throw Error('No se pudo consultar historial privado.');
+    const sha=old.ok?(await old.json()).sha:undefined;
+    const bytes=new TextEncoder().encode(JSON.stringify(report,null,2)+'\n');
+    let binary='';for(const n of bytes)binary+=String.fromCharCode(n);
+    const data={message:'Read-only Reto Actinver order-status snapshot',
+      content:btoa(binary),branch:'main'};
+    if(sha)data.sha=sha;
+    const saved=await fetch(endpoint,{method:'PUT',headers,body:JSON.stringify(data)});
+    if(!saved.ok)throw Error('No se pudo guardar historial privado.');
+    const verified=stage==='ORDERS_TABLE_READ'||stage==='ORDERS_TABLE_EMPTY';
+    await chrome.storage.local.set({orderHistoryLastStatus:stage,
+      orderHistoryLastCheckedAt:report.captured_at,
+      orderHistoryCounts:verified?counts:null});
+    return {ok:true,status:stage,verified,counts:verified?counts:null,
+      order_count:verified?orders.length:null,
+      message:verified?
+        'Órdenes verificadas en Actinver: '+counts.executed+' ejecutadas, '+
+        counts.partial+' parciales, '+counts.pending+' pendientes, '+
+        counts.cancelled+' canceladas y '+counts.rejected+' rechazadas.':
+        'La sección de órdenes aún no se reconoció ('+stage+
+        '). No se puede afirmar que haya cero órdenes.'};
+  }catch(error){
+    return {ok:false,error:String(error?.message||'Error consultando órdenes.')};
+  }finally{
+    if(tab)try{await chrome.tabs.remove(tab.id)}catch(_){}
+  }
+}
