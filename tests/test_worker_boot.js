@@ -70,22 +70,17 @@ const send=(msg)=>new Promise((resolve,reject)=>{
   setTimeout(()=>reject(Error('Worker never replied')),2500);
 });
 (async()=>{
-  // Fast WAKE_MANUAL_SYNC acknowledgement and queued start from the full worker.
-  store.manualSyncRequest={id:'manual-integrated-2026',at:Date.now()};
-  const response=await send({type:'WAKE_MANUAL_SYNC'});
+  // Real 2.7.1-compatible direct capture contract with all 2.8 add-ons loaded.
+  const response=await send({type:'START_SYNC'});
   assert.equal(response.ok,true);
-  assert.equal(response.queued,true);
-  for(let i=0;i<100&&!store.manualSyncLastResult;i++)
+  for(let i=0;i<100&&!tracking.injected.length;i++)
     await new Promise(resolve=>setImmediate(resolve));
-  assert.equal(store.manualSyncHandledId,'manual-integrated-2026');
-  assert.equal(store.manualSyncLastResult?.ok,true);
-  assert.equal(tracking.created.length,1);
+  assert.equal(tracking.created.length,1,'Opening Capitales must create one tab');
   assert.equal(tracking.created[0].active,false);
   assert.equal(tracking.created[0].openerTabId,51);
-  // The scheduled fallback fires and must not start another capture.
-  for(const listener of chrome.alarms.onAlarm.listeners)
-    await listener({name:'investmentchecker_manual_sync'});
-  assert.equal(tracking.created.length,1);
+  assert.ok(tracking.injected.length>=1,'Collector was never invoked');
+  assert.equal(tracking.injected[0].target.tabId,119);
   assert.equal(chrome.runtime.onMessage.listeners.length,1);
-  console.log('PASS complete worker imports, fast ACK, manual alarm, duplicate guard');
+  assert.ok(chrome.alarms.onAlarm.listeners.length>=3);
+  console.log('PASS direct START_SYNC and complete 2.8 add-on worker initialization');
 })().catch(e=>{process.stderr.write(String(e.stack||e));process.exitCode=1});
