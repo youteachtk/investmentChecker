@@ -48,7 +48,7 @@ function marketUrlForSession(tab) {
     'https://www.retoactinver.com':'https://retoactinver.com';
   return host+'/RetoActinver/#/capitales';
 }
-async function createIsolatedMarketTab(sourceTab,runId) {
+async function createIsolatedMarketTab(sourceTab,runId,{waitForReady=true}={}) {
   if(!Number.isInteger(sourceTab?.id)||
      !ACTINVER.test(sourceTab.url||sourceTab.pendingUrl||''))
     throw Error('No se encontró una sesión Actinver para la pestaña de lectura.');
@@ -60,7 +60,7 @@ async function createIsolatedMarketTab(sourceTab,runId) {
   await chrome.storage.local.set({
     syncTemporaryTabId:tab.id,syncTempRunId:runId
   });
-  if(!(await waitForPage(tab.id))){
+  if(waitForReady && !(await waitForPage(tab.id))){
     await cleanupTemporarySyncTab(tab.id,runId);
     throw Error('No se pudo cargar Capitales en la pestaña secundaria.');
   }
@@ -159,27 +159,53 @@ async function startSync(tabId = null) {
       ||found.matches[0];
     // Always isolate the 226-row collector. Even when Capitales is already
     // visible, that original user tab stays completely untouched.
-    const tab=await createIsolatedMarketTab(sourceTab,runId);
-    // Finish private capture before public navigation because their temporary
-    // tabs may share the authenticated opener. All public page switching
-    // happens inside our disposable Capitales tab, never the user tab.
-    void runPortfolioSync(tab.id)
-      .then(result=>chrome.storage.local.set({privateSyncStatus:result?.message||'Lectura privada completada.'}))
-      .catch(error=>chrome.storage.local.set({privateSyncStatus:'Cartera: '+error.message}))
-      .finally(()=>{
-        void (async()=>{
-          await chrome.storage.local.set({
-            syncProgress:{stage:'Abriendo Capitales en segundo plano',
-              captured:0,total:226,category:null,page:null,updatedAt:Date.now()},
-            syncStatus:'Preparando captura de las 226 cotizaciones…'
-          });
-          await injectQuotesWithRetry(tab.id,runId);
-        })().catch(async error=>{
-          await setStatus('Error al iniciar Capitales: '+String(error?.message||error),false);
-          await cleanupTemporarySyncTab(null,runId);
-        });
+    // Opening a tab is fast, but loading the Angular app can take 25 seconds.
+    // Acknowledge the popup immediately after creating the isolated tab.
+    // Continue navigation/read/upload asynchronously with explicit status.
+    await chrome.storage.local.set({
+      syncProgress:{stage:'Abriendo pestaña secundaria de Capitales',
+        captured:0,total:226,category:null,page:null,updatedAt:Date.now()},
+      syncStatus:'Abriendo Capitales en segundo plano…'
+    });
+    const tab=await createIsolatedMarketTab(sourceTab,runId,{waitForReady:false});
+    void (async()=>{
+      await chrome.storage.local.set({
+        syncProgress:{stage:'Esperando carga de Capitales',
+          captured:0,total:226,category:null,page:null,updatedAt:Date.now()},
+        syncStatus:'Esperando carga de Capitales en segundo plano…'
       });
-    return {ok:true};
+      if(!(await waitForPage(tab.id)))
+        throw Error('Capitales no terminó de cargar en la pestaña secundaria.');
+      await chrome.storage.local.set({
+        syncProgress:{stage:'Leyendo cartera privada',
+          captured:0,total:226,category:null,page:null,updatedAt:Date.now()},
+        syncStatus:'Leyendo cartera y posiciones privadas…'
+      });
+      try{
+        const result=await runPortfolioSync(tab.id);
+        await chrome.storage.local.set({
+          privateSyncStatus:result?.message||'Lectura privada completada.'
+        });
+      }catch(error){
+        await chrome.storage.local.set({
+          privateSyncStatus:'Cartera: '+String(error?.message||error)
+        });
+      }
+      await chrome.storage.local.set({
+        syncProgress:{stage:'Preparando las 226 cotizaciones',
+          captured:0,total:226,category:null,page:null,updatedAt:Date.now()},
+        syncStatus:'Preparando lectura de las 226 cotizaciones…'
+      });
+      await injectQuotesWithRetry(tab.id,runId);
+    })().catch(async error=>{
+      await setStatus('Error al iniciar la lectura: '+String(error?.message||error),false);
+      await chrome.storage.local.set({
+        syncProgress:{stage:'Fallo al abrir Capitales',captured:0,
+          total:226,category:null,page:null,updatedAt:Date.now()}
+      });
+      await cleanupTemporarySyncTab(null,runId);
+    });
+    return {ok:true,stage:'INICIADA',temporaryTabId:tab.id};
   }catch(error){
     await setStatus('Error al iniciar lectura: '+error.message,false);
     await cleanupTemporarySyncTab(null,runId);
