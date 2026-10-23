@@ -5,8 +5,10 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 const code=fs.readFileSync('browser/brave-extension/order-preflight.js','utf8');
 const now=Date.parse('2026-10-23T16:00:00Z');
+const alarms={onAlarm:{addListener:()=>{}}};
 const {orderDrafts,orderCSV,orderApprove}=vm.runInNewContext(
-  code+';({orderDrafts,orderCSV,orderApprove})',{Date,Promise,Set,Map,Number,Math,JSON}
+  code+';({orderDrafts,orderCSV,orderApprove})',
+  {Date,Promise,Set,Map,Number,Math,JSON,chrome:{alarms}}
 );
 const mk=(symbol,ask)=>({
   symbol,category:'ACCIONES',
@@ -44,7 +46,7 @@ assert.equal(orderDrafts(snap,{...portfolio,holdings:[
 let draft={...result,draft_id:'test-unique-id',expires_at:new Date(Date.now()+60000).toISOString(),
   approved:false};
 let storage={orderDraftCache:draft};
-const chrome={storage:{local:{
+const chrome={alarms,storage:{local:{
   get:async keys=>Object.fromEntries((Array.isArray(keys)?keys:[keys]).map(k=>[k,storage[k]])),
   set:async obj=>Object.assign(storage,obj)
 }}};
