@@ -16,16 +16,28 @@
   const fields = region => [...region.querySelectorAll('input,select,textarea,[role="spinbutton"],mat-select')]
     .filter(visible).filter(el => !['hidden','password','email'].includes(String(el.type || '').toLowerCase()));
   const fieldKind = field => {
-    const labels = elements('label').filter(el => field.id && el.htmlFor === field.id);
-    const parent = field.closest?.('mat-form-field,.mat-form-field,.form-group,[class*="form-field"]') || field.parentElement;
-    const semantic = norm([
+    const type=String(field.type||'').toLowerCase();
+    const related=elements('label').filter(el=>field.id && el.htmlFor===field.id);
+    const scope=field.closest?.('label,mat-form-field,.mat-form-field,.form-group,[class*="form-field"],[class*="input-wrapper"]')||field.parentElement;
+    const hints=[
       field.getAttribute?.('aria-label'),field.getAttribute?.('placeholder'),
-      field.getAttribute?.('name'),...labels.map(label),parent?.textContent?.slice(0,100)
-    ].filter(Boolean).join(' '));
-    if (/cantidad|titulos|volumen|unidades|numero de titulos|numero de acciones/.test(semantic))return 'CANTIDAD';
-    if (/precio|limite|limit/.test(semantic))return 'PRECIO';
-    if (/tipo de orden|modalidad|tipo de operacion/.test(semantic))return 'TIPO_ORDEN';
-    if (/vigencia|duracion|fecha/.test(semantic))return 'VIGENCIA';
+      field.getAttribute?.('name'),field.getAttribute?.('id'),
+      field.closest?.('label')?.textContent,
+      ...related.map(el=>el.textContent),
+      scope?.previousElementSibling?.textContent,
+      field.previousElementSibling?.textContent,
+      scope?.textContent?.slice(0,110)
+    ];
+    const semantic=norm(hints.filter(Boolean).join(' '));
+    // Selection radios are not editable price or quantity fields.
+    if(type==='radio'||type==='checkbox')
+      return /limitada por precio|a mercado|tipo de orden/.test(semantic)?
+        'TIPO_ORDEN':'OTRO';
+    if(/titulos|cantidad|numero de acciones|numero de titulos|unidades/.test(semantic))
+      return 'CANTIDAD';
+    if(/precio limite|precio de compra|precio de venta|precio|limite/.test(semantic))
+      return 'PRECIO';
+    if(/vigencia|duracion/.test(semantic))return 'VIGENCIA';
     return 'OTRO';
   };
   const safeFields = region => fields(region).slice(0,15).map(el=>({
