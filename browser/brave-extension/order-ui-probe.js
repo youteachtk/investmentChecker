@@ -160,16 +160,19 @@
   buys[0].click();
   state.clicked_steps.push('OPEN_DETAIL_BUY_TICKET');
   state.stage='DETAIL_BUY_TICKET_REQUESTED';
-  let descriptors=[];
+  let descriptors=[],ticketInputs=[];
   for(let attempt=0;attempt<36;attempt++){
     await sleep(250);
     descriptors=safeFields(document);
-    if(descriptors.length>=2)break;
+    ticketInputs=descriptors.filter(field=>
+      ['CANTIDAD','PRECIO'].includes(field.kind) ||
+      ['number','text','tel'].includes(field.type));
+    if(ticketInputs.length>=2)break;
   }
   state.fields=descriptors;
   state.side_panel_visible=elements('aside,[role="complementary"],mat-sidenav,mat-drawer,.mat-drawer,.mat-sidenav').length>0;
   state.detail_controls.visible_field_count=descriptors.length;
-  if(descriptors.length>=2){
+  if(ticketInputs.length>=2){
     state.form_detected=true;
     state.stage='DETAIL_BUY_TICKET_FIELDS_DETECTED';
   }else state.stage='DETAIL_BUY_TICKET_NOT_DETECTED';
