@@ -101,7 +101,7 @@ async function injectQuotesWithRetry(firstTabId, runId) {
       await cleanupTemporarySyncTab(tabId,runId);
       return;
     }catch(err){
-      const missing=/No tab with id|tab was closed|No frame with id/i.test(String(err?.message||''));
+      const missing=/No tab with id|tab was closed|No frame with id|Frame with ID [0-9]+ was removed/i.test(String(err?.message||''));
       if(!missing||attempt===1){
         await setStatus('Error de lectura de Actinver: '+(missing?'pestaña cerrada durante la captura':err.message),false);
         await cleanupTemporarySyncTab(null,runId);
