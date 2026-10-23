@@ -51,6 +51,9 @@ async function refresh(){
       new Date(s.lastSync).toLocaleString('es-MX'):
     'Aún no hay un envío registrado.';
   const draft=s.orderDraftCache;
+  $('orderStageVisa').disabled=!(draft?.approved===true &&
+    draft.approved_symbols?.includes('V')&&
+    Date.parse(draft.expires_at)>Date.now());
   if(draft?.ok && !draft.approved && Date.parse(draft.expires_at)>Date.now() &&
      draft.draft_id!==orderDraft?.draft_id)renderOrders(draft);
 }
@@ -179,6 +182,7 @@ $('orderApprove').addEventListener('click',async()=>{
     result.orders.map(o=>o.symbol+' ('+o.quantity+')').join(', ')+
     '. Ninguna orden fue enviada a Actinver.';
   resetOrderSelection();
+  await refresh();
 });
 $('orderInspect').addEventListener('click',async()=>{
   $('orderInspect').disabled=true;
@@ -190,6 +194,15 @@ $('orderInspect').addEventListener('click',async()=>{
 });
 
 
+
+$('orderStageVisa').addEventListener('click',async()=>{
+  $('orderStageVisa').disabled=true;
+  $('orderMessage').textContent='Cargando propuesta aprobada de V, sin enviar orden…';
+  const response=await send({type:'ORDER_STAGE_VISA'});
+  $('orderMessage').textContent=response?.message||response?.error||
+    'No se pudo verificar el formulario de compra.';
+  await refresh();
+});
 $('orderHistory').addEventListener('click',async()=>{
   $('orderHistory').disabled=true;
   $('orderHistoryMessage').textContent='Consultando la sección Órdenes de Actinver…';
