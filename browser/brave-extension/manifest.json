@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.8.0",
-  "description": "Prepara lotes de compras virtuales con límites, aprobación explícita y revisión de la interfaz real. No envía operaciones sin adaptador verificado.",
+  "version": "2.8.1",
+  "description": "Muestra progreso real Acciones/ETFs/Fondos, páginas, contador 0–226, alertas por ausencia de avance y verificación de cotizaciones validadas en GitHub.",
   "permissions": [
     "storage",
     "scripting",
