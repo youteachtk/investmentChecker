@@ -1,14 +1,15 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.8.10",
-  "description": "2.8.10: inspector navega al Detalle de V desde ACCIONES y deja la página visible, sin operaciones.",
+  "version": "2.8.11",
+  "description": "2.8.11: Brave avisa al actualizador local cuando GitHub publica una versión; sin tareas horarias.",
   "permissions": [
     "storage",
     "scripting",
     "alarms",
     "activeTab",
-    "tabs"
+    "tabs",
+    "nativeMessaging"
   ],
   "host_permissions": [
     "https://retoactinver.com/*",
