@@ -13,6 +13,7 @@ on:
       - 'tests/test_order_preflight.js'
       - 'tests/test_order_ui_probe.js'
       - 'tests/test_auto_reload.js'
+      - 'tests/test_event_update.js'
       - 'tests/test_popup_progress.js'
       - 'tests/test_worker_boot.js'
       - 'tests/test_stable_collector_contract.js'
@@ -56,6 +57,8 @@ jobs:
         run: node tests/test_order_ui_probe.js
       - name: Verify new local-file auto reload without interrupting sync
         run: node tests/test_auto_reload.js
+      - name: Check event-based Windows update notification
+        run: node tests/test_event_update.js
       - name: Regression test for live popup telemetry and verified snapshots
         run: node tests/test_popup_progress.js
       - name: Lock proven 2.7.1 market collector and background capture lifecycle
@@ -71,17 +74,28 @@ jobs:
           cd /tmp/ics-dist
           zip -q -r "${GITHUB_WORKSPACE}/browser/investmentChecker-brave-v${VERSION}.zip" .
           cp "${GITHUB_WORKSPACE}/browser/investmentChecker-brave-v${VERSION}.zip" "${GITHUB_WORKSPACE}/browser/investmentChecker-brave-latest.zip"
-      - name: Publish verified ZIP files
+      - name: Publish verified packages and announce new version
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          # Refresh the base before staging binary ZIPs. Rebasing two
-          # competing binary archives causes unresolvable add/add conflicts.
-          # Keep the workflow-owned generated archives in the worktree.
-          git fetch origin main
-          git reset --mixed origin/main
-          git add browser/investmentChecker-brave-v*.zip browser/investmentChecker-brave-latest.zip
-          if ! git diff --cached --quiet; then
-            git commit -m "Package InvestmentChecker Brave updated extension"
-            git push origin HEAD:main
-          fi
+          # Only announce after the built extension and all tests succeeded.
+          # Refresh remote-request from main to preserve user requests.
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git reset --mixed origin/main
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          manifest=json.loads(Path('browser/brave-extension/manifest.json').read_text())
+          file=Path('browser/remote-request.json')
+          control=json.loads(file.read_text())
+          control['latest_version']=manifest['version']
+          file.write_text(json.dumps(control,ensure_ascii=False,indent=2)+'\\n')
+          PY
+            git add browser/investmentChecker-brave-v*.zip browser/investmentChecker-brave-latest.zip browser/remote-request.json
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m "Package InvestmentChecker and announce published extension version"
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
