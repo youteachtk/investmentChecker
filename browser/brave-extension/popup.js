@@ -31,42 +31,20 @@ async function refresh(){
     if(privateOk && s.privateSyncStatus && (!s.syncRunning)) lines.push(s.privateSyncStatus);
     show(lines.join('\n'));
   }
-  // Read local telemetry instead of inferring success from hidden tabs.
-  const progress=s.syncProgress||{};
-  const count=Number.isInteger(progress.captured)?
-    Math.min(226,Math.max(0,progress.captured)):0;
+  // Read progress from field-proven collector status strings.
+  // No modification to the working 226-row collector is needed.
+  const message=String(s.syncStatus||'');
+  const match=/Capitales:\s*(ACCIONES|ETFs|FONDOS)\s+página\s+(\d+)\s*[·•-]\s*(\d+)\s*\/\s*(\d+)/i.exec(message);
+  const offsets={ACCIONES:0,ETFs:145,FONDOS:201};
+  const category=match?.[1]?.toUpperCase();
+  const count=match?Math.min(226,offsets[category]+Number(match[3])):
+    /226 cotizaciones (?:enviadas|capturadas)/i.test(message)?226:0;
   $('syncProgress').value=count;
-  $('syncCount').textContent=count+' / 226 instrumentos capturados en esta ejecución';
-  const category=['ACCIONES','ETFs','FONDOS'].includes(progress.category)?
-    progress.category:null;
-  const phase=String(progress.stage||'');
-  const stage=category?
-    'Leyendo '+category+(Number.isInteger(progress.page)?
-      ' · página '+progress.page:''):
-    (phase||'Sin sincronización activa.');
-  const inactivity=running && Number(progress.updatedAt)>0 &&
-    Date.now()-progress.updatedAt>3*60*1000;
-  $('syncStage').textContent=inactivity?
-    'Sin avance confirmado desde hace más de 3 minutos. '+stage:stage;
-  if(s.syncRunning&&!running){
-    $('syncStage').textContent='La sincronización anterior perdió contacto o superó 7 minutos. Puedes reintentar.';
-  }
-  const request=s.manualSyncRequest,result=s.manualSyncLastResult;
-  const pending=request && request.id!==result?.id &&
-    !running && Date.now()-request.at>=12000 &&
-    Date.now()-request.at<2*60*1000;
-  if(pending){
-    const acknowledged=s.manualSyncHandledId===request.id;
-    const diagnosis=acknowledged?
-      'Brave recibió la solicitud, pero no confirmó el arranque.':
-      'El proceso de fondo de Brave no respondió a la solicitud.';
-    $('syncStage').textContent=diagnosis;
-    show(diagnosis+' Revisa Configuración y diagnóstico; no hay nueva captura confirmada.');
-  }else if(result && request?.id===result.id && result.ok===false && !running){
-    const error='Inicio rechazado: '+(result.error||'error desconocido');
-    $('syncStage').textContent=error;
-    if(!localMessage)show(error);
-  }
+  $('syncCount').textContent=count+' / 226 instrumentos'+
+    (match?' · '+category+', página '+match[2]:'');
+  $('syncStage').textContent=s.syncRunning&&!running?
+    'La captura superó siete minutos. Revisa el estado antes de reintentar.':
+    (message||'Sin sincronización activa.');
   $('syncFreshness').textContent=s.lastSync?
     'Último envío iniciado en GitHub: '+
       new Date(s.lastSync).toLocaleString('es-MX'):
@@ -76,33 +54,21 @@ async function refresh(){
      draft.draft_id!==orderDraft?.draft_id)renderOrders(draft);
 }
 $('run').addEventListener('click',async()=>{
-  // START_SYNC used to wait for an asynchronous service-worker reply, which
-  // sometimes never reached this popup even though the worker was alive.
-  // A browser alarm is durable and wakes the worker independently.
+  // Field-proven direct route from 2.7.1. No queue, no extra alarm.
+  localMessage=null;
+  show('Solicitando lectura de Actinver…');
   $('run').disabled=true;
-  const id='manual-'+Date.now().toString(36)+'-'+
-    Math.random().toString(36).slice(2,10);
-  try{
-    await chrome.storage.local.set({
-      manualSyncRequest:{id,at:Date.now()},
-      syncStatus:'Solicitud recibida. Esperando a Brave para iniciar la lectura…',
-      syncProgress:{stage:'Esperando proceso de fondo de Brave',
-        category:null,page:null,captured:0,total:226,updatedAt:Date.now()}
-    });
-    await chrome.alarms.create('investmentchecker_manual_sync',{
-      when:Date.now()+1000
-    });
-    // Try an immediate wake without awaiting it. If the message stalls,
-    // Brave's own durable alarm will still dispatch the exact same request.
-    void send({type:'WAKE_MANUAL_SYNC'});
-    localMessage=null;
-    await refresh();
-  }catch(error){
-    localMessage='No se pudo programar la lectura: '+
-      String(error?.message||error);
+  const response=await Promise.race([
+    send({type:'START_SYNC'}),
+    new Promise(resolve=>setTimeout(()=>resolve({
+      ok:false,error:'Brave no confirmó el inicio; no hay captura nueva verificada.'
+    }),35000))
+  ]);
+  if(!response?.ok){
+    localMessage=response?.error||'No fue posible iniciar la captura.';
     show(localMessage);
-    $('run').disabled=false;
-  }
+  }else localMessage=null;
+  await refresh();
 });
 $('save').addEventListener('click',async()=>{
   const value=$('token').value.trim();
@@ -129,9 +95,7 @@ chrome.storage.onChanged.addListener((changes,area)=>{
   if(changes.syncStatus||changes.syncRunning||changes.privateSyncStatus||
      changes.privateEnabled||changes.privateLastSync||
      changes.orderDraftCache||changes.orderReviewStatus||
-     changes.syncProgress||changes.lastSync||changes.syncStartedAt||
-     changes.manualSyncRequest||changes.manualSyncHandledId||
-     changes.manualSyncStartedAt||changes.manualSyncLastResult){
+     changes.syncProgress||changes.lastSync||changes.syncStartedAt){
     localMessage=null;
     void refresh();
   }
