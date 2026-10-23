@@ -92,49 +92,6 @@
   let row=findV(),page=pageNumber()||1;
   state.pages_visited=1;
   state.lookup_method=row?'VISIBLE_PAGE':'PAGINATOR';
-  state.search_attempted=false;
-  // Search only inside the temporary Capitales tab. The active user page
-  // is never modified, and the exact Emisora cell must still equal V.
-  if(!row){
-    const searches=[...(root?.querySelectorAll('input')||[])].filter(visible)
-      .filter(input=>/^(buscar|search)$/.test(norm([
-        input.getAttribute?.('placeholder'),input.getAttribute?.('aria-label')
-      ].filter(Boolean).join(' '))));
-    if(searches.length===1){
-      const search=searches[0];
-      state.search_attempted=true;
-      const setSearch=term=>{
-        const descriptor=Object.getOwnPropertyDescriptor(
-          Object.getPrototypeOf(search),'value');
-        if(descriptor?.set)descriptor.set.call(search,term);
-        else search.value=term;
-        search.dispatchEvent(new Event('input',{bubbles:true}));
-      };
-      for(const term of ['VISA','V']){
-        const before=rows().map(ticker).join('|');
-        setSearch(term);
-        for(let tick=0;tick<32;tick++){
-          await sleep(250);
-          const now=rows().map(ticker).join('|');
-          if(now!==before)break;
-        }
-        row=findV();
-        if(row){
-          state.lookup_method='SEARCH';
-          state.search_term=term;
-          page=pageNumber()||1;
-          break;
-        }
-      }
-      if(!row){
-        setSearch('');
-        for(let tick=0;tick<40;tick++){
-          await sleep(250);
-          if(rows().length>0)break;
-        }
-      }
-    }
-  }
   for(let n=0;!row&&n<14;n++){
     if(!pager())break;
     const nextPage=page+1, before=rows().map(ticker).join('|');
