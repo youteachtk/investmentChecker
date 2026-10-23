@@ -46,7 +46,7 @@ function setup({visaPage=1,form=true}={}){
     querySelectorAll:s=>{
       if(s==='gt-btn-operar')return [widget];
       if(s==='label')return [];
-      if(s==='[role="dialog"],mat-dialog-container,dialog')
+      if(s.startsWith('[role="dialog"],mat-dialog-container,dialog'))
         return buyOpen&&form?[dialog]:[];
       if(s==='form')return [];
       if(s.includes('[role="menu"]')||s.includes('mat-menu-panel'))
@@ -72,6 +72,17 @@ async function run(model){
   assert.deepEqual(Array.from(ok.clicked_steps),['OPEN_MARKET_ACTIONS','OPEN_BUY_FORM']);
   assert.equal(ok.fields.some(f=>f.kind==='CANTIDAD'),true);
   assert.equal(ok.fields.some(f=>f.kind==='PRECIO'),true);
+  // The real Actinver interface can render a nonmodal right-side drawer.
+  const side=setup();
+  const orig=side.document.querySelectorAll.bind(side.document);
+  side.document.querySelectorAll=s=>{
+    if(s==='aside,[role="complementary"],mat-sidenav,mat-drawer,.mat-drawer,.mat-sidenav')
+      return [{getClientRects:()=>[1],disabled:false}];
+    return orig(s);
+  };
+  const sideResult=await run(side);
+  assert.equal(sideResult.side_panel_visible,true);
+  assert.equal(sideResult.submitted_orders,0);
   const second=setup({visaPage:2});
   const paged=await run(second);
   assert.equal(paged.stage,'BUY_FORM_DETECTED');
