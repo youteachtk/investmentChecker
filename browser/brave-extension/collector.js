@@ -13,9 +13,16 @@
     .trim().toLowerCase().replace(/\s+/g,' ');
   const phase={name:'START',tab:null,page:null,retries:0};
   const started=Date.now();
-  const progress=async message=>{
+  let lastRead=0,lastCategory=null,lastPage=null;
+  const progress=async (message,detail={})=>{
+    if(Number.isInteger(detail.captured))lastRead=detail.captured;
+    if(typeof detail.category==='string')lastCategory=detail.category;
+    if(Number.isInteger(detail.page))lastPage=detail.page;
     console.log('[investmentChecker]',message);
-    await chrome.runtime.sendMessage({type:'PROGRESS',status:message});
+    // Only known stage metadata; never transmit private accounts or raw DOM.
+    await chrome.runtime.sendMessage({type:'PROGRESS',status:message,
+      detail:{phase:phase.name,category:lastCategory,page:lastPage,
+        captured:lastRead,total:226}});
   };
   function root(){
     const el=document.querySelector('app-capitales');
@@ -213,7 +220,9 @@
     const out=[],globalSeen=new Set();
     for(let i=0;i<GROUPS.length;i++){
       const {category,expected}=GROUPS[i];
-      await progress('Capitales: pestaña '+(i+1)+' / 3');
+      await progress('Capitales: pestaña '+(i+1)+' / 3',{
+        category,captured:globalSeen.size,page:1
+      });
       await selectCategory(i,globalSeen);
       await goFirst(globalSeen);
       const local=new Set(),visited=new Set();
@@ -233,7 +242,9 @@
           out.push({category,...r});
         }
         await progress('Capitales: '+category+' página '+page+
-          ' · '+local.size+'/'+expected);
+          ' · '+local.size+'/'+expected,{
+            category,page,captured:globalSeen.size
+          });
         if(local.size===expected)break;
         if(local.size>expected)throw Error('Más filas de las esperadas');
         phase.name='NEXT_PAGE';phase.page=page+1;
