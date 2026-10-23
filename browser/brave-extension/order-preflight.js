@@ -216,6 +216,7 @@ async function orderInspectUi(){
       'DETAIL_LINK_AMBIGUOUS','DETAIL_REQUESTED','DETAIL_NAVIGATION_NOT_CONFIRMED',
       'DETAIL_OPENED','DETAIL_FORM_DETECTED','DETAIL_TICKET_LAUNCHER_UNVERIFIED',
       'DETAIL_BUY_TICKET_REQUESTED','DETAIL_BUY_TICKET_FIELDS_DETECTED',
+      'DETAIL_BUY_TICKET_FIELDS_MAPPED',
       'DETAIL_BUY_TICKET_NOT_DETECTED']);
     const allowedKinds=new Set(['CANTIDAD','PRECIO','TIPO_ORDEN','VIGENCIA','OTRO']);
     const allowedControls=new Set(['INPUT','SELECT','TEXTAREA','MAT-SELECT']);
@@ -243,6 +244,10 @@ async function orderInspectUi(){
           Math.min(30,Math.max(0,raw.detail_controls.visible_field_count)):0
       },
       side_panel_visible:raw.side_panel_visible===true,
+      lookup_method:['VISIBLE_PAGE','SEARCH','PAGINATOR'].includes(raw.lookup_method)?
+        raw.lookup_method:null,
+      search_attempted:raw.search_attempted===true,
+      search_term:['V','VISA'].includes(raw.search_term)?raw.search_term:null,
       pages_visited:Number.isInteger(raw.pages_visited)?
         Math.min(15,Math.max(0,raw.pages_visited)):null,
       located_page:Number.isInteger(raw.located_page)&&raw.located_page>=1&&raw.located_page<=15?
