@@ -1,3 +1,9 @@
+## v2.7.1 — Corregido “Frame with ID 0 was removed” (23/oct/2026)
+
+La causa era la carrera entre la respuesta de `COLLECT_DONE` y el cierre inmediato de la pestaña secundaria. El trabajador cerraba su pestaña **antes de que `collector.js` terminara su promesa**, por lo que Brave emitía un error de marco eliminado incluso cuando GitHub ya había aceptado las 226 cotizaciones. Ahora el cierre ocurre en `injectQuotesWithRetry`, después de que la ejecución del script finaliza. Si el frame se elimina por una recarga auténtica de Actinver, el error se clasifica como transitorio y se reintenta solo en otra pestaña secundaria propia. Si el envío público fue confirmado en la misma ejecución, el error tardío no pisa el estado exitoso ni duplica la carga.
+
+Los tests protegen las 226 cotizaciones, la cartera privada, la navegación aislada y la finalización del script después del envío a GitHub. Se mantienen los permisos, tokens y pantallas del usuario; no se ejecutan órdenes. **La prueba real en Brave aún queda pendiente.**
+
 ## v2.7.0 — Cotizaciones sin mover la página visible (22/oct/2026)
 
 La captura pública de 145 Acciones, 56 ETFs y 25 Fondos ahora utiliza **siempre una pestaña secundaria inactiva de Capitales**, aunque la pestaña visible del usuario ya esté en Capitales. Las categorías y el paginador se recorren en esa pestaña separada, no en la pantalla del usuario. La pestaña temporal usa el mismo dominio de Actinver y un vínculo con la sesión existente; se cierra tras un envío exitoso o un fallo de captura.
