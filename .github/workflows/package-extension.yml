@@ -12,6 +12,7 @@ on:
       - 'tests/test_frame_lifecycle.js'
       - 'tests/test_order_preflight.js'
       - 'tests/test_order_ui_probe.js'
+      - 'tests/test_auto_reload.js'
       - 'tests/test_popup_progress.js'
       - 'tests/test_worker_boot.js'
       - 'tests/test_stable_collector_contract.js'
@@ -53,6 +54,8 @@ jobs:
         run: node tests/test_order_preflight.js
       - name: Regression test for read-only Actinver order UI inspection
         run: node tests/test_order_ui_probe.js
+      - name: Verify new local-file auto reload without interrupting sync
+        run: node tests/test_auto_reload.js
       - name: Regression test for live popup telemetry and verified snapshots
         run: node tests/test_popup_progress.js
       - name: Lock proven 2.7.1 market collector and background capture lifecycle

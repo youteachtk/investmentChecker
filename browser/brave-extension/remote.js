@@ -7,6 +7,43 @@ const REMOTE_MAX_AGE_MS = 5 * 60 * 1000;
 const REMOTE_INTERVAL_MINUTES = 0.5; // Chrome 120+ permits 30-second alarms.
 let remoteCheckInProgress = false;
 
+// Detect when the Windows updater has already replaced unpacked extension
+// files. Chromium does not reliably activate those files until reload.
+const LOCAL_UPDATE_SETTLE_MS = 60000;
+async function checkInstalledFileUpdate() {
+  try {
+    if(typeof chrome.runtime.reload!=='function')return;
+    const loaded=chrome.runtime.getManifest().version;
+    const localUrl=chrome.runtime.getURL('manifest.json')+'?disk-check='+Date.now();
+    const response=await fetch(localUrl,{cache:'no-store'});
+    if(!response.ok)return;
+    const disk=await response.json();
+    if(!disk||!/^\\d+\\.\\d+\\.\\d+$/.test(disk.version||''))return;
+    const parts=v=>v.split('.').map(Number);
+    const a=parts(disk.version),b=parts(loaded);
+    const newer=a.some((n,i)=>n!==b[i] && a.slice(0,i).every((p,j)=>p===b[j]) && n>b[i]);
+    const state=await chrome.storage.local.get(['pendingExtensionVersion','pendingVersionSince',
+      'syncRunning','syncStartedAt']);
+    if(!newer){
+      if(state.pendingExtensionVersion)await chrome.storage.local.remove(
+        ['pendingExtensionVersion','pendingVersionSince']);
+      return;
+    }
+    if(state.pendingExtensionVersion!==disk.version) {
+      await chrome.storage.local.set({
+        pendingExtensionVersion:disk.version,pendingVersionSince:Date.now()
+      });
+      return;
+    }
+    if(Date.now()-(state.pendingVersionSince||Date.now())<LOCAL_UPDATE_SETTLE_MS)return;
+    // Never reload while public quotes are actively being uploaded.
+    if(state.syncRunning && Date.now()-(state.syncStartedAt||0)<7*60*1000)return;
+    chrome.runtime.reload();
+  }catch(error){
+    console.warn('[investmentChecker auto-reload]',String(error?.message||error));
+  }
+}
+
 async function checkRemoteRequest() {
   if (remoteCheckInProgress) return;
   remoteCheckInProgress = true;
@@ -64,7 +101,10 @@ async function checkRemoteRequest() {
 }
 
 chrome.alarms.onAlarm.addListener(alarm => {
-  if (alarm.name === REMOTE_ALARM) void checkRemoteRequest();
+  if (alarm.name === REMOTE_ALARM) {
+    void checkInstalledFileUpdate();
+    void checkRemoteRequest();
+  }
 });
 async function ensureRemoteAlarm() {
   await chrome.alarms.create(REMOTE_ALARM, {periodInMinutes:REMOTE_INTERVAL_MINUTES});
