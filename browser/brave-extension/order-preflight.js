@@ -326,14 +326,15 @@ chrome.alarms.onAlarm.addListener(alarm=>{
 async function orderHistoryStatus(){
   const session=await getActinverTabs();
   const source=session.matches.find(t=>t.active)||session.matches[0];
-  if(!source)return {ok:false,error:'No hay sesión de Actinver en Brave.'};
+
   let tab=null;
   const diag={order_history:true,phase:'ORDERS_START',code:'ORDERS_ERROR',
     probe_step:'INITIAL',orders_page_seen:false};
   try{
+    if(!source)throw Error('No hay sesión de Actinver en Brave.');
     const origin=new URL(source.url).origin;
     if(!/^https:\/\/(?:www\.)?retoactinver\.com$/.test(origin))
-      return {ok:false,error:'Origen de Actinver no autorizado.'};
+      throw Error('Origen de Actinver no autorizado.');
     diag.phase='ORDERS_NAV';
     tab=await chrome.tabs.create({url:origin+'/RetoActinver/#/portafolio',
       active:false,openerTabId:source.id});
