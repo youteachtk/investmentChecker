@@ -210,6 +210,7 @@ async function route(msg,sender) {
   if(msg?.type==='ORDER_PREVIEW')return await orderPreview();
   if(msg?.type==='ORDER_APPROVE')return await orderApprove(msg);
   if(msg?.type==='ORDER_INSPECT_UI')return await orderInspectUi();
+  if(msg?.type==='ORDER_HISTORY')return await orderHistoryStatus();
   if (msg?.type==='PRIVATE_CONFIG') return await configurePrivatePortfolio(msg);
   if (msg?.type==='PRIVATE_START') return await capturePrivatePortfolio();
   if (msg?.type==='PRIVATE_CAPTURE') return await acceptPrivateCapture(msg,sender);
