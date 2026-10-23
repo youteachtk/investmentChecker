@@ -27,12 +27,22 @@ a{color:#a2d9ff}
 .trade .confirm input{margin:3px 0 0 0}
 .trade .message{white-space:pre-wrap;font-size:12px;line-height:1.5;color:#d8e0e9}
 .trade button.secondary{margin:8px 0}
+.syncdetails{margin-top:10px;border:1px solid #465266;border-radius:9px;padding:10px;line-height:1.5}
+.syncdetails progress{width:100%;height:13px;accent-color:#22c55e;margin:7px 0}
+.syncdetails .minor{margin-top:4px}
+.syncdetails #syncStage{font-size:12px;font-weight:700}
 </style></head><body>
 <h1>InvestmentChecker <small id="version"></small></h1>
 <p>Mercado y cartera unidos. Se sincronizan automáticamente mientras Actinver esté abierto en Brave.</p>
 <div id="connection" class="minor">Comprobando conexión…</div>
 <button id="run">Sincronizar todo ahora</button>
 <div id="status" class="status" role="status">Preparando sincronización…</div>
+<section id="syncDetails" class="syncdetails" aria-live="polite">
+  <div id="syncStage">Sin actividad reciente confirmada.</div>
+  <progress id="syncProgress" value="0" max="226" aria-label="Instrumentos capturados"></progress>
+  <div id="syncCount" class="minor">0 / 226 instrumentos en esta ejecución</div>
+  <div id="syncFreshness" class="minor">Último envío confirmado: no disponible</div>
+</section>
 <p class="minor">Cotizaciones → GitHub público. Cartera → GitHub privado. Propuestas y aprobación por lote; el envío de órdenes aún está bloqueado.</p>
 <section class="trade" aria-labelledby="tradeHeader">
   <h2 id="tradeHeader">Propuestas para el Reto Actinver</h2>
