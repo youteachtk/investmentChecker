@@ -230,7 +230,10 @@
   state.detail_controls.visible_field_count=descriptors.length;
   if(ticketInputs.length>=2){
     state.form_detected=true;
-    state.stage='DETAIL_BUY_TICKET_FIELDS_DETECTED';
+    const editable=descriptors.filter(f=>['text','number','tel'].includes(f.type));
+    state.stage=editable.some(f=>f.kind==='CANTIDAD')&&
+      editable.some(f=>f.kind==='PRECIO')?
+      'DETAIL_BUY_TICKET_FIELDS_MAPPED':'DETAIL_BUY_TICKET_FIELDS_DETECTED';
   }else state.stage='DETAIL_BUY_TICKET_NOT_DETECTED';
   // Never enter order values or press Calculate, Comprar or any confirmation
   // inside the ticket. Do not serialize page text, account data or input values.
