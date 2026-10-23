@@ -175,13 +175,17 @@ async function uploadPrivateDiagnostic(raw) {
   const keys=['category_index','page_index','retries','selected_tab_index',
     'tab_count','visible_rows','numeric_page_buttons','active_page','elapsed_seconds'];
   const stages=new Set(['START','CATEGORY','FIRST_PAGE','READ_PAGE','NEXT_PAGE','UPLOAD',
-    'PRIVATE_START','PRIVATE_NAV','PRIVATE_READ','PRIVATE_DONE']);
+    'PRIVATE_START','PRIVATE_NAV','PRIVATE_READ','PRIVATE_DONE',
+    'ORDERS_START','ORDERS_NAV','ORDERS_READ','ORDERS_SAVE','ORDERS_DONE']);
   const codes=new Set(['TABS','PAGINATION','TABLE','TIMEOUT','OTHER',
     'PRIVATE_SUMMARY_MISSING','PRIVATE_HOLDINGS_MISSING',
-    'PRIVATE_NAV_FAILED','PRIVATE_UPLOAD_FAILED','PRIVATE_OK']);
+    'PRIVATE_NAV_FAILED','PRIVATE_UPLOAD_FAILED','PRIVATE_OK',
+    'ORDERS_NAV_FAILED','ORDERS_TABLE_MISSING','ORDERS_SAVE_FAILED','ORDERS_OK','ORDERS_ERROR']);
   if(!raw || typeof raw!=='object')return {ok:false,reason:'No diagnostic'};
   const portfolio=raw?.private_portfolio===true;
-  const rateKey=portfolio?'lastPortfolioDiagnosticAt':'lastDiagnosticAt';
+  const history=raw?.order_history===true;
+  const rateKey=history?'lastOrderHistoryDiagnosticAt':
+    portfolio?'lastPortfolioDiagnosticAt':'lastDiagnosticAt';
   const stored=await chrome.storage.local.get(['privateRepo','privateToken',
     'privateEnabled',rateKey]);
   if(!stored.privateEnabled||!stored.privateRepo||!stored.privateToken)
@@ -196,6 +200,20 @@ async function uploadPrivateDiagnostic(raw) {
     const v=raw[k];
     payload[k]=Number.isInteger(v)&&v>=-1&&v<=1000?v:null;
   }
+  if(history){
+    payload.order_history=true;
+    payload.orders_page_seen=raw.orders_page_seen===true;
+    const steps=new Set(['INITIAL','READ_CURRENT_TABLE','FIND_ORDER_NAVIGATION',
+      'OPEN_ORDER_NAVIGATION','WAIT_ORDERS_TABLE','NO_MATCHING_TABLE',
+      'CLASSIFY_ORDER_ROWS','COMPLETED','UNRECOGNIZED']);
+    payload.probe_step=steps.has(raw.probe_step)?raw.probe_step:'UNRECOGNIZED';
+    for(const key of ['visible_table_count','visible_control_count',
+      'order_nav_candidate_count','investment_menu_candidate_count']){
+      payload[key]=Number.isInteger(raw[key])&&raw[key]>=0&&raw[key]<=1000?
+        raw[key]:null;
+    }
+    payload.client_version=chrome.runtime.getManifest().version;
+  }
   if(portfolio){
     payload.private_portfolio=true;
     payload.summary_detected=raw.summary_detected===true;
@@ -209,7 +227,8 @@ async function uploadPrivateDiagnostic(raw) {
       raw.visible_tables>=0&&raw.visible_tables<=50?raw.visible_tables:null;
   }
   await verifyPrivateRepo(stored.privateRepo,stored.privateToken);
-  const path=portfolio?'actinver/portfolio-diagnostic.json':
+  const path=history?'actinver/order-history-diagnostic.json':
+    portfolio?'actinver/portfolio-diagnostic.json':
     'actinver/diagnostics-latest.json';
   const url='https://api.github.com/repos/'+stored.privateRepo+'/contents/'+path;
   const headers={Authorization:'Bearer '+stored.privateToken,
