@@ -110,7 +110,8 @@
         else search.value=term;
         search.dispatchEvent(new Event('input',{bubbles:true}));
       };
-      for(const term of ['VISA','V']){
+      // Capitales searches the listed ticker, not the company name: Visa is V *.
+      for(const term of ['V']){
         const before=rows().map(ticker).join('|');
         setSearch(term);
         for(let tick=0;tick<32;tick++){
