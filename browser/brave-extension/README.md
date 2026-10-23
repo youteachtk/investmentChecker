@@ -1,3 +1,7 @@
+## v2.8.16 — Diagnóstico verificable de órdenes (23/oct/2026)
+
+Corregida la falta de trazabilidad de la consulta de órdenes. La extensión guarda ahora un diagnóstico mínimo y privado en `actinver/order-history-diagnostic.json`, incluso si no localiza la navegación, la tabla o la carga del historial. El diagnóstico registra versión activa, fase permitida, códigos controlados y conteos estructurales; nunca almacena HTML, contraseñas ni contenido libre de la cuenta. El panel de InvestmentChecker muestra el estado de la lectura remota y si el diagnóstico realmente se guardó. El historial completo permanece exclusivamente en `actinver/orders-latest.json` cuando puede leerse. Las ausencias y fallos no se etiquetan falsamente como «cero ejecutadas». La ruta de compra no se modifica. Se mantiene el recorrido por páginas de Capitales.
+
 ## v2.8.14 — Preparar compra aprobada y consultar órdenes (23/oct/2026)
 
 Se restaura el recorrido por páginas de ACCIONES (el probado contra Actinver); se retira el experimento Buscar. El inspector mantiene Capitales → V → Detalle → acceso de compra y no realiza operaciones.
