@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.8.7",
-  "description": "2.8.7: deteccion y recarga automáticas tras actualizar archivos locales; conserva inspección de compra y 226 cotizaciones.",
+  "version": "2.8.8",
+  "description": "2.8.8: inspección de V recorre páginas de ACCIONES desde Capitales; conserva cartera y captura de 226 cotizaciones.",
   "permissions": [
     "storage",
     "scripting",
