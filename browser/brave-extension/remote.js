@@ -7,6 +7,46 @@ const REMOTE_MAX_AGE_MS = 5 * 60 * 1000;
 const REMOTE_INTERVAL_MINUTES = 0.5; // Chrome 120+ permits 30-second alarms.
 let remoteCheckInProgress = false;
 
+// Event-driven updates reuse the existing GitHub control channel.
+// GitHub Actions writes latest_version only after packaging succeeds.
+// An explicitly installed native host updates approved extension files in
+// Windows. No new polling alarm or hourly task is required.
+let nativeUpdateInProgress=false;
+function publishedVersionNewer(published,loaded){
+  const pattern=/^\\d+\\.\\d+\\.\\d+$/;
+  if(!pattern.test(String(published||''))||!pattern.test(String(loaded||'')))return false;
+  const a=published.split('.').map(Number),b=loaded.split('.').map(Number);
+  for(let i=0;i<3;i++){if(a[i]!==b[i])return a[i]>b[i]}
+  return false;
+}
+async function updateIfPublished(latest){
+  if(nativeUpdateInProgress||!publishedVersionNewer(latest,chrome.runtime.getManifest().version))return;
+  const prev=await chrome.storage.local.get(['lastNativeUpdateVersion','lastNativeUpdateAttemptAt']);
+  if(prev.lastNativeUpdateVersion===latest&&
+     Date.now()-(prev.lastNativeUpdateAttemptAt||0)<60000)return;
+  nativeUpdateInProgress=true;
+  try{
+    await chrome.storage.local.set({lastNativeUpdateVersion:latest,
+      lastNativeUpdateAttemptAt:Date.now()});
+    const result=await new Promise((resolve,reject)=>{
+      chrome.runtime.sendNativeMessage('com.investmentchecker.updater',
+        {action:'update',version:latest},response=>{
+          const error=chrome.runtime.lastError;
+          if(error)reject(Error(error.message));
+          else resolve(response);
+        });
+    });
+    if(result?.ok&&publishedVersionNewer(result.version,chrome.runtime.getManifest().version)){
+      await chrome.storage.local.set({lastNativeUpdateSucceeded:result.version});
+      chrome.runtime.reload();
+    }else if(result?.error){
+      console.warn('[investmentChecker event update]',String(result.error).slice(0,160));
+    }
+  }catch(error){
+    console.warn('[investmentChecker event update]',String(error?.message||error).slice(0,160));
+  }finally{nativeUpdateInProgress=false}
+}
+
 // Detect when the Windows updater has already replaced unpacked extension
 // files. Chromium does not reliably activate those files until reload.
 const LOCAL_UPDATE_SETTLE_MS = 60000;
@@ -57,6 +97,8 @@ async function checkRemoteRequest() {
     const response = await fetch(url, {cache:'no-store'});
     if (!response.ok) throw Error('Error consultando solicitudes GitHub: HTTP '+response.status);
     const request = await response.json();
+    if(request && typeof request.latest_version==='string')
+      await updateIfPublished(request.latest_version);
     // Both approved remote actions are READ-ONLY. Never accept buy/sell,
     // click instructions, scripts, freeform URLs or financial data payloads.
     if (!request || !['capture_public_quotes','inspect_order_ui'].includes(request.action) ||
