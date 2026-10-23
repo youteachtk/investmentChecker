@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.8.1",
-  "description": "Muestra progreso real Acciones/ETFs/Fondos, páginas, contador 0–226, alertas por ausencia de avance y verificación de cotizaciones validadas en GitHub.",
+  "version": "2.8.2",
+  "description": "Confirma al instante el arranque y muestra apertura/carga de Capitales, progreso 0–226 y errores de inicio sin espera indefinida.",
   "permissions": [
     "storage",
     "scripting",
