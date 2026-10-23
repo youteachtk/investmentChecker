@@ -14,6 +14,7 @@ on:
       - 'tests/test_order_ui_probe.js'
       - 'tests/test_popup_progress.js'
       - 'tests/test_sync_fast_ack.js'
+      - 'tests/test_manual_sync_recovery.js'
       - '.github/workflows/package-extension.yml'
   workflow_dispatch:
 
@@ -54,6 +55,8 @@ jobs:
         run: node tests/test_popup_progress.js
       - name: Regression test for immediate sync acknowledgement with slow page load
         run: node tests/test_sync_fast_ack.js
+      - name: Regression test for manual sync alarm recovery and duplicate protection
+        run: node tests/test_manual_sync_recovery.js
       - name: Build stable folder-layout installer
         run: |
           VERSION=$(python -c "import json;print(json.load(open('browser/brave-extension/manifest.json'))['version'])")
