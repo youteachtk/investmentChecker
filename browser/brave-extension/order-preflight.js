@@ -214,7 +214,9 @@ async function orderInspectUi(){
       'BUY_FORM_REQUESTED','BUY_ACTION_AMBIGUOUS','BUY_MENU_NOT_FOUND',
       'BUY_FORM_DETECTED','DETAIL_COLUMN_NOT_FOUND','DETAIL_LINK_NOT_FOUND',
       'DETAIL_LINK_AMBIGUOUS','DETAIL_REQUESTED','DETAIL_NAVIGATION_NOT_CONFIRMED',
-      'DETAIL_OPENED','DETAIL_FORM_DETECTED']);
+      'DETAIL_OPENED','DETAIL_FORM_DETECTED','DETAIL_TICKET_LAUNCHER_UNVERIFIED',
+      'DETAIL_BUY_TICKET_REQUESTED','DETAIL_BUY_TICKET_FIELDS_DETECTED',
+      'DETAIL_BUY_TICKET_NOT_DETECTED']);
     const allowedKinds=new Set(['CANTIDAD','PRECIO','TIPO_ORDEN','VIGENCIA','OTRO']);
     const allowedControls=new Set(['INPUT','SELECT','TEXTAREA','MAT-SELECT']);
     const fields=Array.isArray(raw.fields)?raw.fields.slice(0,15)
@@ -226,7 +228,7 @@ async function orderInspectUi(){
           (item.type||''):'other'
       })):[];
     const steps=Array.isArray(raw.clicked_steps)?raw.clicked_steps.filter(step=>
-      ['OPEN_STOCK_DETAIL'].includes(step)).slice(0,2):[];
+      ['OPEN_STOCK_DETAIL','OPEN_DETAIL_BUY_TICKET'].includes(step)).slice(0,2):[];
     const probe={schema_version:2,captured_at:new Date().toISOString(),
       target_symbol:'V',selected_symbol:raw.selected_symbol==='V'?'V':null,
       stage:stages.has(raw.stage)?raw.stage:'MARKET_NOT_READY',
@@ -277,8 +279,10 @@ async function orderInspectUi(){
       submitted_orders:0,
       message:probe.detail_route_verified?
         'Se abrió Detalle de V en Brave. '+(probe.form_detected?
-          'Se identificaron controles del formulario.':
-          'Se reconoció la página; todavía no se identificó un formulario de compra.')+
+          'El botón Comprar abrió controles del formulario de orden.':
+          probe.stage==='DETAIL_BUY_TICKET_NOT_DETECTED'?
+            'Se pulsó el acceso Comprar, pero aún no se reconoció el formulario.':
+            'Todavía no se pudo verificar el acceso al formulario.')+
           ' Diagnóstico privado guardado. No se envió ninguna orden.':
         'Inspección parcial de V ('+probe.stage+'). Se guardó el diagnóstico privado. No se envió ninguna orden.'};
   }catch(error){
