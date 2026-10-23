@@ -97,6 +97,8 @@ async function injectQuotesWithRetry(firstTabId, runId) {
       await chrome.scripting.executeScript({
         target:{tabId},files:['collector.js'],world:'ISOLATED'
       });
+      // Wait for collector.js to finish before removing its frame.
+      await cleanupTemporarySyncTab(tabId,runId);
       return;
     }catch(err){
       const missing=/No tab with id|tab was closed|No frame with id/i.test(String(err?.message||''));
@@ -211,7 +213,7 @@ async function route(msg,sender) {
         diagnosticStatus='upload_failed';
       }
       await chrome.storage.local.set({lastDiagnosticStatus:diagnosticStatus});
-      await cleanupTemporarySyncTab(null,syncRunId);
+      // Background injector closes its own tab after collector.js completes.
       return {ok:true};
     }
     try {
@@ -220,12 +222,12 @@ async function route(msg,sender) {
       await chrome.storage.local.set({lastSync:Date.now()});
       await setStatus('226 cotizaciones enviadas a GitHub · '+stamp()+
         '. Consulta también el estado de la cartera privada.',false);
-      await cleanupTemporarySyncTab(null,syncRunId);
+      // Background injector closes its own tab after collector.js completes.
       return {ok:true};
     }catch(err) {
       await setStatus('Error en envío público: '+err.message+
         '. La cartera privada no se interrumpe.',false);
-      await cleanupTemporarySyncTab(null,syncRunId);
+      // Background injector closes its own tab after collector.js completes.
       return {ok:false,error:err.message};
     }
   }
