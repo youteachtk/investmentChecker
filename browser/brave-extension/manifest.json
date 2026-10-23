@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.8.13",
-  "description": "2.8.13: busca Visa desde Buscar de Capitales y diferencia Títulos de Precio límite; solo inspección.",
+  "version": "2.8.14",
+  "description": "2.8.14: prepara V tras aprobar propuesta y consulta estados reales de órdenes en Actinver; sin envíos automáticos.",
   "permissions": [
     "storage",
     "scripting",
