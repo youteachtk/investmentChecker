@@ -192,3 +192,63 @@ async function orderApprove(msg){
     execution_enabled:false,submitted_orders:0,
     message:'Lote aprobado para preparación. Ninguna orden se envió a Actinver.'};
 }
+
+async function orderInspectUi(){
+  const found=await getActinverTabs();
+  const source=found.matches.find(t=>t.active)||found.matches[0];
+  if(!source)return {ok:false,error:'No hay sesión de Actinver abierta en Brave.'};
+  let tab=null;
+  try{
+    tab=await chrome.tabs.create({url:marketUrlForSession(source),
+      openerTabId:source.id,active:false});
+    if(!await waitForPage(tab.id))throw Error('Capitales no terminó de cargar.');
+    const result=await chrome.scripting.executeScript({
+      target:{tabId:tab.id},files:['order-ui-probe.js'],world:'ISOLATED'
+    });
+    const raw=result?.[0]?.result;
+    if(!raw||raw.schema_version!==1||raw.inspected_without_clicks!==true)
+      throw Error('No fue posible inspeccionar la interfaz de operaciones.');
+    // Whitelist only non-sensitive structural counters and known generic kinds.
+    const allowed=new Set(['COMPRAR_O_VENDER','COMPRAR','VENDER','OPERAR','DETALLE']);
+    const counts={};
+    for(const [key,value] of Object.entries(raw.action_kinds||{})){
+      if(allowed.has(key)&&Number.isInteger(value)&&value>=0&&value<=500)
+        counts[key]=value;
+    }
+    const probe={schema_version:1,captured_at:new Date().toISOString(),
+      area:raw.area==='CAPITALES'?'CAPITALES':'OTHER',
+      action_widget_count:Number.isInteger(raw.action_widget_count)?
+        Math.min(500,Math.max(0,raw.action_widget_count)):null,
+      visible_form_count:Number.isInteger(raw.visible_form_count)?
+        Math.min(50,Math.max(0,raw.visible_form_count)):null,
+      action_kinds:counts,inspected_without_clicks:true,submitted_orders:0};
+    const {privateRepo,privateToken,privateEnabled}=await chrome.storage.local.get([
+      'privateRepo','privateToken','privateEnabled']);
+    if(!privateEnabled)throw Error('Repositorio privado no configurado.');
+    await verifyPrivateRepo(privateRepo,privateToken);
+    const url='https://api.github.com/repos/'+privateRepo+
+      '/contents/actinver/order-ui-probe.json';
+    const headers={Authorization:'Bearer '+privateToken,
+      Accept:'application/vnd.github+json','Content-Type':'application/json',
+      'X-GitHub-Api-Version':'2022-11-28'};
+    const existing=await fetch(url,{headers,cache:'no-store'});
+    if(!existing.ok&&existing.status!==404)
+      throw Error('No se pudo comprobar el diagnóstico privado.');
+    const sha=existing.ok?(await existing.json()).sha:undefined;
+    const rawJson=JSON.stringify(probe,null,2)+'\n';
+    const bytes=new TextEncoder().encode(rawJson);
+    let binary='';for(const n of bytes)binary+=String.fromCharCode(n);
+    const body={message:'Inspect simulated trading controls without submitting orders',
+      content:btoa(binary),branch:'main'};
+    if(sha)body.sha=sha;
+    const saved=await fetch(url,{method:'PUT',headers,body:JSON.stringify(body)});
+    if(!saved.ok)throw Error('No se pudo guardar el diagnóstico privado.');
+    return {ok:true,status:'UI_DISCOVERED',action_widget_count:probe.action_widget_count,
+      order_form_verified:false,submitted_orders:0,
+      message:'Estructura de compra registrada solo en GitHub privado. No se abrió ni envió ninguna orden.'};
+  }catch(error){
+    return {ok:false,error:String(error?.message||'No se pudo inspeccionar la interfaz.')};
+  }finally{
+    if(tab)try{await chrome.tabs.remove(tab.id);}catch(_){}
+  }
+}
