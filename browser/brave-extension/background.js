@@ -231,7 +231,10 @@ async function route(msg,sender) {
     try {
       await setStatus('226 cotizaciones capturadas. Validando en GitHub…',true);
       await upload(msg.payload);
-      await chrome.storage.local.set({lastSync:Date.now()});
+      await chrome.storage.local.set({lastSync:Date.now(),orderReviewAttempts:0});
+      // GitHub Actions validates the new snapshot asynchronously. Recheck the
+      // confirmed public file shortly afterward, then stage local proposals.
+      await chrome.alarms.create('order_review_refresh',{delayInMinutes:0.5});
       await setStatus('226 cotizaciones enviadas a GitHub · '+stamp()+
         '. Consulta también el estado de la cartera privada.',false);
       // Background injector closes its own tab after collector.js completes.
