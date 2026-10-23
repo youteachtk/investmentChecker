@@ -101,6 +101,15 @@ async function injectQuotesWithRetry(firstTabId, runId) {
       await cleanupTemporarySyncTab(tabId,runId);
       return;
     }catch(err){
+      // Brave can report a destroyed frame after GitHub has already accepted
+      // all 226 rows. Preserve that confirmed result; never overwrite it
+      // with a misleading error or upload a duplicate capture.
+      const done=await chrome.storage.local.get(['lastSync','syncStartedAt','syncRunId']);
+      if(done.syncRunId===runId && Number.isFinite(done.lastSync) &&
+         done.lastSync>=done.syncStartedAt){
+        await cleanupTemporarySyncTab(tabId,runId);
+        return;
+      }
       const missing=/No tab with id|tab was closed|No frame with id|Frame with ID [0-9]+ was removed/i.test(String(err?.message||''));
       if(!missing||attempt===1){
         await setStatus('Error de lectura de Actinver: '+(missing?'pestaña cerrada durante la captura':err.message),false);
