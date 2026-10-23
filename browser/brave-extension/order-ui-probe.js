@@ -46,7 +46,7 @@
   };
   const state={schema_version:2,stage:'MARKET_NOT_READY',
     target_symbol:'V',selected_symbol:null,
-    clicked_steps:[],form_detected:false,fields:[],
+    clicked_steps:[],form_detected:false,fields:[],side_panel_visible:false,
     action_widget_count:0,submitted_orders:0,
     inspected_without_submission:true};
   for(let attempt=0;attempt<45;attempt++){
@@ -149,6 +149,8 @@
     state.fields=form.descriptors;
     state.stage='BUY_FORM_DETECTED';
   }
+  // Structural diagnostic only; never store panel text or input values.
+  state.side_panel_visible=elements('aside,[role="complementary"],mat-sidenav,mat-drawer,.mat-drawer,.mat-sidenav').length>0;
   // Never click confirm, send, preview, finalize, submit, buy-order buttons.
   // No transactions, no account values and no order form values are transmitted.
   return state;
