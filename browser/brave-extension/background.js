@@ -205,6 +205,19 @@ async function upload(payload) {
   }
 }
 async function route(msg,sender) {
+  if (msg?.type==='CHECK_QUOTES') {
+    // Public snapshot only, never expose the private portfolio or token.
+    const url='https://raw.githubusercontent.com/youteachtk/investmentChecker/main/output/actinver_quotes.json?check='+Date.now();
+    const response=await fetch(url,{cache:'no-store'});
+    if(!response.ok)return {ok:false,error:'GitHub no respondió a la comprobación pública.'};
+    const snapshot=await response.json();
+    const valid=snapshot?.total===226 &&
+      Array.isArray(snapshot?.quotes)&&snapshot.quotes.length===226 &&
+      typeof snapshot?.validated_at==='string';
+    if(!valid)return {ok:false,error:'GitHub no confirma una captura válida de 226 instrumentos.'};
+    return {ok:true,total:226,captured_at:snapshot.captured_at,
+      validated_at:snapshot.validated_at};
+  }
   if (msg?.type==='ORDER_PREVIEW') return await orderPreview();
   if (msg?.type==='ORDER_APPROVE') return await orderApprove(msg);
   if (msg?.type==='ORDER_INSPECT_UI') return await orderInspectUi();
