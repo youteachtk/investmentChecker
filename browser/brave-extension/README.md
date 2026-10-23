@@ -1,3 +1,11 @@
+## v2.8.1 — Progreso visible y verificación real de GitHub (23/oct/2026)
+
+Se restauró el evento `chrome.storage.onChanged` del popup: en 2.8.0 se borró accidentalmente la llamada `refresh()`, por lo que el mensaje podía quedar congelado incluso con actividad de fondo. El popup ahora actualiza en vivo y también cada 1.5 segundos mientras esté abierto. El lector de Capitales transmite solamente indicadores inocuos (categoría ACCIONES/ETFs/FONDOS, número de página, cantidad capturada y etapa), que se guardan en `syncProgress` y se muestran junto a una barra 0–226. La UI avisa si pasan tres minutos sin actualizaciones o si una sincronización supera siete minutos, para evitar un estado eterno «trabajando».
+
+Un botón `Verificar 226 cotizaciones en GitHub` consulta bajo demanda el archivo público validado, presenta fecha y cantidad, y diferencia **enviado a GitHub** de **validado por GitHub**. No descarga posiciones privadas ni necesita más permisos. Se conserva la pestaña secundaria inactiva: el usuario no tiene que ver los cambios de páginas de Angular. La prueba `test_popup_progress.js` simula actualizaciones de 20, 175 y 226 instrumentos; los tests anteriores protegen el recolector y la cartera.
+
+No se envían operaciones a Actinver; la aprobación por lote de 2.8.0 sigue limitada a preparar propuestas. La primera captura real con la 2.8.1 aún debe confirmarse.
+
 ## v2.8.0 — Propuestas virtuales y autorización por lote (23/oct/2026)
 
 Nuevo módulo `order-preflight.js` calcula en Brave borradores de compra sin depender de la programación horaria del motor GitHub privado. Lee los últimos 226 precios ya validados, el ranking histórico público y el archivo de cartera del repositorio PRIVADO verificado. Los rechaza si cotizaciones tienen más de 15 minutos o la cartera más de 35 minutos, si no concilian saldos, si faltan posiciones o se repiten títulos; excluye apalancados. Conserva restricciones de concentración 20% por acción, inversión máxima de 65% del poder de compra, hasta 5 emisoras nuevas, diferenciales y profundidad y comisión estimada. Tras nueva sincronización, reintenta generar el borrador cuando el proceso de GitHub termina la validación, sin enviar órdenes.
