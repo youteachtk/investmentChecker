@@ -61,8 +61,11 @@ chrome.storage.onChanged.addListener((changes,area)=>{
   if(area!=='local')return;
   if(changes.syncStatus||changes.syncRunning||changes.privateSyncStatus||
      changes.privateEnabled||changes.privateLastSync||
-     changes.orderDraftCache||changes.orderReviewStatus){
-    localMessage=null;  }
+     changes.orderDraftCache||changes.orderReviewStatus||
+     changes.syncProgress||changes.lastSync||changes.syncStartedAt){
+    localMessage=null;
+    void refresh();
+  }
 });
 void refresh();
 
@@ -153,3 +156,4 @@ $('orderInspect').addEventListener('click',async()=>{
 });
 
 void refresh();
+setInterval(()=>{void refresh();},1500);
