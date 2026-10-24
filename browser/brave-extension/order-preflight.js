@@ -332,7 +332,18 @@ async function inspectOrdersInPage(){
   const visible=e=>!!(e&&e.getClientRects?.().length&&!e.disabled);
   const label=e=>norm(e.innerText||e.textContent);
   const controls=()=>[...document.querySelectorAll(
-    'a,button,[role="tab"],[role="menuitem"],[routerlink]')].filter(visible);
+    'a,button,[role="tab"],[role="menuitem"],[role="button"],[routerlink],mat-list-item,mat-expansion-panel-header'
+  )].filter(visible);
+  const navContainer='a,button,[role="tab"],[role="menuitem"],[role="button"],[routerlink],mat-list-item,mat-expansion-panel-header';
+  const captionMatches=(accept)=>{
+    const matches=[];
+    for(const el of document.querySelectorAll('span,div,li,p,small')){
+      if(!visible(el)||!accept(label(el)))continue;
+      const parent=el.closest?.(navContainer);
+      if(parent&&visible(parent)&&!matches.includes(parent))matches.push(parent);
+    }
+    return matches;
+  };
   const result={schema_version:1,read_only:true,submitted_orders:0,
     stage:'ORDERS_NOT_OPEN',probe_step:'INITIAL',orders_page_seen:false,
     visible_table_count:0,visible_control_count:0,order_nav_candidate_count:0,
@@ -387,17 +398,30 @@ async function inspectOrdersInPage(){
   result.visible_control_count=Math.min(1000,controls().length);
   let current=readTable();
   if(!current){
-    const orderLink=e=>/^(ordenes|mis ordenes|historial de ordenes|ordenes de compra y venta)$/
-      .test(label(e));
+    // Match only navigation labels. Never click operation/cancel controls.
+    const orderLabel=t=>/^(ordenes|mis ordenes|historial de ordenes|ordenes de compra y venta)$/.test(t);
+    const orderLink=e=>orderLabel(label(e))||
+      (label(e).length>0&&label(e).length<65&&
+        /ordenes/.test(norm(e.getAttribute?.('routerlink')||e.getAttribute?.('href')||''))&&
+        !/comprar|vender|cancelar|eliminar|modificar|enviar/.test(label(e)));
+    const eligible=items=>items.filter(e=>typeof e.click==='function');
+    const findOrders=()=>eligible([...new Set([...controls().filter(orderLink),
+      ...captionMatches(orderLabel)])]);
     result.probe_step='FIND_ORDER_NAVIGATION';
-    let links=controls().filter(orderLink);
+    let links=findOrders();
     result.order_nav_candidate_count=Math.min(100,links.length);
     if(links.length===0){
-      const menus=controls().filter(e=>label(e)==='tu inversion');
+      const menuLabel=t=>t==='tu inversion'||(t.startsWith('tu inversion')&&t.length<=50);
+      const menus=eligible([...new Set([...controls().filter(e=>menuLabel(label(e))),
+        ...captionMatches(menuLabel)])]);
       result.investment_menu_candidate_count=Math.min(100,menus.length);
-      if(menus.length===1){menus[0].click();
-        for(let i=0;i<20;i++){await sleep(250);links=controls().filter(orderLink);
-          if(links.length)break;}}
+      if(menus.length===1){
+        result.probe_step='OPEN_INVESTMENT_MENU';
+        menus[0].click();
+        for(let i=0;i<24;i++){await sleep(250);links=findOrders();
+          if(links.length)break;}
+        result.probe_step='FIND_ORDER_NAVIGATION';
+      }
     }
     if(links.length!==1){result.stage=links.length>1?
       'ORDERS_NAV_AMBIGUOUS':'ORDERS_SECTION_NOT_FOUND';return result;}
