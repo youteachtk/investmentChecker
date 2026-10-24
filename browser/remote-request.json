@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "action": "inspect_order_history",
-  "id": "read-orders-inline-20261024T141906Z",
-  "issued_at": "2026-10-24T14:19:06Z",
+  "id": "read-history-20261024T151417Z-angular",
+  "issued_at": "2026-10-24T15:14:17Z",
   "latest_version": "2.8.21"
 }
