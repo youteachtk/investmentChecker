@@ -1,3 +1,7 @@
+## v2.8.20 — Diagnóstico y recuperación de actualización automática (24/oct/2026)
+
+La comprobación de versiones publicadas queda independiente del interruptor de solicitudes remotas de ChatGPT. Los errores del puente de Windows se guardan en el estado local de la extensión y se muestran directamente en la ventana principal, junto a la versión cargada y publicada. Se añade el botón «Comprobar actualización de InvestmentChecker», que solicita al servicio local la actualización inmediatamente, sin programarla cada hora. El lector integrado de órdenes introducido en 2.8.19 se mantiene. No se modifica la captura de cotizaciones, cartera ni se envían órdenes.
+
 ## v2.8.19 — Historial integrado, independiente de archivos opcionales (24/oct/2026)
 
 El lector de historial de órdenes se ejecuta ahora mediante una función segura integrada en `order-preflight.js`, que el actualizador de Windows instala junto con la extensión. Deja de depender del archivo `orders-history-probe.js` que Brave reportaba como ausente (`ORDERS_READER_MISSING`) pese a la instalación. Se agregó una prueba de regresión que verifica lectura de ejecutadas, pendientes, parciales y canceladas, además de tabla vacía y navegación ausente; no se realizan operaciones de compra/venta ni se pulsa «Calcular orden». El diagnóstico privado y las demás funciones permanecen disponibles.
