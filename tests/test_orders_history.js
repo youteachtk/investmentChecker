@@ -65,5 +65,13 @@ async function inspect(x){
   assert.ok(privateUploader.includes('actinver/order-history-diagnostic.json'));
   assert.ok(orderPreflight.includes('uploadPrivateDiagnostic(diag)'));
   assert.ok(orderPreflight.includes("orderHistoryDiagnosticCode:diag.code"));
+  for(const code of ['ORDERS_READER_MISSING','ORDERS_INJECTION_FAILED',
+    'ORDERS_INVALID_RESULT']){
+    assert.ok(privateUploader.includes("'"+code+"'"),code+' not allowed for private logs');
+    assert.ok(orderPreflight.includes("'"+code+"'"),code+' not identified');
+  }
+  const popup=fs.readFileSync('browser/brave-extension/popup.js','utf8');
+  assert.ok(popup.includes('dates.sort((a,b)=>Date.parse(b)-Date.parse(a))'),
+    'Popup must prefer the latest order-history timestamp');
   console.log('PASS private read-only orders status requires visible status table');
 })().catch(e=>{console.error(e);process.exitCode=1});
