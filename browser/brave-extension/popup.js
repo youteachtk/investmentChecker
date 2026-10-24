@@ -14,12 +14,29 @@ async function refresh(){
     'orderHistoryLastRemoteStatus','orderHistoryLastRemoteAt',
     'orderHistoryDiagnosticCode','orderHistoryDiagnosticPhase',
     'orderHistoryDiagnosticUploaded','orderHistoryLastCheckedAt','orderHistoryCounts',
+    'lastPublishedExtensionVersion','lastPublishedVersionCheckedAt',
+    'lastNativeUpdateStatus','lastNativeUpdateError','lastNativeUpdateSucceeded',
     'syncProgress','syncStartedAt','manualSyncRequest','manualSyncHandledId',
     'manualSyncStartedAt','manualSyncLastResult']);
   const publicOk=!!s.githubToken,privateOk=!!(s.privateEnabled && s.privateRepo && s.privateToken);
   $('connection').textContent=(publicOk?'✓ Token de cotizaciones guardado':'⚠ Sin token público')+'  ·  '+
     (privateOk?'✓ Acceso a cartera privada verificado':'⚠ Cartera privada pendiente');
   $('connection').className=publicOk && privateOk?'minor ok':'minor warn';
+  const currentVersion=chrome.runtime.getManifest().version;
+  const publishedVersion=s.lastPublishedExtensionVersion;
+  const versionParts=v=>String(v||'').split('.').map(Number);
+  const newer=publishedVersion&&versionParts(publishedVersion).every(Number.isFinite)&&
+    versionParts(publishedVersion).some((n,i)=>{
+      const a=versionParts(currentVersion),b=versionParts(publishedVersion);
+      return b.slice(0,i).every((x,j)=>x===a[j])&&n>a[i];
+    });
+  $('updateState').textContent=newer?
+    'Disponible '+publishedVersion+' · instalada '+currentVersion+
+    (s.lastNativeUpdateError?' · Falló el actualizador: '+s.lastNativeUpdateError:
+      ' · comprobando instalación automática'):
+    'Versión instalada '+currentVersion+
+    (publishedVersion?' · publicada '+publishedVersion:
+      ' · publicación pendiente de consultar');
   if(document.activeElement!==$('privateRepo'))$('privateRepo').value=s.privateRepo||'';
   $('token').placeholder=publicOk?'Guardado; dejar vacío para conservar':'github_pat_…';
   $('privateToken').placeholder=privateOk?'Guardado; dejar vacío para conservar':'github_pat_…';
@@ -75,6 +92,21 @@ async function refresh(){
   if(draft?.ok && !draft.approved && Date.parse(draft.expires_at)>Date.now() &&
      draft.draft_id!==orderDraft?.draft_id)renderOrders(draft);
 }
+$('checkUpdate').addEventListener('click',async()=>{
+  $('checkUpdate').disabled=true;
+  $('updateState').textContent='Consultando la última versión publicada…';
+  const result=await send({type:'CHECK_EXTENSION_UPDATE'});
+  if(!result?.ok)$('updateState').textContent=result?.error||
+    'No se pudo consultar la actualización.';
+  else if(result.error)$('updateState').textContent=
+    'Actualizador de Windows: '+result.error;
+  else $('updateState').textContent=
+    'Publicada '+(result.published||'sin confirmar')+
+    ' · cargada '+result.loaded+
+    (result.updater==='INSTALLED_RELOAD_PENDING'?' · activando la actualización…':'');
+  $('checkUpdate').disabled=false;
+  await refresh();
+});
 $('run').addEventListener('click',async()=>{
   // Field-proven direct route from 2.7.1. No queue, no extra alarm.
   localMessage=null;
