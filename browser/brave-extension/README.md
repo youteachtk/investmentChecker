@@ -1,3 +1,7 @@
+## v2.8.21 — Navegación Angular al historial de órdenes (24/oct/2026)
+
+Después de confirmar que el lector integrado 2.8.20 accedió al documento de Actinver pero registró `ORDERS_SECTION_NOT_FOUND`, se amplió la búsqueda de navegación de solo lectura para incluir `mat-list-item`, `mat-expansion-panel-header`, controles `role=button` y títulos anidados dentro de elementos clicables. Se prueba el caso de etiquetas anidadas además del menú existente. El lector solo activa controles de navegación identificados como «Órdenes» o «Tu inversión» y no pulsa comprar, vender, cancelar ni confirmar; las cantidades de órdenes siguen sin considerarse verificadas hasta encontrar una tabla con columnas explícitas de símbolo y estatus. Se conserva GitHub privado para cualquier diagnóstico y no se modifica la captura probada de cotizaciones o cartera.
+
 ## v2.8.20 — Diagnóstico y recuperación de actualización automática (24/oct/2026)
 
 La comprobación de versiones publicadas queda independiente del interruptor de solicitudes remotas de ChatGPT. Los errores del puente de Windows se guardan en el estado local de la extensión y se muestran directamente en la ventana principal, junto a la versión cargada y publicada. Se añade el botón «Comprobar actualización de InvestmentChecker», que solicita al servicio local la actualización inmediatamente, sin programarla cada hora. El lector integrado de órdenes introducido en 2.8.19 se mantiene. No se modifica la captura de cotizaciones, cartera ni se envían órdenes.
