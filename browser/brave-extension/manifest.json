@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.8.20",
-  "description": "2.8.20: actualización automática independiente de controles remotos, diagnóstico visible del puente Windows y lector integrado de órdenes.",
+  "version": "2.8.21",
+  "description": "2.8.21: búsqueda segura del historial en controles Angular y menús anidados de Actinver.",
   "permissions": [
     "storage",
     "scripting",
