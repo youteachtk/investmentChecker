@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.8.18",
-  "description": "2.8.18: muestra la comprobación más reciente y distingue fallas al cargar o ejecutar el lector de órdenes.",
+  "version": "2.8.19",
+  "description": "2.8.19: lector de historial integrado, sin archivo externo; diagnóstico privado y envío de órdenes deshabilitado.",
   "permissions": [
     "storage",
     "scripting",
