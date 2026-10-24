@@ -70,6 +70,32 @@ async function inspect(x){
     assert.ok(privateUploader.includes("'"+code+"'"),code+' not allowed for private logs');
     assert.ok(orderPreflight.includes("'"+code+"'"),code+' not identified');
   }
+  // Regression: the Windows updater may omit a standalone file.
+  // The live extension must inject a self-contained read-only function instead.
+  assert.ok(orderPreflight.includes("func:inspectOrdersInPage,world:'ISOLATED'"));
+  const from=orderPreflight.indexOf('async function inspectOrdersInPage(){');
+  const to=orderPreflight.indexOf('async function orderHistoryStatus(){',from);
+  assert.ok(from>=0 && to>from,'Embedded orders reader must exist');
+  const embedded=orderPreflight.slice(from,to);
+  for(const scenario of [
+    {options:{},expected:'ORDERS_TABLE_READ',count:5},
+    {options:{section:false},expected:'ORDERS_SECTION_NOT_FOUND',count:0},
+    {options:{rows:false},expected:'ORDERS_TABLE_EMPTY',count:0}
+  ]){
+    const mock=setup(scenario.options);
+    const actual=await vm.runInNewContext(
+      embedded+'\ninspectOrdersInPage()',{
+        document:mock.document,Date,setTimeout:fn=>fn()
+      });
+    assert.equal(actual.stage,scenario.expected);
+    assert.equal(actual.orders.length,scenario.count);
+    assert.equal(actual.submitted_orders,0);
+    assert.equal(actual.read_only,true);
+    if(actual.orders.length){
+      assert.equal(actual.orders[0].folio,'ORD001');
+      assert.equal(actual.orders[0].date,'23/10/2026');
+    }
+  }
   const popup=fs.readFileSync('browser/brave-extension/popup.js','utf8');
   assert.ok(popup.includes('dates.sort((a,b)=>Date.parse(b)-Date.parse(a))'),
     'Popup must prefer the latest order-history timestamp');
