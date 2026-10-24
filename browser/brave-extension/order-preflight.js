@@ -440,9 +440,8 @@ async function orderHistoryStatus(){
         target:{tabId:tab.id},func:inspectOrdersInPage,world:'ISOLATED'
       });
     }catch(error){
-      const detail=String(error?.message||'');
-      diag.code=/could not load file|could not load|not found|enoent/i.test(detail)?
-        'ORDERS_READER_MISSING':'ORDERS_INJECTION_FAILED';
+      // The inline reader has no external filename to go missing.
+      diag.code='ORDERS_INJECTION_FAILED';
       throw Error(diag.code);
     }
     const raw=result?.[0]?.result;
