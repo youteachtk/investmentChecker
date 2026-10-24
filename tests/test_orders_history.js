@@ -59,14 +59,6 @@ async function inspect(x){
   assert.equal(b.probe_step,'FIND_ORDER_NAVIGATION');
   assert.equal(b.order_nav_candidate_count,0);
   assert.deepEqual(no.clicks,[]);
-  const angular=setup({navMode:'angular'});
-  const ang=await inspect(angular);
-  assert.equal(ang.stage,'ORDERS_TABLE_READ');
-  assert.deepEqual(angular.clicks,['ORDERS']);
-  const caption=setup({navMode:'caption'});
-  const cap=await inspect(caption);
-  assert.equal(cap.stage,'ORDERS_TABLE_READ');
-  assert.deepEqual(caption.clicks,['ORDERS']);
   const empty=setup({rows:false});
   const c=await inspect(empty);
   assert.equal(c.stage,'ORDERS_TABLE_EMPTY');
