@@ -27,7 +27,8 @@ async function updateIfPublished(latest){
   nativeUpdateInProgress=true;
   try{
     await chrome.storage.local.set({lastNativeUpdateVersion:latest,
-      lastNativeUpdateAttemptAt:Date.now()});
+      lastNativeUpdateAttemptAt:Date.now(),lastNativeUpdateStatus:'ATTEMPTING',
+      lastNativeUpdateError:null});
     const result=await new Promise((resolve,reject)=>{
       chrome.runtime.sendNativeMessage('com.investmentchecker.updater',
         {action:'update',version:latest},response=>{
@@ -37,13 +38,20 @@ async function updateIfPublished(latest){
         });
     });
     if(result?.ok&&publishedVersionNewer(result.version,chrome.runtime.getManifest().version)){
-      await chrome.storage.local.set({lastNativeUpdateSucceeded:result.version});
+      await chrome.storage.local.set({lastNativeUpdateSucceeded:result.version,
+        lastNativeUpdateStatus:'INSTALLED_RELOAD_PENDING',lastNativeUpdateError:null});
       chrome.runtime.reload();
-    }else if(result?.error){
-      console.warn('[investmentChecker event update]',String(result.error).slice(0,160));
+    }else{
+      const reason=String(result?.error||'El actualizador no confirmó una versión nueva').slice(0,180);
+      await chrome.storage.local.set({lastNativeUpdateStatus:'FAILED',
+        lastNativeUpdateError:reason});
+      console.warn('[investmentChecker event update]',reason);
     }
   }catch(error){
-    console.warn('[investmentChecker event update]',String(error?.message||error).slice(0,160));
+    const reason=String(error?.message||error).slice(0,180);
+    await chrome.storage.local.set({lastNativeUpdateStatus:'FAILED',
+      lastNativeUpdateError:reason});
+    console.warn('[investmentChecker event update]',reason);
   }finally{nativeUpdateInProgress=false}
 }
 
@@ -84,6 +92,18 @@ async function checkInstalledFileUpdate() {
   }
 }
 
+// Update checking remains active even when optional ChatGPT remote tasks are paused.
+async function readPublishedControl(){
+  const response=await fetch(REMOTE_REQUEST_URL+'?at='+Date.now(),{cache:'no-store'});
+  if(!response.ok)throw Error('GitHub control HTTP '+response.status);
+  const request=await response.json();
+  if(request&&/^\d+\.\d+\.\d+$/.test(request.latest_version||'')){
+    await chrome.storage.local.set({lastPublishedExtensionVersion:request.latest_version,
+      lastPublishedVersionCheckedAt:new Date().toISOString()});
+    await updateIfPublished(request.latest_version);
+  }
+  return request;
+}
 async function checkRemoteRequest() {
   if (remoteCheckInProgress) return;
   remoteCheckInProgress = true;
@@ -91,14 +111,8 @@ async function checkRemoteRequest() {
     const state = await chrome.storage.local.get([
       'remoteControlEnabled','lastRemoteRequestId','syncRunning','syncStartedAt'
     ]);
-    if (state.remoteControlEnabled === false) return;
-    // A timestamp query avoids stale raw.githubusercontent.com CDN responses.
-    const url = REMOTE_REQUEST_URL + '?at=' + Date.now();
-    const response = await fetch(url, {cache:'no-store'});
-    if (!response.ok) throw Error('Error consultando solicitudes GitHub: HTTP '+response.status);
-    const request = await response.json();
-    if(request && typeof request.latest_version==='string')
-      await updateIfPublished(request.latest_version);
+    const request=await readPublishedControl();
+    if(state.remoteControlEnabled===false)return;
     // Both approved remote actions are READ-ONLY. Never accept buy/sell,
     // click instructions, scripts, freeform URLs or financial data payloads.
     if (!request || !['capture_public_quotes','inspect_order_ui','inspect_order_history'].includes(request.action) ||
