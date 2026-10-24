@@ -32,5 +32,12 @@ const f=vm.runInNewContext(source.slice(first,last)+
   await f.updateIfPublished('2.8.11');assert.equal(sent.length,1);
   loaded='2.8.11';now+=70000;
   await f.updateIfPublished('2.8.11');assert.equal(sent.length,1);
+  const polling=source.slice(source.indexOf('async function checkRemoteRequest()'));
+  assert.ok(polling.indexOf('await readPublishedControl()')>=0);
+  assert.ok(polling.indexOf('await readPublishedControl()')<
+    polling.indexOf('state.remoteControlEnabled===false'),
+    'Version updates must be checked even if remote ChatGPT tasks are paused');
+  assert.ok(source.includes("lastNativeUpdateError:reason"),
+    'Native updater failure must be visible in Brave popup');
   console.log('PASS update only on new GitHub published version');
 })().catch(e=>{console.error(e);process.exitCode=1});
