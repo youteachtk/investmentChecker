@@ -360,6 +360,8 @@ async function inspectOrdersInPage(){
       if(symbol<0||status<0)continue;
       const side=hs.findIndex(h=>/operacion|tipo de movimiento|compra o venta/.test(h));
       const qty=hs.findIndex(h=>/titulos|cantidad|volumen/.test(h));
+      const folio=hs.findIndex(h=>/^(folio|numero de orden|no de orden|id orden)$/.test(h));
+      const date=hs.findIndex(h=>/^(fecha|fecha de orden|fecha de operacion)$/.test(h));
       const rows=[...table.querySelectorAll('tbody tr,[role="rowgroup"] [role="row"]')].filter(visible);
       const found=[];
       for(const row of rows.slice(0,100)){
@@ -373,6 +375,8 @@ async function inspectOrdersInPage(){
           else if(/venta|sell/.test(t))item.side='SELL';}
         if(qty>=0){const n=Number(String(v[qty]).replace(/,/g,''));
           if(Number.isInteger(n)&&n>0&&n<=10000000)item.quantity=n;}
+        if(folio>=0&&/^[A-Za-z0-9-]{1,48}$/.test(v[folio]))item.folio=v[folio];
+        if(date>=0&&/^[\\d\\s:/.-]{6,32}$/.test(v[date]))item.date=v[date];
         found.push(item);
       }
       return {rows:rows.length,orders:found};
