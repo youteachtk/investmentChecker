@@ -2,13 +2,14 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const source=fs.readFileSync('browser/brave-extension/orders-history-probe.js','utf8');
-function setup({section=true,rows=true}={}){
+function setup({section=true,rows=true,navMode='button'}={}){
   let open=false;const clicks=[];
   const node=(text='',extras={})=>({
     textContent:text,innerText:text,getClientRects:()=>[1],disabled:false,
     getAttribute:()=>null,querySelectorAll:()=>[],click:()=>{},...extras
   });
   const nav=node('Órdenes',{click:()=>{open=true;clicks.push('ORDERS')}});
+  const nestedCaption=node('Órdenes',{closest:()=>nav});
   const head=['Emisora','Estatus','Operación','Títulos','Folio','Fecha']
     .map(x=>node(x));
   const values=[
@@ -27,7 +28,9 @@ function setup({section=true,rows=true}={}){
   }});
   const document={querySelectorAll:sel=>{
     if(sel==='table,[role="table"]')return open?[table]:[];
-    if(sel.startsWith('a,button'))return section?[nav]:[];
+    if(sel.startsWith('a,button'))return section&&navMode!=='caption'?[nav]:[];
+    if(sel==='span,div,li,p,small')return section&&navMode==='caption'?
+      [nestedCaption]:[];
     return [];
   }};
   return {document,clicks};
@@ -56,6 +59,14 @@ async function inspect(x){
   assert.equal(b.probe_step,'FIND_ORDER_NAVIGATION');
   assert.equal(b.order_nav_candidate_count,0);
   assert.deepEqual(no.clicks,[]);
+  const angular=setup({navMode:'angular'});
+  const ang=await inspect(angular);
+  assert.equal(ang.stage,'ORDERS_TABLE_READ');
+  assert.deepEqual(angular.clicks,['ORDERS']);
+  const caption=setup({navMode:'caption'});
+  const cap=await inspect(caption);
+  assert.equal(cap.stage,'ORDERS_TABLE_READ');
+  assert.deepEqual(caption.clicks,['ORDERS']);
   const empty=setup({rows:false});
   const c=await inspect(empty);
   assert.equal(c.stage,'ORDERS_TABLE_EMPTY');
@@ -81,6 +92,8 @@ async function inspect(x){
   for(const scenario of [
     {options:{},expected:'ORDERS_TABLE_READ',count:5},
     {options:{section:false},expected:'ORDERS_SECTION_NOT_FOUND',count:0},
+    {options:{navMode:'caption'},expected:'ORDERS_TABLE_READ',count:5},
+    {options:{navMode:'angular'},expected:'ORDERS_TABLE_READ',count:5},
     {options:{rows:false},expected:'ORDERS_TABLE_EMPTY',count:0}
   ]){
     const mock=setup(scenario.options);
