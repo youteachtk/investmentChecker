@@ -47,7 +47,19 @@ $mf = Join-Path $target 'manifest.json'
 if (-not (Test-Path $mf)) { throw 'La carpeta elegida no contiene manifest.json. No se hicieron cambios.' }
 $installed = Get-Content -Raw -Encoding UTF8 $mf | ConvertFrom-Json
 if ([string]$installed.name -notmatch 'investmentChecker') { throw 'No parece ser la extension investmentChecker; no se hicieron cambios.' }
-$names = @('manifest.json','background.js','collector.js','remote.js','private-sync.js','portfolio-collector.js','portfolio-navigator.js','popup.html','popup.js','README.md')
+# Use all packaged extension resources, including newly added readers.
+# Never copy executables or arbitrary nested archive paths.
+$names = @(Get-ChildItem -LiteralPath $source -File | Where-Object {
+  $_.Extension -in @('.js','.json','.html','.md')
+} | ForEach-Object { $_.Name })
+$required = @('manifest.json','background.js','collector.js','remote.js','private-sync.js',
+  'portfolio-collector.js','portfolio-navigator.js','popup.html','popup.js',
+  'order-preflight.js','order-ui-probe.js','orders-history-probe.js')
+foreach ($name in $required) {
+  if ($name -notin $names) { throw "Paquete incompleto: falta $name. No se hicieron cambios." }
+}
+# Copy manifest last so Brave sees a completed update, not mixed versions.
+$names = @($names | Where-Object { $_ -ne 'manifest.json' }) + @('manifest.json')
 foreach ($name in $names) {
   if (-not (Test-Path (Join-Path $source $name))) { throw "Falta $name en el ZIP. No se hicieron cambios." }
 }
