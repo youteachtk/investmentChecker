@@ -323,6 +323,96 @@ chrome.alarms.onAlarm.addListener(alarm=>{
 });
 
 
+// The order reader is embedded in the installed worker so Windows native updates
+// cannot leave the live extension with a missing separate content-script file.
+async function inspectOrdersInPage(){
+  'use strict';
+  const norm=s=>String(s||'').normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toLowerCase();
+  const visible=e=>!!(e&&e.getClientRects?.().length&&!e.disabled);
+  const label=e=>norm(e.innerText||e.textContent);
+  const controls=()=>[...document.querySelectorAll(
+    'a,button,[role="tab"],[role="menuitem"],[routerlink]')].filter(visible);
+  const result={schema_version:1,read_only:true,submitted_orders:0,
+    stage:'ORDERS_NOT_OPEN',probe_step:'INITIAL',orders_page_seen:false,
+    visible_table_count:0,visible_control_count:0,order_nav_candidate_count:0,
+    investment_menu_candidate_count:0,rows_scanned:0,orders:[]};
+  const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+  const classify=s=>{
+    const v=norm(s);
+    if(/^(ejecutada|ejecutado|asignada|asignado|completada|completado|filled)$/.test(v))
+      return 'executed';
+    if(/parcial|partially/.test(v))return 'partial';
+    if(/pendiente|abierta|abierto|registrada|recibida|en proceso|activa|pending/.test(v))
+      return 'pending';
+    if(/cancelada|cancelado|vencida|vencido|expirada|expired/.test(v))
+      return 'cancelled';
+    if(/rechazada|rechazado|rejected/.test(v))return 'rejected';
+    return 'unknown';
+  };
+  function readTable(){
+    const tables=[...document.querySelectorAll('table,[role="table"]')].filter(visible);
+    result.visible_table_count=Math.min(1000,tables.length);
+    for(const table of tables){
+      const hs=[...table.querySelectorAll('thead th,[role="columnheader"]')].map(label);
+      const symbol=hs.findIndex(h=>/emisora|simbolo|instrumento|accion|titulo valor/.test(h));
+      const status=hs.findIndex(h=>/^(estatus|estado|situacion|estatus de orden|estado de orden)$/.test(h));
+      if(symbol<0||status<0)continue;
+      const side=hs.findIndex(h=>/operacion|tipo de movimiento|compra o venta/.test(h));
+      const qty=hs.findIndex(h=>/titulos|cantidad|volumen/.test(h));
+      const rows=[...table.querySelectorAll('tbody tr,[role="rowgroup"] [role="row"]')].filter(visible);
+      const found=[];
+      for(const row of rows.slice(0,100)){
+        const v=[...row.querySelectorAll('td,[role="cell"]')]
+          .map(el=>String(el.innerText||el.textContent||'').trim());
+        if(v.length<=Math.max(symbol,status))continue;
+        const name=v[symbol].toUpperCase().replace(/[\*ⓘℹ]/g,'').trim();
+        if(!/^[A-Z0-9 .&+/-]{1,35}$/.test(name))continue;
+        const item={symbol:name,status:classify(v[status])};
+        if(side>=0){const t=norm(v[side]);if(/compra|buy/.test(t))item.side='BUY';
+          else if(/venta|sell/.test(t))item.side='SELL';}
+        if(qty>=0){const n=Number(String(v[qty]).replace(/,/g,''));
+          if(Number.isInteger(n)&&n>0&&n<=10000000)item.quantity=n;}
+        found.push(item);
+      }
+      return {rows:rows.length,orders:found};
+    }
+    return null;
+  }
+  result.probe_step='READ_CURRENT_TABLE';
+  result.visible_control_count=Math.min(1000,controls().length);
+  let current=readTable();
+  if(!current){
+    const orderLink=e=>/^(ordenes|mis ordenes|historial de ordenes|ordenes de compra y venta)$/
+      .test(label(e));
+    result.probe_step='FIND_ORDER_NAVIGATION';
+    let links=controls().filter(orderLink);
+    result.order_nav_candidate_count=Math.min(100,links.length);
+    if(links.length===0){
+      const menus=controls().filter(e=>label(e)==='tu inversion');
+      result.investment_menu_candidate_count=Math.min(100,menus.length);
+      if(menus.length===1){menus[0].click();
+        for(let i=0;i<20;i++){await sleep(250);links=controls().filter(orderLink);
+          if(links.length)break;}}
+    }
+    if(links.length!==1){result.stage=links.length>1?
+      'ORDERS_NAV_AMBIGUOUS':'ORDERS_SECTION_NOT_FOUND';return result;}
+    result.probe_step='OPEN_ORDER_NAVIGATION';
+    links[0].click();
+    result.orders_page_seen=true;
+    result.probe_step='WAIT_ORDERS_TABLE';
+    for(let i=0;i<48;i++){await sleep(250);current=readTable();if(current)break;}
+  }else result.orders_page_seen=true;
+  if(!current){result.probe_step='NO_MATCHING_TABLE';
+    result.stage='ORDERS_TABLE_NOT_VERIFIED';return result;}
+  result.rows_scanned=Math.min(100,current.rows);
+  result.orders=current.orders;
+  result.probe_step='COMPLETED';
+  result.stage=current.rows===0?'ORDERS_TABLE_EMPTY':
+    current.orders.length?'ORDERS_TABLE_READ':'ORDERS_ROWS_UNRECOGNIZED';
+  return result;
+}
+
 async function orderHistoryStatus(){
   const session=await getActinverTabs();
   const source=session.matches.find(t=>t.active)||session.matches[0];
@@ -343,7 +433,7 @@ async function orderHistoryStatus(){
     let result;
     try{
       result=await chrome.scripting.executeScript({
-        target:{tabId:tab.id},files:['orders-history-probe.js'],world:'ISOLATED'
+        target:{tabId:tab.id},func:inspectOrdersInPage,world:'ISOLATED'
       });
     }catch(error){
       const detail=String(error?.message||'');
