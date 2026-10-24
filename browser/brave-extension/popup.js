@@ -54,7 +54,9 @@ async function refresh(){
       new Date(s.lastSync).toLocaleString('es-MX'):
     'Aún no hay un envío registrado.';
   if(s.orderHistoryLastRemoteAt || s.orderHistoryLastCheckedAt){
-    const when=s.orderHistoryLastRemoteAt||s.orderHistoryLastCheckedAt;
+    const dates=[s.orderHistoryLastRemoteAt,s.orderHistoryLastCheckedAt]
+      .filter(value=>Number.isFinite(Date.parse(value)));
+    const when=dates.sort((a,b)=>Date.parse(b)-Date.parse(a))[0]||null;
     const stamp=Number.isFinite(Date.parse(when))?
       new Date(when).toLocaleString('es-MX'):'';
     const code=s.orderHistoryDiagnosticCode||
