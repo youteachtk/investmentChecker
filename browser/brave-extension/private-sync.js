@@ -205,7 +205,7 @@ async function uploadPrivateDiagnostic(raw) {
     payload.order_history=true;
     payload.orders_page_seen=raw.orders_page_seen===true;
     const steps=new Set(['INITIAL','READ_CURRENT_TABLE','FIND_ORDER_NAVIGATION',
-      'OPEN_ORDER_NAVIGATION','WAIT_ORDERS_TABLE','NO_MATCHING_TABLE',
+      'OPEN_INVESTMENT_MENU','OPEN_ORDER_NAVIGATION','WAIT_ORDERS_TABLE','NO_MATCHING_TABLE',
       'CLASSIFY_ORDER_ROWS','COMPLETED','UNRECOGNIZED']);
     payload.probe_step=steps.has(raw.probe_step)?raw.probe_step:'UNRECOGNIZED';
     for(const key of ['visible_table_count','visible_control_count',
