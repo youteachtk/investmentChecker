@@ -340,9 +340,17 @@ async function orderHistoryStatus(){
       active:false,openerTabId:source.id});
     if(!await waitForPage(tab.id))throw Error('No cargó la página privada.');
     diag.phase='ORDERS_READ';
-    const result=await chrome.scripting.executeScript({
-      target:{tabId:tab.id},files:['orders-history-probe.js'],world:'ISOLATED'
-    });
+    let result;
+    try{
+      result=await chrome.scripting.executeScript({
+        target:{tabId:tab.id},files:['orders-history-probe.js'],world:'ISOLATED'
+      });
+    }catch(error){
+      const detail=String(error?.message||'');
+      diag.code=/could not load file|could not load|not found|enoent/i.test(detail)?
+        'ORDERS_READER_MISSING':'ORDERS_INJECTION_FAILED';
+      throw Error(diag.code);
+    }
     const raw=result?.[0]?.result;
     if(raw&&typeof raw==='object'){
       diag.probe_step=raw.probe_step;
@@ -352,8 +360,10 @@ async function orderHistoryStatus(){
         diag[key]=raw[key];
       }
     }
-    if(!raw||raw.schema_version!==1||raw.read_only!==true||raw.submitted_orders!==0)
+    if(!raw||raw.schema_version!==1||raw.read_only!==true||raw.submitted_orders!==0){
+      diag.code='ORDERS_INVALID_RESULT';
       throw Error('Inspección de órdenes no verificable.');
+    }
     const statuses=new Set(['executed','partial','pending','cancelled','rejected','unknown']);
     const stages=new Set(['ORDERS_SECTION_NOT_FOUND','ORDERS_NAV_AMBIGUOUS',
       'ORDERS_TABLE_NOT_VERIFIED','ORDERS_TABLE_EMPTY','ORDERS_TABLE_READ',
@@ -413,7 +423,8 @@ async function orderHistoryStatus(){
         'La sección de órdenes aún no se reconoció ('+stage+
         '). No se puede afirmar que haya cero órdenes.'};
   }catch(error){
-    diag.code=diag.phase==='ORDERS_SAVE'?'ORDERS_SAVE_FAILED':'ORDERS_ERROR';
+    if(!['ORDERS_READER_MISSING','ORDERS_INJECTION_FAILED','ORDERS_INVALID_RESULT'].includes(diag.code))
+      diag.code=diag.phase==='ORDERS_SAVE'?'ORDERS_SAVE_FAILED':'ORDERS_ERROR';
     return {ok:false,error:String(error?.message||'Error consultando órdenes.')};
   }finally{
     if(tab)try{await chrome.tabs.remove(tab.id)}catch(_){}
