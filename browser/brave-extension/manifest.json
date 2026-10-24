@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.8.16",
-  "description": "2.8.16: diagnóstico privado verificable del historial de órdenes, aun cuando falle navegación o lectura.",
+  "version": "2.8.17",
+  "description": "2.8.17: actualizador incorpora el lector de órdenes y futuros scripts; preserva compra con confirmación manual.",
   "permissions": [
     "storage",
     "scripting",
