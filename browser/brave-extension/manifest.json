@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.8.19",
-  "description": "2.8.19: lector de historial integrado, sin archivo externo; diagnóstico privado y envío de órdenes deshabilitado.",
+  "version": "2.8.20",
+  "description": "2.8.20: actualización automática independiente de controles remotos, diagnóstico visible del puente Windows y lector integrado de órdenes.",
   "permissions": [
     "storage",
     "scripting",
