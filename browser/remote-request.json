@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "action": "inspect_order_history",
-  "id": "chat-20261023T231125Z-history-diagnostic",
-  "issued_at": "2026-10-23T23:11:25Z",
+  "id": "diagnostic-20261024T135820Z",
+  "issued_at": "2026-10-24T13:58:20Z",
   "latest_version": "2.8.18"
 }
