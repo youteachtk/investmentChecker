@@ -196,6 +196,21 @@ async function upload(payload) {
 async function route(msg,sender) {
   // These read-only additions are independent of the proven public
   // collection path. Do not modify startSync/injectQuotesWithRetry.
+  if(msg?.type==='CHECK_EXTENSION_UPDATE'){
+    try{
+      await readPublishedControl();
+      const status=await chrome.storage.local.get([
+        'lastPublishedExtensionVersion','lastNativeUpdateStatus',
+        'lastNativeUpdateError','lastNativeUpdateSucceeded']);
+      return {ok:true,loaded:chrome.runtime.getManifest().version,
+        published:status.lastPublishedExtensionVersion||null,
+        updater:status.lastNativeUpdateStatus||'NO_ATTEMPT',
+        error:status.lastNativeUpdateError||null};
+    }catch(error){
+      return {ok:false,error:'No se pudo consultar GitHub: '+
+        String(error?.message||error).slice(0,140)};
+    }
+  }
   if(msg?.type==='CHECK_QUOTES'){
     const response=await fetch(
       'https://raw.githubusercontent.com/youteachtk/investmentChecker/main/output/actinver_quotes.json?check='+Date.now(),
