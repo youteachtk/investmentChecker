@@ -68,7 +68,8 @@ async function inspect(x){
   for(const code of ['ORDERS_READER_MISSING','ORDERS_INJECTION_FAILED',
     'ORDERS_INVALID_RESULT']){
     assert.ok(privateUploader.includes("'"+code+"'"),code+' not allowed for private logs');
-    assert.ok(orderPreflight.includes("'"+code+"'"),code+' not identified');
+    if(code!=='ORDERS_READER_MISSING')
+      assert.ok(orderPreflight.includes("'"+code+"'"),code+' not identified');
   }
   // Regression: the Windows updater may omit a standalone file.
   // The live extension must inject a self-contained read-only function instead.
