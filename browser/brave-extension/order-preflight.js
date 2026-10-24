@@ -376,7 +376,7 @@ async function inspectOrdersInPage(){
         if(qty>=0){const n=Number(String(v[qty]).replace(/,/g,''));
           if(Number.isInteger(n)&&n>0&&n<=10000000)item.quantity=n;}
         if(folio>=0&&/^[A-Za-z0-9-]{1,48}$/.test(v[folio]))item.folio=v[folio];
-        if(date>=0&&/^[\\d\\s:/.-]{6,32}$/.test(v[date]))item.date=v[date];
+        if(date>=0&&/^[\d\s:/.-]{6,32}$/.test(v[date]))item.date=v[date];
         found.push(item);
       }
       return {rows:rows.length,orders:found};
