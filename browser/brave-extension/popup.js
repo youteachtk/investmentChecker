@@ -101,21 +101,6 @@ async function refresh(){
     $('orderMessage').textContent='La propuesta caducó. Vuelve a analizar el mercado con datos recientes.';
   }
 }
-$('checkUpdate').addEventListener('click',async()=>{
-  $('checkUpdate').disabled=true;
-  $('updateState').textContent='Consultando la última versión publicada…';
-  const result=await send({type:'CHECK_EXTENSION_UPDATE'});
-  if(!result?.ok)$('updateState').textContent=result?.error||
-    'No se pudo consultar la actualización.';
-  else if(result.error)$('updateState').textContent=
-    'Actualizador de Windows: '+result.error;
-  else $('updateState').textContent=
-    'Publicada '+(result.published||'sin confirmar')+
-    ' · cargada '+result.loaded+
-    (result.updater==='INSTALLED_RELOAD_PENDING'?' · activando la actualización…':'');
-  $('checkUpdate').disabled=false;
-  await refresh();
-});
 $('run').addEventListener('click',async()=>{
   // Field-proven direct route from 2.7.1. No queue, no extra alarm.
   localMessage=null;
@@ -177,11 +162,13 @@ function resetOrderSelection(){
   $('orderList').replaceChildren();
   $('orderConsent').checked=false;
   $('orderApprove').disabled=true;
+  $('orderApprove').hidden=true;
 }
 function refreshOrderApproval(){
   const checked=[...$('orderList').querySelectorAll('input[type="checkbox"]')]
     .some(x=>x.checked);
   $('orderApprove').disabled=!orderDraft||!$('orderConsent').checked||!checked;
+  $('orderApprove').hidden=!orderDraft||!checked;
 }
 function renderOrders(result){
   resetOrderSelection();
@@ -192,6 +179,20 @@ function renderOrders(result){
       'Sin propuestas válidas. Actualiza cotizaciones y cartera.';
     return;
   }
+  if(result.simulation_only===true && result.status==='HISTORICAL_SIMULATION'){
+    $('orderConsent').hidden=true;
+    $('orderMessage').textContent='SIMULACIÓN HISTÓRICA — precios no vigentes. '+
+      'No son órdenes para copiar ni enviar. Cotización: '+
+      new Date(result.quotes_captured_at).toLocaleString('es-MX')+'.';
+    for(const o of result.orders){
+      const item=document.createElement('div');item.className='order-line';
+      item.textContent=o.symbol+' · '+o.quantity+' títulos · límite de referencia $'+
+        fmtMX(o.limit_mxn)+' · total estimado $'+fmtMX(o.estimated_total_mxn);
+      $('orderList').append(item);
+    }
+    return;
+  }
+  $('orderConsent').hidden=false;
   if(result.policy_version!==3 || result.copy_only!==true ||
      result.execution_enabled!==false || result.auto_fill_enabled!==false ||
      !Array.isArray(result.orders)) {
@@ -274,7 +275,9 @@ function renderApprovedOrders(draft){
 $('orderPreview').addEventListener('click',async()=>{
   $('orderPreview').disabled=true;
   $('orderMessage').textContent='Contrastando precios y cartera privada…';
-  const result=await send({type:'ORDER_PREVIEW'});
+  let result=await send({type:'ORDER_PREVIEW'});
+  if(['STALE_QUOTES','STALE_PORTFOLIO'].includes(result?.status))
+    result=await send({type:'ORDER_SIMULATION'});
   renderOrders(result);
   $('orderPreview').disabled=false;
 });
@@ -296,28 +299,6 @@ $('orderApprove').addEventListener('click',async()=>{
   resetOrderSelection();
   renderApprovedOrders(approvedDraft);
   await refresh();
-});
-$('orderHistory').addEventListener('click',async()=>{
-  $('orderHistory').disabled=true;
-  $('orderHistoryMessage').textContent='Consultando Órdenes y las páginas de Movimientos de Actinver…';
-  const result=await send({type:'ORDER_HISTORY'});
-  $('orderHistoryMessage').textContent=result?.message||result?.error||
-    'No se pudo verificar el historial de órdenes.';
-  $('orderHistory').disabled=false;
-});
-$('verifyQuotes').addEventListener('click',async()=>{
-  $('verifyQuotes').disabled=true;
-  $('syncVerified').textContent='Comprobando cotizaciones públicas en GitHub…';
-  const result=await send({type:'CHECK_QUOTES'});
-  if(!result?.ok){
-    $('syncVerified').textContent=result?.error||'No se pudo verificar el archivo.';
-  }else{
-    const when=new Date(result.validated_at);
-    $('syncVerified').textContent='GitHub confirma '+result.total+
-      ' cotizaciones validadas el '+when.toLocaleString('es-MX')+
-      '. Esta fecha demuestra si la captura realmente se actualizó.';
-  }
-  $('verifyQuotes').disabled=false;
 });
 void refresh();
 setInterval(()=>{void refresh();},1500);
