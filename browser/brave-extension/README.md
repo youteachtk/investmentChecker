@@ -1,3 +1,7 @@
+## v2.8.23 — Ruta real del historial de órdenes (24/oct/2026)
+
+Corregido el destino de consulta: la inspección de órdenes abre **directamente** `https://www.retoactinver.com/RetoActinver/#/ordenes`, que fue proporcionado y verificado por el usuario, en una pestaña secundaria de solo lectura. La versión anterior partía erróneamente de `#/portafolio` e intentaba descubrir el historial por menús. Ahora el lector exige `#/ordenes`, no pulsa navegación ni controles de operaciones y distingue rutas incorrectas o redirecciones a inicio de sesión de las tablas vacías. Se mantienen las protecciones contra órdenes enviadas y los registros sanitizados en GitHub privado. Que el paquete esté publicado no acredita que el puente de Windows lo haya instalado; el estado local se debe verificar separadamente.
+
 ## v2.8.22 — Tablas Angular y verificación de ruta en Órdenes (24/oct/2026)
 
 El historial ahora reconoce tablas HTML y estructuras Angular como `mat-table`, `mat-row`, `mat-cell`, `[role=grid]` y `.mat-mdc-table`. La verificación registra exclusivamente indicadores sin datos personales: cambio de ruta, presencia de ruta «órdenes», número de posibles cuadrículas y existencia de un aviso explícito de historial vacío. Ningún aviso sin una tabla verificada se convierte automáticamente en la conclusión «cero órdenes». Se añadieron pruebas para cuadrículas Angular y estado vacío. Se mantienen intactos el lector probado de 226 cotizaciones, la cartera privada y la prohibición de enviar órdenes.
