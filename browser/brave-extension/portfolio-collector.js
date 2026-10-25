@@ -177,7 +177,7 @@
     const scanned=new Set();
     for(const tab of tabs.slice(0,8)){
       const name=canon(tab.innerText||tab.textContent);
-      if(scanned.has(name))continue;
+      if(scanned.has(name)||tab.getAttribute?.('aria-selected')==='true')continue;
       scanned.add(name);
       const before=JSON.stringify(holdings());
       tab.click(); // Exact recognized read-only portfolio category tab.
