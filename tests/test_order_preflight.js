@@ -43,6 +43,14 @@ assert.equal(result.research_covered,2);
 assert.equal(result.research_pending,224);
 assert.equal(result.eligible_count,2);
 assert.equal(orderDrafts(snap,portfolio,ranked,now+16*60000).status,'STALE_QUOTES');
+const historical=orderDrafts(snap,portfolio,ranked,now+2*86400000,{simulation_only:true});
+assert.equal(historical.ok,true);
+assert.equal(historical.status,'HISTORICAL_SIMULATION');
+assert.equal(historical.simulation_only,true);
+assert.equal(historical.copy_only,false);
+assert.equal(historical.execution_enabled,false);
+assert.equal(historical.auto_fill_enabled,false);
+assert.equal(historical.orders.length,2);
 assert.equal(orderDrafts(snap,{...portfolio,captured_at:new Date(now-36*60000).toISOString()},
   ranked,now).status,'STALE_PORTFOLIO');
 assert.equal(orderDrafts(snap,{...portfolio,summary:{...portfolio.summary,buying_power:15}},
