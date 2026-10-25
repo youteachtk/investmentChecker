@@ -27,6 +27,9 @@ a{color:#a2d9ff}
 .trade .confirm input{margin:3px 0 0 0}
 .trade .message{white-space:pre-wrap;font-size:12px;line-height:1.5;color:#d8e0e9}
 .trade button.secondary{margin:8px 0}
+.trade .copy-tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0}
+.trade .copy-tools button{margin:0;padding:8px 3px;font-size:11px;min-height:38px;background:#334155;color:white}
+.trade .copy-tools button:focus-visible{outline:2px solid #a2d9ff;outline-offset:2px}
 .syncdetails{margin-top:10px;border:1px solid #465266;border-radius:9px;padding:10px;line-height:1.5}
 .syncdetails progress{width:100%;height:13px;accent-color:#22c55e;margin:7px 0}
 .syncdetails .minor{margin-top:4px}
@@ -47,23 +50,22 @@ a{color:#a2d9ff}
   <button id="verifyQuotes" class="secondary">Verificar 226 cotizaciones en GitHub</button>
   <div id="syncVerified" class="minor">Sin comprobación reciente en GitHub.</div>
 </section>
-<p class="minor">Cotizaciones → GitHub público. Cartera → GitHub privado. Propuestas y aprobación por lote; el envío de órdenes aún está bloqueado.</p>
+<p class="minor">Cotizaciones → GitHub público. Cartera → GitHub privado. Los datos de compra se copian manualmente: sin autollenado ni envío de órdenes.</p>
 <section class="trade" aria-labelledby="tradeHeader">
   <h2 id="tradeHeader">Propuestas para el Reto Actinver</h2>
-  <p class="minor">Importes en actipesos virtuales. Una propuesta no es una orden.</p>
-  <button id="orderPreview" class="secondary">Calcular compras con datos recientes</button>
+  <p class="minor">Propuestas para copiar manualmente. InvestmentChecker nunca abre ni rellena formularios de compra. Solo tú decides y confirmas en Actinver.</p>
+  <button id="orderPreview" class="secondary">Analizar mercado y preparar propuestas</button>
   <div id="orderMessage" class="message" role="status">Sin propuestas revisadas.</div>
   <div id="orderList"></div>
+  <div id="orderCopy" aria-live="polite"></div>
   <label class="confirm" for="orderConsent">
     <input id="orderConsent" type="checkbox">
-    Apruebo únicamente preparar las operaciones seleccionadas, con los límites y cantidades mostrados.
+    Apruebo solamente mostrar los datos seleccionados para copiarlos manualmente. Ningún botón del complemento opera en Actinver.
   </label>
-  <button id="orderApprove" disabled>Aprobar lote para preparación</button>
-  <button id="orderStageVisa" class="secondary" disabled>Cargar compra de V aprobada (sin enviarla)</button>
-  <button id="orderInspect" class="secondary">Abrir formulario de V para inspección (sin comprar)</button>
+  <button id="orderApprove" disabled>Preparar datos para copiar</button>
   <button id="orderHistory" class="secondary">Consultar movimientos realizados y órdenes programadas</button>
   <p id="orderHistoryMessage" class="minor" role="status">Movimientos y órdenes sin verificar.</p>
-  <p class="minor">Por seguridad, el envío a Actinver permanece deshabilitado hasta verificar el formulario real de órdenes y su confirmación.</p>
+  <p class="minor">En el concurso no se usan scripts ni macros para rellenar, confirmar o enviar operaciones. Copia y pega tú los valores; comprueba la orden antes de confirmar.</p>
 </section>
 <details id="settings">
   <summary>Configuración y diagnóstico</summary>
