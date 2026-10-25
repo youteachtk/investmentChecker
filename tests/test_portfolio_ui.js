@@ -33,7 +33,7 @@ const chrome={runtime:{sendMessage:async payload=>{
 }}};
 (async()=>{
   const result=await vm.runInNewContext(source,{
-    document,chrome,console:{warn(){},log(){}},
+    document,chrome,location:{hash:'#/portafolio'},console:{warn(){},log(){}},
     setTimeout:cb=>cb(),Date,Promise
   },{timeout:10000});
   assert.equal(result.ok,true);
@@ -50,6 +50,33 @@ const chrome={runtime:{sendMessage:async payload=>{
   assert.equal(message.payload.holdings[0].value_mxn,10000);
   assert.equal(message.diagnostic.summary_detected,true);
   assert.equal(message.diagnostic.holdings_detected,true);
+  // The same table on the Movimientos route cannot be accepted as holdings.
+  message=null;
+  const wrongRoute=await vm.runInNewContext(source,{
+    document,chrome,location:{hash:'#/movimientos'},console:{warn(){},log(){}},
+    setTimeout:cb=>cb(),Date,Promise
+  },{timeout:10000});
+  assert.equal(wrongRoute.holdings_detected,false);
+  assert.equal(message.payload.holdings,null);
+  // Even if Angular keeps an old Movimientos grid visible on #/portafolio,
+  // its Fecha/Folio/Operación headers cannot qualify as positions.
+  const movementTable={...table,querySelectorAll:sel=>sel.startsWith('thead')?
+    ['Fecha','Folio','Emisora','Operación','Títulos','Precio','Comisión']
+      .map(cell):
+    sel.startsWith('tbody')?[{
+      getClientRects:()=>[1],
+      querySelectorAll:()=>['12/OCT/2026','F001','AAPL','COMPRA','4',
+        '$100.00','$0.10'].map(cell)
+    }]:[]};
+  const movementDocument={querySelectorAll:sel=>sel.startsWith('span,div')?nodes:
+    sel.startsWith('table')?[movementTable]:[]};
+  message=null;
+  const transition=await vm.runInNewContext(source,{
+    document:movementDocument,chrome,location:{hash:'#/portafolio'},
+    console:{warn(){},log(){}},setTimeout:cb=>cb(),Date,Promise
+  },{timeout:10000});
+  assert.equal(transition.holdings_detected,false);
+  assert.equal(message.payload.holdings,null);
   // No credentials, HTML, customer identities or account numbers are uploaded.
   assert.ok(!JSON.stringify(message).includes('github_pat_'));
   console.log('PASS private summary, holdings, acknowledgement, and safe metadata');
