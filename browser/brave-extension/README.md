@@ -1,3 +1,11 @@
+## v2.8.27 — Cartera con categorías, paginación y conciliación obligatoria (25/oct/2026)
+
+- La v2.8.26 entregó cuatro emisoras (`AAPL`, `CVX`, `KO`, `PFE`) con un valor reconstruido de MXN 182,974.05 frente a MXN 235,624.89 reportados en «Inversiones». Los movimientos verificados muestran compras históricas de `QQQ`, pero **no prueban por sí solos una tenencia actual**; jamás se convierten en posiciones automáticamente.
+- Ahora el lector reúne todas las tablas visibles de posiciones de `#/portafolio`, y únicamente dentro de la **pestaña temporal inactiva** puede navegar categorías expresamente reconocidas (`Acciones`, `ETF`, `ETFs`, `Fondos` y `FIBRAs`) y controles numéricos de página inequívocos. No cambia de pestaña en la sesión visible del usuario ni pulsa controles para comprar o vender.
+- El receptor privado valida la procedencia de las posiciones y compara `value_mxn` (o `quantity × price_mxn`) contra el subtotal «Inversiones». Si faltan valores o la diferencia excede 2.5% (mínimo MXN 100), registra `HOLDINGS_VALUE_MISMATCH`/lectura incompleta **sin sobrescribir** la última instantánea privada. El archivo antiguo no se considera verificado.
+- La caché de la v2.8.26 que carece de conciliación no impide repetir el escaneo ni bloquea por límite temporal la primera actualización correcta. El diagnóstico `PRIVATE_OK` se reserva a una lectura nueva conciliada.
+- Regresiones aprobadas para dos páginas más categorías Acciones/ETF, no tocar la pestaña activa, impedir sobrescritura de tenencias incompletas, y lectura paginada segura. Sin cambios al ejecutable manual de Windows, a cotizaciones, órdenes programadas ni a Movimientos.
+
 ## v2.8.26 — Aislamiento de cartera real frente a Movimientos (25/oct/2026)
 
 - Se encontró que `actinver/portfolio-latest.json` recogía filas de `#/movimientos` como posiciones porque ambas tablas comparten las columnas «Emisora» y «Títulos». Los movimientos reales permanecen en `actinver/movements-latest.json`; este archivo no se modifica.
