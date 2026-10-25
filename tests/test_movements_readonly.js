@@ -6,7 +6,7 @@ const from=source.indexOf('async function inspectMovementsInPage(){');
 const to=source.indexOf('async function movementHistoryStatus(){',from);
 assert.ok(from>=0&&to>from,'Self-contained injected Movimientos reader');
 const embedded=source.slice(from,to);
-function fixture({route='#/movimientos',pages=true,tableVisible=true,empty=false}={}){
+function fixture({route='#/movimientos',pages=true,tableVisible=true,empty=false,extraDomRows=false}={}){
   let page=1;const clicks=[];
   const node=(t='',extras={})=>({
     innerText:t,textContent:t,getClientRects:()=>[{}],disabled:false,
@@ -32,8 +32,13 @@ function fixture({route='#/movimientos',pages=true,tableVisible=true,empty=false
     if(sel.startsWith('thead th,'))return names.map(n=>node(n));
     if(sel.startsWith('tbody tr,')){
       const rows=page===1?fillings.slice(0,10):fillings.slice(10);
-      return rows.map(values=>node('',{querySelectorAll:sel=>
+      const mapped=rows.map(values=>node('',{querySelectorAll:sel=>
         sel.startsWith('td,')?values.map(v=>node(v)):[]}));
+      if(extraDomRows&&page===1){
+        mapped.push(node('Cargando...',{querySelectorAll:()=>[]}));
+        mapped.push(node('Fila auxiliar',{querySelectorAll:()=>[]}));
+      }
+      return mapped;
     }
     return [];
   }});
@@ -70,6 +75,11 @@ async function inspect(o){
   assert.equal(r.movements[0].symbol,'PFE');
   assert.equal(r.movements[0].price_mxn,519);
   assert.deepEqual(clicks,['PAGE_2'],'Only page number control clicked');
+  const withExtra=await inspect({extraDomRows:true});
+  assert.equal(withExtra.result.stage,'MOVEMENTS_VERIFIED');
+  assert.equal(withExtra.result.movements.length,12);
+  assert.equal(withExtra.result.rows_scanned,14);
+  assert.deepEqual(withExtra.clicks,['PAGE_2']);
   const wrong=await inspect({route:'#/ordenes'});
   assert.equal(wrong.result.stage,'MOVEMENTS_WRONG_ROUTE');
   assert.deepEqual(wrong.clicks,[]);
