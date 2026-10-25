@@ -18,6 +18,8 @@ class OverlayContract(unittest.TestCase):
         self.assertIn('FLAG_NOT_FOCUSABLE', service)
         self.assertIn('MotionEvent.ACTION_MOVE', service)
         self.assertIn('manager.updateViewLayout(root, p)', service)
+        self.assertIn('Ajustar ancho', service)
+        self.assertIn('saveGeometry(p)', service)
 
     def test_explicit_unverified_status_and_no_trading_actions(self):
         service = (ROOT / 'app/src/main/java/mx/investmentchecker/tablet/OverlayService.kt').read_text()
