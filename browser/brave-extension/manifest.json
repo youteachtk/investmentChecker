@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.8.25",
-  "description": "2.8.25: verifica 12 movimientos válidos aun con filas HTML extra y lee Órdenes sin esperar carga completa.",
+  "version": "2.8.26",
+  "description": "2.8.26: protege posiciones de cartera contra datos de Movimientos y descarta caché sin origen verificado.",
   "permissions": [
     "storage",
     "scripting",
