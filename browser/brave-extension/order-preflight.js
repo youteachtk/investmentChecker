@@ -444,7 +444,7 @@ async function inspectOrdersInPage(){
   return result;
 }
 
-async function orderHistoryStatus(){
+async function scheduledOrdersStatus(){
   const session=await getActinverTabs();
   const source=session.matches.find(t=>t.active)||session.matches[0];
 
@@ -576,6 +576,223 @@ async function orderHistoryStatus(){
   }
 }
 
+
+
+// Read the authentic Movimientos screen only. The only permitted click is an
+// unambiguous numeric PAGE button after its movement-page footer is verified.
+async function inspectMovementsInPage(){
+  'use strict';
+  const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/\s+/g,' ').trim().toLowerCase();
+  const label=e=>String(e?.innerText||e?.textContent||'').trim();
+  const visible=e=>!!(e&&e.getClientRects?.().length&&!e.disabled);
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  const output={schema_version:1,read_only:true,submitted_orders:0,
+    route_verified:false,stage:'MOVEMENTS_NOT_VERIFIED',
+    total_expected:null,total_pages:null,pages_read:0,rows_scanned:0,
+    movements:[],pagination_issue:null};
+  if(!/^#\/movimientos(?:[/?#]|$)/i.test(String(location.hash||''))){
+    output.stage='MOVEMENTS_WRONG_ROUTE';return output;
+  }
+  output.route_verified=true;
+  const footer=()=>{
+    const t=norm(document.body?.innerText||'');
+    const count=t.match(/todos los movimientos\s*:\s*(\d{1,5})/);
+    const section=t.match(/seccion\s*:\s*(\d{1,3})\s+de\s+(\d{1,3})/);
+    return {total:count?Number(count[1]):null,
+      page:section?Number(section[1]):null,
+      pages:section?Number(section[2]):null};
+  };
+  const number=v=>{
+    const t=String(v||'').replace(/[^0-9.,-]/g,'');
+    if(!t)return null;
+    const n=Number(t.includes('.')?t.replace(/,/g,''):t.replace(',','.'));
+    return Number.isFinite(n)&&n>=0&&n<=1e10?n:null;
+  };
+  const parseTable=()=>{
+    const tables=[...document.querySelectorAll(
+      'table,[role="table"],[role="grid"],mat-table,.mat-table,.mat-mdc-table,.cdk-table'
+    )].filter(visible);
+    for(const table of tables){
+      const headers=[...table.querySelectorAll(
+        'thead th,[role="columnheader"],mat-header-cell,.mat-header-cell,.mat-mdc-header-cell'
+      )].map(x=>norm(label(x)));
+      const col=(word)=>headers.findIndex(h=>h===word||h.startsWith(word+' '));
+      const ix={date:col('fecha'),time:col('hora'),folio:col('folio'),
+        symbol:col('emisora'),side:col('operacion'),qty:col('titulos'),
+        price:col('precio'),fee:col('comision'),vat:col('iva'),total:col('importe total')};
+      if(['date','time','folio','symbol','side','qty','price','fee','vat','total']
+          .some(k=>ix[k]<0))continue;
+      const rows=[...table.querySelectorAll(
+        'tbody tr,[role="rowgroup"] [role="row"],mat-row,.mat-row,.mat-mdc-row'
+      )].filter(visible);
+      const movements=[];
+      for(const row of rows.slice(0,100)){
+        const cells=[...row.querySelectorAll(
+          'td,[role="cell"],mat-cell,.mat-cell,.mat-mdc-cell'
+        )].map(label);
+        if(cells.length<headers.length)continue;
+        const date=cells[ix.date],time=cells[ix.time],folio=cells[ix.folio];
+        const symbol=cells[ix.symbol].toUpperCase().replace(/[\*ⓘℹ?]/g,'').trim();
+        const side=norm(cells[ix.side])==='compra'?'BUY':
+          norm(cells[ix.side])==='venta'?'SELL':null;
+        const qty=number(cells[ix.qty]),price=number(cells[ix.price]);
+        const fee=number(cells[ix.fee]),vat=number(cells[ix.vat]);
+        const total=number(cells[ix.total]);
+        if(!/^\d{2}\/\d{2}\/\d{4}$/.test(date)||
+          !/^\d{1,2}:\d{2}(?::\d{2})?$/.test(time)||
+          !/^[A-Za-z0-9-]{1,48}$/.test(folio)||
+          !/^[A-Z0-9 .&+/-]{1,35}$/.test(symbol)||!side||
+          !Number.isInteger(qty)||qty<1||qty>1e7||
+          [price,fee,vat,total].some(x=>x===null))continue;
+        movements.push({date,time,folio,symbol,side,quantity:qty,
+          price_mxn:price,commission_mxn:fee,vat_mxn:vat,total_mxn:total});
+      }
+      return {rows:rows.length,movements};
+    }
+    return null;
+  };
+  let current=null,meta=null;
+  for(let i=0;i<35;i++){
+    meta=footer();current=parseTable();
+    if(current&&meta.page&&meta.pages&&meta.total!==null)break;
+    await sleep(200);
+  }
+  if(!current){output.stage='MOVEMENTS_TABLE_MISSING';return output;}
+  if(meta?.total===null||!meta?.pages||!meta?.page||
+    meta.pages>30||meta.total>2000||meta.page!==1){
+    output.stage='MOVEMENTS_PAGINATION_UNVERIFIED';return output;
+  }
+  output.total_expected=meta.total;
+  output.total_pages=meta.pages;
+  for(let page=1;page<=meta.pages;page++){
+    const now=footer();
+    if(now.page!==page){output.pagination_issue='PAGE_INDICATOR_MISMATCH';break;}
+    const grid=parseTable();
+    if(!grid){output.pagination_issue='TABLE_NOT_LOADED';break;}
+    output.rows_scanned+=grid.rows;
+    // Never deduplicate by folio: several fills may share the same order folio.
+    output.movements.push(...grid.movements);
+    output.pages_read=page;
+    if(page===meta.pages)break;
+    // Page number must be the ONLY visible exact numeric control for this page.
+    // Do not click generic forward, submit, or action controls.
+    const controls=[...document.querySelectorAll('button,a,[role="button"]')]
+      .filter(e=>visible(e)&&norm(label(e))===String(page+1)&&
+        typeof e.click==='function');
+    if(controls.length!==1){output.pagination_issue='PAGE_BUTTON_NOT_UNIQUE';break;}
+    const oldSignature=JSON.stringify(grid.movements);
+    controls[0].click();
+    let changed=false;
+    for(let attempt=0;attempt<45;attempt++){
+      await sleep(200);
+      const state=footer(),other=parseTable();
+      if(state.page===page+1&&other&&
+        JSON.stringify(other.movements)!==oldSignature){changed=true;break;}
+    }
+    if(!changed){output.pagination_issue='PAGE_DID_NOT_ADVANCE';break;}
+  }
+  output.stage=output.pagination_issue?'MOVEMENTS_PARTIAL':
+    output.pages_read===output.total_pages&&
+    output.rows_scanned===output.total_expected&&
+    output.movements.length===output.total_expected?
+    'MOVEMENTS_VERIFIED':'MOVEMENTS_PARTIAL';
+  return output;
+}
+
+async function movementHistoryStatus(){
+  const session=await getActinverTabs();
+  const source=session.matches.find(t=>t.active)||session.matches[0];
+  let tab=null;
+  try{
+    if(!source)throw Error('No hay una sesión Actinver abierta en Brave.');
+    const origin=new URL(source.url).origin;
+    if(!/^https:\/\/(?:www\.)?retoactinver\.com$/.test(origin))
+      throw Error('Origen no autorizado.');
+    tab=await chrome.tabs.create({
+      url:origin+'/RetoActinver/#/movimientos',active:false,openerTabId:source.id
+    });
+    if(!await waitForPage(tab.id))throw Error('No cargó Movimientos.');
+    const landed=await chrome.tabs.get(tab.id);
+    if(!/^https:\/\/(?:www\.)?retoactinver\.com\/RetoActinver\/#\/movimientos(?:[/?#]|$)/i.test(landed.url||''))
+      throw Error('MOVEMENTS_ROUTE_REDIRECTED');
+    const result=await chrome.scripting.executeScript({
+      target:{tabId:tab.id},func:inspectMovementsInPage,world:'ISOLATED'
+    });
+    const raw=result?.[0]?.result;
+    if(!raw||raw.schema_version!==1||raw.read_only!==true||
+      raw.submitted_orders!==0||!Array.isArray(raw.movements))
+      throw Error('MOVEMENTS_INVALID_RESULT');
+    const valid=(o)=>o&&/^\d{2}\/\d{2}\/\d{4}$/.test(o.date)&&
+      /^\d{1,2}:\d{2}(?::\d{2})?$/.test(o.time)&&
+      /^[A-Za-z0-9-]{1,48}$/.test(o.folio)&&
+      /^[A-Z0-9 .&+/-]{1,35}$/.test(o.symbol)&&
+      ['BUY','SELL'].includes(o.side)&&
+      Number.isInteger(o.quantity)&&o.quantity>0&&o.quantity<=1e7&&
+      ['price_mxn','commission_mxn','vat_mxn','total_mxn']
+        .every(k=>Number.isFinite(o[k])&&o[k]>=0&&o[k]<=1e10);
+    const movements=raw.movements.slice(0,2000).filter(valid)
+      .map(o=>({date:o.date,time:o.time,folio:o.folio,
+        symbol:o.symbol,side:o.side,quantity:o.quantity,price_mxn:o.price_mxn,
+        commission_mxn:o.commission_mxn,vat_mxn:o.vat_mxn,total_mxn:o.total_mxn}));
+    const verified=raw.stage==='MOVEMENTS_VERIFIED'&&
+      Number.isInteger(raw.total_expected)&&raw.total_expected===movements.length&&
+      raw.total_expected===raw.rows_scanned;
+    const report={schema_version:1,captured_at:new Date().toISOString(),
+      stage:verified?'MOVEMENTS_VERIFIED':raw.stage,
+      route_verified:raw.route_verified===true,
+      total_expected:Number.isInteger(raw.total_expected)?raw.total_expected:null,
+      total_pages:Number.isInteger(raw.total_pages)?raw.total_pages:null,
+      pages_read:Number.isInteger(raw.pages_read)?raw.pages_read:0,
+      rows_scanned:Number.isInteger(raw.rows_scanned)?raw.rows_scanned:0,
+      movements,verified,read_only:true,submitted_orders:0};
+    const config=await chrome.storage.local.get(['privateEnabled','privateRepo','privateToken']);
+    if(!config.privateEnabled)throw Error('GitHub privado no configurado.');
+    await verifyPrivateRepo(config.privateRepo,config.privateToken);
+    const endpoint='https://api.github.com/repos/'+config.privateRepo+
+      '/contents/actinver/movements-latest.json';
+    const headers={Authorization:'Bearer '+config.privateToken,
+      Accept:'application/vnd.github+json','Content-Type':'application/json',
+      'X-GitHub-Api-Version':'2022-11-28'};
+    const old=await fetch(endpoint,{headers,cache:'no-store'});
+    if(!old.ok&&old.status!==404)throw Error('No se pudo consultar Movimientos en GitHub.');
+    const sha=old.ok?(await old.json()).sha:undefined;
+    const bytes=new TextEncoder().encode(JSON.stringify(report,null,2)+'\n');
+    let binary='';for(const n of bytes)binary+=String.fromCharCode(n);
+    const data={message:'Read-only Actinver executed movements across all pages',
+      content:btoa(binary),branch:'main'};
+    if(sha)data.sha=sha;
+    const saved=await fetch(endpoint,{method:'PUT',headers,body:JSON.stringify(data)});
+    if(!saved.ok)throw Error('No se pudieron guardar Movimientos en GitHub privado.');
+    await chrome.storage.local.set({movementHistoryLastStatus:report.stage,
+      movementHistoryLastCheckedAt:report.captured_at});
+    return {ok:true,status:report.stage,verified,count:verified?movements.length:null,
+      pages:report.pages_read,total_pages:report.total_pages,
+      message:verified?'Movimientos verificados: '+movements.length+
+        ' compras o ventas registradas en '+report.pages_read+' página(s).':
+        'Movimientos: lectura incompleta ('+report.stage+
+        '). Datos parciales guardados en GitHub privado; no se presentan como completos.'};
+  }catch(error){
+    return {ok:false,status:'MOVEMENTS_ERROR',
+      error:'Movimientos: '+String(error?.message||error)};
+  }finally{if(tab)try{await chrome.tabs.remove(tab.id)}catch(_){}}
+}
+
+// Both sites are scanned in their own inactive tab. Reading Movimientos
+// never implies that a pending order was executed.
+async function orderHistoryStatus(){
+  const scheduled=await scheduledOrdersStatus();
+  const movements=await movementHistoryStatus();
+  const message=(scheduled.message||scheduled.error||'Órdenes sin verificar.')+
+    '\n'+(movements.message||movements.error||'Movimientos sin verificar.');
+  await chrome.storage.local.set({orderHistoryCombinedMessage:message,
+    orderHistoryCombinedAt:new Date().toISOString()});
+  return {ok:scheduled.ok&&movements.ok,
+    status:scheduled.status||'ORDERS_ERROR',
+    movements_status:movements.status||'MOVEMENTS_ERROR',
+    verified:scheduled.verified===true&&movements.verified===true,
+    message};
+}
 
 // This Chrome-injected function only fills a prepared virtual Reto order.
 // The actual Comprar/Calcular orden controls are NEVER activated here.
