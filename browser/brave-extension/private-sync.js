@@ -182,7 +182,7 @@ async function uploadPrivateDiagnostic(raw) {
     'PRIVATE_NAV_FAILED','PRIVATE_UPLOAD_FAILED','PRIVATE_OK',
     'ORDERS_NAV_FAILED','ORDERS_TABLE_MISSING','ORDERS_SAVE_FAILED','ORDERS_OK','ORDERS_ERROR',
     'ORDERS_READER_MISSING','ORDERS_INJECTION_FAILED','ORDERS_INVALID_RESULT',
-    'ORDERS_ROUTE_REDIRECTED']);
+    'ORDERS_ROUTE_REDIRECTED','ORDERS_NO_PROGRAMMED']);
   if(!raw || typeof raw!=='object')return {ok:false,reason:'No diagnostic'};
   const portfolio=raw?.private_portfolio===true;
   const history=raw?.order_history===true;
