@@ -413,50 +413,29 @@ async function inspectOrdersInPage(){
     }
     return null;
   }
-  result.probe_step='READ_CURRENT_TABLE';
+  result.probe_step='CHECK_DIRECT_ORDERS_ROUTE';
+  const onOrdersRoute=()=>/^#\/ordenes(?:[/?#]|$)/i.test(route());
+  if(!onOrdersRoute()){
+    refreshStructure();
+    result.stage='ORDERS_ROUTE_MISMATCH';
+    return result;
+  }
+  result.orders_page_seen=true;
+  result.probe_step='WAIT_ORDERS_TABLE';
   result.visible_control_count=Math.min(1000,controls().length);
-  let current=readTable();
-  if(!current){
-    // Match only navigation labels. Never click operation/cancel controls.
-    const orderLabel=t=>/^(ordenes|mis ordenes|historial de ordenes|ordenes de compra y venta)$/.test(t);
-    const orderLink=e=>orderLabel(label(e))||
-      (label(e).length>0&&label(e).length<65&&
-        /ordenes/.test(norm(e.getAttribute?.('routerlink')||e.getAttribute?.('href')||''))&&
-        !/comprar|vender|cancelar|eliminar|modificar|enviar/.test(label(e)));
-    const eligible=items=>items.filter(e=>typeof e.click==='function');
-    const findOrders=()=>eligible([...new Set([...controls().filter(orderLink),
-      ...captionMatches(orderLabel)])]);
-    result.probe_step='FIND_ORDER_NAVIGATION';
-    let links=findOrders();
-    result.order_nav_candidate_count=Math.min(100,links.length);
-    if(links.length===0){
-      const menuLabel=t=>t==='tu inversion'||(t.startsWith('tu inversion')&&t.length<=50);
-      const menus=eligible([...new Set([...controls().filter(e=>menuLabel(label(e))),
-        ...captionMatches(menuLabel)])]);
-      result.investment_menu_candidate_count=Math.min(100,menus.length);
-      if(menus.length===1){
-        result.probe_step='OPEN_INVESTMENT_MENU';
-        menus[0].click();
-        for(let i=0;i<24;i++){await sleep(250);links=findOrders();
-          if(links.length)break;}
-        result.probe_step='FIND_ORDER_NAVIGATION';
-      }
-    }
-    if(links.length!==1){
-      refreshStructure();
-      result.stage=links.length>1?
-        'ORDERS_NAV_AMBIGUOUS':'ORDERS_SECTION_NOT_FOUND';return result;
-    }
-    result.probe_step='OPEN_ORDER_NAVIGATION';
-    links[0].click();
-    result.orders_page_seen=true;
-    result.probe_step='WAIT_ORDERS_TABLE';
-    for(let i=0;i<48;i++){await sleep(250);current=readTable();if(current)break;}
-  }else result.orders_page_seen=true;
+  let current=null;
+  for(let attempt=0;attempt<48;attempt++){
+    current=readTable();
+    if(current)break;
+    if(attempt<47)await sleep(250);
+  }
   refreshStructure();
-  if(!current){result.probe_step='NO_MATCHING_TABLE';
-    result.stage='ORDERS_TABLE_NOT_VERIFIED';return result;}
-  result.rows_scanned=Math.min(100,current.rows);
+  if(!current){
+    result.probe_step='NO_MATCHING_TABLE';
+    result.stage='ORDERS_TABLE_NOT_VERIFIED';
+    return result;
+  }
+    result.rows_scanned=Math.min(100,current.rows);
   result.orders=current.orders;
   result.probe_step='COMPLETED';
   result.stage=current.rows===0?'ORDERS_TABLE_EMPTY':
