@@ -63,7 +63,7 @@ class MainActivity : Activity() {
         content.addView(Button(this).apply {
             text = "Abrir Actinver en Brave"
             setOnClickListener {
-                val url = Uri.parse("https://www.retoactinver.com/")
+                val url = Uri.parse("https://www.retoactinver.com/inicio-sesion/")
                 try {
                     startActivity(Intent(Intent.ACTION_VIEW, url).setPackage("com.brave.browser"))
                 } catch (_: ActivityNotFoundException) {
