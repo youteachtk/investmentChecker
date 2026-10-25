@@ -2,13 +2,14 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const source=fs.readFileSync('browser/brave-extension/orders-history-probe.js','utf8');
-function setup({section=true,rows=true,navMode='button'}={}){
+function setup({section=true,rows=true,navMode='button',layout='table'}={}){
   let open=false;const clicks=[];
+  const location={hash:'#/portafolio'};
   const node=(text='',extras={})=>({
     textContent:text,innerText:text,getClientRects:()=>[1],disabled:false,
     getAttribute:()=>null,querySelectorAll:()=>[],click:()=>{},...extras
   });
-  const nav=node('Órdenes',{click:()=>{open=true;clicks.push('ORDERS')}});
+  const nav=node('Órdenes',{click:()=>{open=true;location.hash='#/inversion/ordenes';clicks.push('ORDERS')}});
   const nestedCaption=node('Órdenes',{closest:()=>nav});
   const head=['Emisora','Estatus','Operación','Títulos','Folio','Fecha']
     .map(x=>node(x));
@@ -20,20 +21,21 @@ function setup({section=true,rows=true,navMode='button'}={}){
     ['PFE','Parcialmente ejecutada','Compra','7','ORD005','23/10/2026']
   ];
   const trs=values.map(vals=>node('',{querySelectorAll:sel=>
-    sel==='td,[role="cell"]'?vals.map(v=>node(v)):[]}));
+    sel.startsWith('td,[role="cell"]')?vals.map(v=>node(v)):[]}));
   const table=node('',{querySelectorAll:sel=>{
-    if(sel==='thead th,[role="columnheader"]')return head;
-    if(sel==='tbody tr,[role="rowgroup"] [role="row"]')return rows?trs:[];
+    if(sel.startsWith('thead th,[role="columnheader"]'))return head;
+    if(sel.startsWith('tbody tr,[role="rowgroup"] [role="row"]'))return rows?trs:[];
     return [];
   }});
-  const document={querySelectorAll:sel=>{
-    if(sel==='table,[role="table"]')return open?[table]:[];
+  const document={body:{innerText:layout==='empty-state'&&open?'No hay órdenes':' '},querySelectorAll:sel=>{
+    if(sel==='table,[role="table"]')return open&&layout==='table'?[table]:[];
+    if(sel.includes('mat-table'))return open&&layout!=='empty-state'?[table]:[];
     if(sel.startsWith('a,button'))return section&&navMode!=='caption'?[nav]:[];
     if(sel==='span,div,li,p,small')return section&&navMode==='caption'?
       [nestedCaption]:[];
     return [];
   }};
-  return {document,clicks};
+  return {document,location,clicks};
 }
 async function inspect(x){
   return vm.runInNewContext(source,{document:x.document,Date,setTimeout:fn=>fn()});
@@ -86,17 +88,24 @@ async function inspect(x){
     {options:{section:false},expected:'ORDERS_SECTION_NOT_FOUND',count:0},
     {options:{navMode:'caption'},expected:'ORDERS_TABLE_READ',count:5},
     {options:{navMode:'angular'},expected:'ORDERS_TABLE_READ',count:5},
+    {options:{layout:'grid'},expected:'ORDERS_TABLE_READ',count:5},
+    {options:{layout:'empty-state'},expected:'ORDERS_TABLE_NOT_VERIFIED',count:0},
     {options:{rows:false},expected:'ORDERS_TABLE_EMPTY',count:0}
   ]){
     const mock=setup(scenario.options);
     const actual=await vm.runInNewContext(
       embedded+'\ninspectOrdersInPage()',{
-        document:mock.document,Date,setTimeout:fn=>fn()
+        document:mock.document,location:mock.location,Date,setTimeout:fn=>fn()
       });
     assert.equal(actual.stage,scenario.expected);
     assert.equal(actual.orders.length,scenario.count);
     assert.equal(actual.submitted_orders,0);
     assert.equal(actual.read_only,true);
+    if(scenario.options.layout==='grid')assert.equal(actual.possible_grid_count,1);
+    if(scenario.options.layout==='empty-state'){
+      assert.equal(actual.empty_notice_detected,true);
+      assert.equal(actual.orders_route_seen,true);
+    }
     if(actual.orders.length){
       assert.equal(actual.orders[0].folio,'ORD001');
       assert.equal(actual.orders[0].date,'23/10/2026');
