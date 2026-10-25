@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.8.28",
-  "description": "2.8.28: análisis imparcial y preparación de compras para copiar manualmente, sin autollenado ni envío de órdenes.",
+  "version": "2.8.29",
+  "description": "2.8.29: interfaz mínima y simulación histórica sin órdenes operativas ni autollenado.",
   "permissions": [
     "storage",
     "scripting",
