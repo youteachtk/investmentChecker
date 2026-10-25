@@ -224,9 +224,11 @@ async function route(msg,sender) {
   }
   if(msg?.type==='ORDER_PREVIEW')return await orderPreview();
   if(msg?.type==='ORDER_APPROVE')return await orderApprove(msg);
-  if(msg?.type==='ORDER_INSPECT_UI')return await orderInspectUi();
+  if(msg?.type==='ORDER_INSPECT_UI')return {ok:false,status:'CONTEST_SAFE_COPY_ONLY',
+    error:'La inspección automatizada de formularios está deshabilitada; copia los datos manualmente.'};
   if(msg?.type==='ORDER_HISTORY')return await orderHistoryStatus();
-  if(msg?.type==='ORDER_STAGE_VISA')return await orderStageApprovedVisa();
+  if(msg?.type==='ORDER_STAGE_VISA')return {ok:false,status:'CONTEST_SAFE_COPY_ONLY',
+    error:'El autollenado está deshabilitado para el Reto Actinver.'};
   if (msg?.type==='PRIVATE_CONFIG') return await configurePrivatePortfolio(msg);
   if (msg?.type==='PRIVATE_START') return await capturePrivatePortfolio();
   if (msg?.type==='PRIVATE_CAPTURE') return await acceptPrivateCapture(msg,sender);
