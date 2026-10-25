@@ -427,6 +427,8 @@ async function inspectOrdersInPage(){
   for(let attempt=0;attempt<48;attempt++){
     current=readTable();
     if(current)break;
+    refreshStructure();
+    if(result.empty_notice_detected)break;
     if(attempt<47)await sleep(250);
   }
   refreshStructure();
@@ -444,6 +446,28 @@ async function inspectOrdersInPage(){
   return result;
 }
 
+// A SPA tab may display its route before Chrome reports status 'complete'.
+// Inspect only the route and document readiness; do not click anything.
+async function waitForReadOnlyOrdersRoute(tabId,maxMs=18000){
+  const until=Date.now()+maxMs;
+  while(Date.now()<until){
+    try{
+      const tab=await chrome.tabs.get(tabId);
+      if(tab?.id&&/^https:\/\/(?:www\.)?retoactinver\.com\/RetoActinver\/#\/ordenes(?:[/?#]|$)/i.test(tab.url||'')){
+        const probe=await chrome.scripting.executeScript({
+          target:{tabId},world:'ISOLATED',
+          func:()=>({hash:location.hash,ready:document.readyState})
+        });
+        const p=probe?.[0]?.result;
+        if(/^#\/ordenes(?:[/?#]|$)/i.test(p?.hash||'')&&
+          ['interactive','complete'].includes(p?.ready))return true;
+      }
+    }catch(_){/* Retry while the isolated navigation is committing. */}
+    await new Promise(r=>setTimeout(r,450));
+  }
+  return false;
+}
+
 async function scheduledOrdersStatus(){
   const session=await getActinverTabs();
   const source=session.matches.find(t=>t.active)||session.matches[0];
@@ -457,11 +481,12 @@ async function scheduledOrdersStatus(){
     if(!/^https:\/\/(?:www\.)?retoactinver\.com$/.test(origin))
       throw Error('Origen de Actinver no autorizado.');
     diag.phase='ORDERS_NAV';
-    tab=await chrome.tabs.create({url:'https://www.retoactinver.com/RetoActinver/#/ordenes',
+    tab=await chrome.tabs.create({url:origin+'/RetoActinver/#/ordenes',
       active:false,openerTabId:source.id});
-    if(!await waitForPage(tab.id))throw Error('No cargó la página de órdenes.');
+    if(!await waitForReadOnlyOrdersRoute(tab.id))
+      throw Error('La ruta Órdenes no quedó lista para consulta.');
     const landed=await chrome.tabs.get(tab.id);
-    if(!/^https:\/\/www\.retoactinver\.com\/RetoActinver\/#\/ordenes(?:[/?#]|$)/i.test(landed.url||'')){
+    if(!/^https:\/\/(?:www\.)?retoactinver\.com\/RetoActinver\/#\/ordenes(?:[/?#]|$)/i.test(landed.url||'')){
       diag.code='ORDERS_ROUTE_REDIRECTED';
       throw Error('ORDERS_ROUTE_REDIRECTED');
     }
