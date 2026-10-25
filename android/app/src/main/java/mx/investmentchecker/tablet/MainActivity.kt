@@ -2,6 +2,7 @@ package mx.investmentchecker.tablet
 
 import android.Manifest
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -45,9 +46,14 @@ class MainActivity : Activity() {
         }
         content.addView(openPanel)
         content.addView(Button(this).apply {
-            text = "Abrir Actinver en navegador"
+            text = "Abrir Actinver en Brave"
             setOnClickListener {
-                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.retoactinver.com/")))
+                val url = Uri.parse("https://www.retoactinver.com/")
+                try {
+                    startActivity(Intent(Intent.ACTION_VIEW, url).setPackage("com.brave.browser"))
+                } catch (_: ActivityNotFoundException) {
+                    startActivity(Intent(Intent.ACTION_VIEW, url))
+                }
             }
         })
         content.gravity = Gravity.TOP
