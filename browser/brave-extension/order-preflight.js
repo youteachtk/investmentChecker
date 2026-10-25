@@ -432,7 +432,8 @@ async function inspectOrdersInPage(){
   refreshStructure();
   if(!current){
     result.probe_step='NO_MATCHING_TABLE';
-    result.stage='ORDERS_TABLE_NOT_VERIFIED';
+    result.stage=result.empty_notice_detected?'ORDERS_NO_PROGRAMMED':
+      'ORDERS_TABLE_NOT_VERIFIED';
     return result;
   }
     result.rows_scanned=Math.min(100,current.rows);
@@ -493,7 +494,7 @@ async function orderHistoryStatus(){
       throw Error('Inspección de órdenes no verificable.');
     }
     const statuses=new Set(['executed','partial','pending','cancelled','rejected','unknown']);
-    const stages=new Set(['ORDERS_ROUTE_MISMATCH','ORDERS_SECTION_NOT_FOUND','ORDERS_NAV_AMBIGUOUS',
+    const stages=new Set(['ORDERS_NO_PROGRAMMED','ORDERS_ROUTE_MISMATCH','ORDERS_SECTION_NOT_FOUND','ORDERS_NAV_AMBIGUOUS',
       'ORDERS_TABLE_NOT_VERIFIED','ORDERS_TABLE_EMPTY','ORDERS_TABLE_READ',
       'ORDERS_ROWS_UNRECOGNIZED']);
     const orders=(Array.isArray(raw.orders)?raw.orders:[]).slice(0,100)
@@ -510,7 +511,8 @@ async function orderHistoryStatus(){
     for(const order of orders)counts[order.status]++;
     const stage=stages.has(raw.stage)?raw.stage:'ORDERS_TABLE_NOT_VERIFIED';
     diag.phase='ORDERS_READ';
-    diag.code=stage==='ORDERS_TABLE_READ'||stage==='ORDERS_TABLE_EMPTY'?
+    diag.code=stage==='ORDERS_NO_PROGRAMMED'?'ORDERS_NO_PROGRAMMED':
+      stage==='ORDERS_TABLE_READ'||stage==='ORDERS_TABLE_EMPTY'?
       'ORDERS_OK':stage==='ORDERS_ROUTE_MISMATCH'||
       stage==='ORDERS_SECTION_NOT_FOUND'||stage==='ORDERS_NAV_AMBIGUOUS'?
       'ORDERS_NAV_FAILED':'ORDERS_TABLE_MISSING';
@@ -518,7 +520,9 @@ async function orderHistoryStatus(){
       stage,orders_page_seen:raw.orders_page_seen===true,
       rows_scanned:Number.isInteger(raw.rows_scanned)?
         Math.min(100,Math.max(0,raw.rows_scanned)):0,
-      counts,orders,read_only:true,submitted_orders:0};
+      counts:stage==='ORDERS_NO_PROGRAMMED'?null:counts,
+      programmed_orders_count:stage==='ORDERS_NO_PROGRAMMED'?0:null,
+      orders,read_only:true,submitted_orders:0};
     diag.phase='ORDERS_SAVE';
     const config=await chrome.storage.local.get(['privateEnabled','privateRepo','privateToken']);
     if(!config.privateEnabled)throw Error('GitHub privado no configurado.');
@@ -539,13 +543,15 @@ async function orderHistoryStatus(){
     const saved=await fetch(endpoint,{method:'PUT',headers,body:JSON.stringify(data)});
     if(!saved.ok)throw Error('No se pudo guardar historial privado.');
     diag.phase='ORDERS_DONE';
-    const verified=stage==='ORDERS_TABLE_READ'||stage==='ORDERS_TABLE_EMPTY';
+    const noProgrammed=stage==='ORDERS_NO_PROGRAMMED';
+    const verified=noProgrammed||stage==='ORDERS_TABLE_READ'||stage==='ORDERS_TABLE_EMPTY';
     await chrome.storage.local.set({orderHistoryLastStatus:stage,
       orderHistoryLastCheckedAt:report.captured_at,
-      orderHistoryCounts:verified?counts:null});
-    return {ok:true,status:stage,verified,counts:verified?counts:null,
-      order_count:verified?orders.length:null,
-      message:verified?
+      orderHistoryCounts:verified&&!noProgrammed?counts:null});
+    return {ok:true,status:stage,verified,counts:verified&&!noProgrammed?counts:null,
+      order_count:verified&&!noProgrammed?orders.length:null,
+      message:noProgrammed?'Órdenes: no hay órdenes programadas actualmente.':
+        verified?
         'Órdenes verificadas en Actinver: '+counts.executed+' ejecutadas, '+
         counts.partial+' parciales, '+counts.pending+' pendientes, '+
         counts.cancelled+' canceladas y '+counts.rejected+' rechazadas.':
