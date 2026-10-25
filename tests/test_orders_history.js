@@ -2,9 +2,9 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const source=fs.readFileSync('browser/brave-extension/orders-history-probe.js','utf8');
-function setup({section=true,rows=true,navMode='button',layout='table'}={}){
-  let open=false;const clicks=[];
-  const location={hash:'#/portafolio'};
+function setup({section=true,rows=true,navMode='button',layout='table',direct=false}={}){
+  let open=direct;const clicks=[];
+  const location={hash:direct?'#/ordenes':'#/portafolio'};
   const node=(text='',extras={})=>({
     textContent:text,innerText:text,getClientRects:()=>[1],disabled:false,
     getAttribute:()=>null,querySelectorAll:()=>[],click:()=>{},...extras
@@ -83,14 +83,16 @@ async function inspect(x){
   const to=orderPreflight.indexOf('async function orderHistoryStatus(){',from);
   assert.ok(from>=0 && to>from,'Embedded orders reader must exist');
   const embedded=orderPreflight.slice(from,to);
+  assert.ok(orderPreflight.includes("https://www.retoactinver.com/RetoActinver/#/ordenes"),
+    'Orders history must open the user-verified direct route');
+  assert.ok(embedded.includes('CHECK_DIRECT_ORDERS_ROUTE'));
+  assert.ok(!embedded.includes('menus[0].click()'),'Do not click speculative menus');
   for(const scenario of [
-    {options:{},expected:'ORDERS_TABLE_READ',count:5},
-    {options:{section:false},expected:'ORDERS_SECTION_NOT_FOUND',count:0},
-    {options:{navMode:'caption'},expected:'ORDERS_TABLE_READ',count:5},
-    {options:{navMode:'angular'},expected:'ORDERS_TABLE_READ',count:5},
-    {options:{layout:'grid'},expected:'ORDERS_TABLE_READ',count:5},
-    {options:{layout:'empty-state'},expected:'ORDERS_TABLE_NOT_VERIFIED',count:0},
-    {options:{rows:false},expected:'ORDERS_TABLE_EMPTY',count:0}
+    {options:{direct:true,section:false},expected:'ORDERS_TABLE_READ',count:5},
+    {options:{direct:false,section:false},expected:'ORDERS_ROUTE_MISMATCH',count:0},
+    {options:{direct:true,layout:'grid'},expected:'ORDERS_TABLE_READ',count:5},
+    {options:{direct:true,layout:'empty-state'},expected:'ORDERS_TABLE_NOT_VERIFIED',count:0},
+    {options:{direct:true,rows:false},expected:'ORDERS_TABLE_EMPTY',count:0}
   ]){
     const mock=setup(scenario.options);
     const actual=await vm.runInNewContext(
@@ -101,6 +103,7 @@ async function inspect(x){
     assert.equal(actual.orders.length,scenario.count);
     assert.equal(actual.submitted_orders,0);
     assert.equal(actual.read_only,true);
+    assert.deepEqual(mock.clicks,[],'A direct orders reader must never click menu or trading controls');
     if(scenario.options.layout==='grid')assert.equal(actual.possible_grid_count,1);
     if(scenario.options.layout==='empty-state'){
       assert.equal(actual.empty_notice_detected,true);
