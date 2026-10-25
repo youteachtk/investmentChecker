@@ -49,17 +49,18 @@ function orderCSV(text){
   const keys=rows.shift()||[];
   return rows.map(row=>Object.fromEntries(keys.map((k,i)=>[k,row[i]||''])));
 }
-function orderDrafts(quotes,portfolio,ranking,now=Date.now()){
+function orderDrafts(quotes,portfolio,ranking,now=Date.now(),options={}){
+  const simulation=options.simulation_only===true;
   const fail=(status,reason)=>({ok:false,status,reason,orders:[],
     execution_enabled:false,auto_fill_enabled:false});
   if(!quotes||quotes.total!==226||!Array.isArray(quotes.quotes)||
      quotes.quotes.length!==226)
     return fail('INVALID_QUOTES','Faltan cotizaciones validadas de los 226 instrumentos.');
   const qa=orderAge(quotes.captured_at,now),va=orderAge(quotes.validated_at,now);
-  if(qa< -300000||qa>900000||va< -300000||va>900000)
+  if(!simulation&&(qa< -300000||qa>900000||va< -300000||va>900000))
     return fail('STALE_QUOTES','Cotizaciones vencidas. Sin precios actuales no se preparan compras.');
   const pa=orderAge(portfolio?.captured_at,now);
-  if(pa< -300000||pa>2100000)
+  if(!simulation&&(pa< -300000||pa>2100000))
     return fail('STALE_PORTFOLIO','Cartera vencida: vuelve a sincronizar antes de preparar compras.');
   const summary=portfolio?.summary,holds=portfolio?.holdings;
   if(!summary||!Array.isArray(holds)||holds.length>100)
@@ -165,8 +166,8 @@ function orderDrafts(quotes,portfolio,ranking,now=Date.now()){
   }
   if(!orders.length)
     return fail('NO_ELIGIBLE_NEW_BUYS','No hay compras que cumplan filtros de cotización, riesgo y diversificación.');
-  return {ok:true,status:'DRAFTS_READY_FOR_REVIEW',orders,
-    policy_version:3,copy_only:true,
+  return {ok:true,status:simulation?'HISTORICAL_SIMULATION':'DRAFTS_READY_FOR_REVIEW',orders,
+    policy_version:3,copy_only:!simulation,simulation_only:simulation,
     universe_total:quotes.quotes.length,research_covered:covered,
     research_pending:unknown,eligible_count:eligible.length,
     quote_age_minutes:Math.round(qa/60000),
@@ -200,17 +201,19 @@ async function orderFetchPublic(name){
   if(!response.ok)throw Error('Datos de mercado no disponibles.');
   return name.endsWith('.csv')?response.text():response.json();
 }
-async function orderPreview(){
+async function orderPreview(options={}){
   // No data containing private holdings is uploaded or returned to public GitHub.
   const [quotes,portfolio,csv]=await Promise.all([
     orderFetchPublic('actinver_quotes.json'),orderLoadPrivatePortfolio(),
     orderFetchPublic('ranking.csv')
   ]);
-  const proposal=orderDrafts(quotes,portfolio,orderCSV(csv));
+  const simulation=options.simulation_only===true;
+  const proposal=orderDrafts(quotes,portfolio,orderCSV(csv),Date.now(),{simulation_only:simulation});
   if(!proposal.ok){
-    await chrome.storage.local.remove('orderDraftCache');
+    if(!simulation)await chrome.storage.local.remove('orderDraftCache');
     return proposal;
   }
+  if(simulation)return proposal;
   const stamp=crypto.randomUUID();
   const result={...proposal,draft_id:stamp};
   await chrome.storage.local.set({
