@@ -134,6 +134,7 @@ async function acceptPrivateCapture(msg,sender) {
     return {ok:false,error:'No se aceptan tenencias fuera de Mi portafolio.'};
   if(!capture.summary && !capture.holdings) return {ok:false,error:'No se detectó información de cartera.'};
   const previous=await chrome.storage.local.get(['privateCache','privateLastSync']);
+  const wasReconciled=previous.privateCache?.holdings?.reconciled===true;
   const cache=previous.privateCache||{};
   // Pre-2.8.26 cached rows have no verified source and are unsafe to reuse.
   if(cache.holdings?.verified_portfolio_route!==true)delete cache.holdings;
@@ -171,7 +172,8 @@ async function acceptPrivateCapture(msg,sender) {
     portfolioReconciliationStatus:'MATCH',
     portfolioReconciliationDifferenceMXN:reconciled.difference_mxn});
   // Avoid duplicate writes only after valuation and source checks succeeded.
-  if (previous.privateLastSync && Date.now()-previous.privateLastSync<120000)
+  if (wasReconciled && previous.privateLastSync &&
+    Date.now()-previous.privateLastSync<120000)
     return {ok:true,recentlySaved:true,verified:true};
   // An empty table is only compatible with a negligible invested balance.
   // Never interpret unrecognized or missing rows as a liquidated portfolio.
@@ -317,6 +319,7 @@ async function runPortfolioSync(marketTabId) {
   catch(error){readSummary={ok:false,error:'No se pudo leer el resumen'};}
   let cache=(await chrome.storage.local.get('privateCache')).privateCache;
   let freshHoldings=!!(cache?.holdings?.verified_portfolio_route===true &&
+    cache?.holdings?.reconciled===true &&
     Date.now()-Date.parse(cache.holdings.at)<PRIVATE_TTL_MS);
   if(!freshHoldings&&!privateDiscoveryBusy){
     privateDiscoveryBusy=true;
@@ -358,6 +361,7 @@ async function runPortfolioSync(marketTabId) {
   const freshSummary=!!(cache?.summary &&
     Date.now()-Date.parse(cache.summary.at)<PRIVATE_TTL_MS);
   freshHoldings=!!(cache?.holdings?.verified_portfolio_route===true &&
+    cache?.holdings?.reconciled===true &&
     Date.now()-Date.parse(cache.holdings.at)<PRIVATE_TTL_MS);
   const hasUpload=!!(freshSummary&&freshHoldings&&
     cache?.holdings?.reconciled===true&&state.privateLastSync &&
