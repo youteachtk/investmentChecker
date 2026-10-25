@@ -639,7 +639,7 @@ async function inspectMovementsInPage(){
         const qty=number(cells[ix.qty]),price=number(cells[ix.price]);
         const fee=number(cells[ix.fee]),vat=number(cells[ix.vat]);
         const total=number(cells[ix.total]);
-        if(!/^\d{2}\/\d{2}\/\d{4}$/.test(date)||
+        if(!/^\d{1,2}\/(?:\d{1,2}|[A-Za-z]{3})\/\d{4}$/.test(date)||
           !/^\d{1,2}:\d{2}(?::\d{2})?$/.test(time)||
           !/^[A-Za-z0-9-]{1,48}$/.test(folio)||
           !/^[A-Z0-9 .&+/-]{1,35}$/.test(symbol)||!side||
@@ -723,7 +723,7 @@ async function movementHistoryStatus(){
     if(!raw||raw.schema_version!==1||raw.read_only!==true||
       raw.submitted_orders!==0||!Array.isArray(raw.movements))
       throw Error('MOVEMENTS_INVALID_RESULT');
-    const valid=(o)=>o&&/^\d{2}\/\d{2}\/\d{4}$/.test(o.date)&&
+    const valid=(o)=>o&&/^\d{1,2}\/(?:\d{1,2}|[A-Za-z]{3})\/\d{4}$/.test(o.date)&&
       /^\d{1,2}:\d{2}(?::\d{2})?$/.test(o.time)&&
       /^[A-Za-z0-9-]{1,48}$/.test(o.folio)&&
       /^[A-Z0-9 .&+/-]{1,35}$/.test(o.symbol)&&
