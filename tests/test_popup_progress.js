@@ -4,6 +4,13 @@ const assert=require('node:assert/strict');
 const vm=require('node:vm');
 const fs=require('node:fs');
 const source=fs.readFileSync('browser/brave-extension/popup.js','utf8');
+const markup=fs.readFileSync('browser/brave-extension/popup.html','utf8');
+assert.match(markup,/id="run"/);
+assert.match(markup,/id="orderPreview"/);
+assert.match(markup,/id="orderApprove"/);
+assert.doesNotMatch(markup,/<button[^>]+id="verifyQuotes"/);
+assert.doesNotMatch(markup,/<button[^>]+id="orderHistory"/);
+assert.doesNotMatch(markup,/<button[^>]+id="checkUpdate"/);
 const nodes=new Map();
 function node(id){
   if(!nodes.has(id))nodes.set(id,{
