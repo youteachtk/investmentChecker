@@ -223,6 +223,7 @@ async function route(msg,sender) {
     return {ok:true,total:226,captured_at:doc.captured_at,validated_at:doc.validated_at};
   }
   if(msg?.type==='ORDER_PREVIEW')return await orderPreview();
+  if(msg?.type==='ORDER_SIMULATION')return await orderPreview({simulation_only:true});
   if(msg?.type==='ORDER_APPROVE')return await orderApprove(msg);
   if(msg?.type==='ORDER_INSPECT_UI')return {ok:false,status:'CONTEST_SAFE_COPY_ONLY',
     error:'La inspección automatizada de formularios está deshabilitada; copia los datos manualmente.'};
