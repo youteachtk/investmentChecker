@@ -202,7 +202,12 @@ function renderOrders(result){
   $('orderMessage').textContent=
     'Datos recientes verificados. Vigencia hasta: '+
     new Date(result.expires_at).toLocaleTimeString('es-MX')+
-    '. Efectivo disponible: 
+    '. Efectivo disponible: $'+fmtMX(result.buying_power_mxn)+
+    '. Tope orientativo de la propuesta: $'+fmtMX(result.review_budget_mxn)+
+    '. Importe estimado: $'+fmtMX(result.estimated_spend_mxn)+'. '+
+    'De '+result.universe_total+' instrumentos, '+result.research_covered+
+    ' tienen historial comparable y '+result.research_pending+
+    ' siguen pendientes de investigación. Sin preferencias fijas por emisora.';
   for(const o of result.orders){
     const container=document.createElement('div');container.className='order-line';
     const label=document.createElement('label');
@@ -222,66 +227,6 @@ function renderOrders(result){
     container.append(label);$('orderList').append(container);
   }
 }
-+fmtMX(result.buying_power_mxn)+
-    '. Tope orientativo de esta propuesta: 
-  for(const o of result.orders){
-    const container=document.createElement('div');container.className='order-line';
-    const label=document.createElement('label');
-    const input=document.createElement('input');input.type='checkbox';
-    input.value=o.symbol;
-    input.addEventListener('change',refreshOrderApproval);
-    const text=document.createElement('span');
-    const ticker=document.createElement('strong');
-    ticker.textContent=o.symbol+' · '+o.quantity+' títulos';
-    const detail=document.createElement('span');detail.className='order-detail';
-    detail.textContent='Límite $'+fmtMX(o.limit_mxn)+
-      ' · máximo estimado $'+fmtMX(o.estimated_total_mxn)+
-      ' · diferencial '+Number(o.spread_pct).toFixed(3)+'%';
-    text.append(ticker,detail);label.append(input,text);
-    container.append(label);$('orderList').append(container);
-  }
-}
-+fmtMX(result.review_budget_mxn)+
-    '. Importe estimado: 
-  for(const o of result.orders){
-    const container=document.createElement('div');container.className='order-line';
-    const label=document.createElement('label');
-    const input=document.createElement('input');input.type='checkbox';
-    input.value=o.symbol;
-    input.addEventListener('change',refreshOrderApproval);
-    const text=document.createElement('span');
-    const ticker=document.createElement('strong');
-    ticker.textContent=o.symbol+' · '+o.quantity+' títulos';
-    const detail=document.createElement('span');detail.className='order-detail';
-    detail.textContent='Límite $'+fmtMX(o.limit_mxn)+
-      ' · máximo estimado $'+fmtMX(o.estimated_total_mxn)+
-      ' · diferencial '+Number(o.spread_pct).toFixed(3)+'%';
-    text.append(ticker,detail);label.append(input,text);
-    container.append(label);$('orderList').append(container);
-  }
-}
-+fmtMX(result.estimated_spend_mxn)+'. '+
-    'De '+result.universe_total+' instrumentos, '+result.research_covered+
-    ' tienen historial comparable y '+result.research_pending+
-    ' siguen pendientes de investigación. Ningún instrumento tiene prioridad fija.';
-  for(const o of result.orders){
-    const container=document.createElement('div');container.className='order-line';
-    const label=document.createElement('label');
-    const input=document.createElement('input');input.type='checkbox';
-    input.value=o.symbol;
-    input.addEventListener('change',refreshOrderApproval);
-    const text=document.createElement('span');
-    const ticker=document.createElement('strong');
-    ticker.textContent=o.symbol+' · '+o.quantity+' títulos';
-    const detail=document.createElement('span');detail.className='order-detail';
-    detail.textContent='Límite $'+fmtMX(o.limit_mxn)+
-      ' · máximo estimado $'+fmtMX(o.estimated_total_mxn)+
-      ' · diferencial '+Number(o.spread_pct).toFixed(3)+'%';
-    text.append(ticker,detail);label.append(input,text);
-    container.append(label);$('orderList').append(container);
-  }
-}
-
 function copyTextButton(label,value){
   const b=document.createElement('button');
   b.type='button';b.textContent=label;
