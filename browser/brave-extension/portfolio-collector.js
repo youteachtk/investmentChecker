@@ -9,6 +9,8 @@
   const canon = s => norm(s).toLowerCase().normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
   const visible = e => !!(e && e.getClientRects().length);
+  // A movement table has Emisora and Títulos too; never interpret its fills as holdings.
+  const onPortfolioRoute = () => /^#\/portafolio(?:[/?#]|$)/i.test(String(location.hash || ''));
   const money = s => {
     const txt=norm(s);
     const m = txt.match(/[-+]?\s*\$\s*[\d,]+(?:\.\d{1,2})?/);
@@ -80,6 +82,7 @@
   }
 
   function holdings() {
+    if (!onPortfolioRoute()) return null;
     const out = [];
     let confirmedEmptyTable=false;
     for (const table of document.querySelectorAll('table,[role="table"]')) {
@@ -88,6 +91,8 @@
       const sym = head.findIndex(h => /emisora|simbolo|instrumento|accion|ticker|fondo|serie/.test(h));
       const qty = head.findIndex(h => /titulos|cantidad|posicion|unidades|participaciones|numero de/.test(h));
       if (sym < 0 || qty < 0 || head.some(h => /volumen de compra|volumen de venta|postura de compra|postura de venta/.test(h))) continue;
+      // Reject the actual Movimientos schema even if the SPA keeps an old DOM visible.
+      if (head.some(h => /^(fecha|hora|folio|operacion|comision|iva|importe total)(\b|$)/.test(h))) continue;
       const cost = head.findIndex(h => /costo promedio|precio promedio|precio de compra/.test(h));
       const val = head.findIndex(h => /valor actual|valor de mercado|valuacion|importe actual/.test(h));
       const price = head.findIndex(h => /ultimo precio|precio actual|cotizacion/.test(h));
