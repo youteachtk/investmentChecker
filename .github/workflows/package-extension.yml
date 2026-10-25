@@ -7,6 +7,7 @@ on:
       - 'tests/test_collector_ui.js'
       - 'tests/test_portfolio_ui.js'
       - 'tests/test_portfolio_source_guard.js'
+      - 'tests/test_portfolio_multisection.js'
       - 'tests/test_portfolio_navigation.js'
       - 'tests/test_direct_portfolio.js'
       - 'tests/test_isolated_market_capture.js'
@@ -50,6 +51,8 @@ jobs:
         run: node tests/test_portfolio_ui.js
       - name: Reject movements as live holdings and stale portfolio cache
         run: node tests/test_portfolio_source_guard.js
+      - name: Read portfolio Acciones, ETF tabs and pages only in hidden tab
+        run: node tests/test_portfolio_multisection.js
       - name: Regression test for Tu inversion navigation
         run: node tests/test_portfolio_navigation.js
       - name: Regression test for exact Mi portafolio URL and domain permissions
