@@ -27,7 +27,7 @@ async function test(redirect=false){
       'https://www.retoactinver.com/RetoActinver/#/inicio':
       'https://www.retoactinver.com/RetoActinver/#/portafolio'}),
     remove:async id=>actions.push({remove:id})
-  }};
+  },scripting:{executeScript:async arg=>{actions.push({script:arg});return[{result:true}];}}};
   let diagnostic;
   const context={
     chrome,Date,Promise,PRIVATE_TTL_MS:1800000,
@@ -40,7 +40,7 @@ async function test(redirect=false){
       if(captureCount===1)state.privateCache.summary={
         at,values:{total_value:2000,investments:0,buying_power:2000}};
       else{
-        state.privateCache.holdings={at,values:[],verified_portfolio_route:true};
+        state.privateCache.holdings={at,values:[],verified_portfolio_route:true,reconciled:true};
         state.privateLastSync=Date.now();
       }
       return {ok:true};
@@ -56,7 +56,9 @@ async function test(redirect=false){
     'https://www.retoactinver.com/RetoActinver/#/portafolio');
   assert.equal(actions[0].create.openerTabId,14);
   assert.equal(actions[0].create.active,false);
-  assert.equal(actions[1].remove,24);
+  assert.equal(actions.at(-1).remove,24);
+  if(!redirect)assert.ok(actions.some(x=>x.script?.target?.tabId===24),
+    'Only the inactive portfolio tab can enable safe category scanning');
   if(redirect){
     assert.equal(captureCount,1);
     assert.equal(diagnostic.code,'PRIVATE_NAV_FAILED');
