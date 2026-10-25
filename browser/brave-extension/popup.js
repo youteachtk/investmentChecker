@@ -14,6 +14,7 @@ async function refresh(){
     'orderHistoryLastRemoteStatus','orderHistoryLastRemoteAt',
     'orderHistoryDiagnosticCode','orderHistoryDiagnosticPhase',
     'orderHistoryDiagnosticUploaded','orderHistoryLastCheckedAt','orderHistoryCounts',
+    'orderHistoryCombinedMessage','orderHistoryCombinedAt',
     'lastPublishedExtensionVersion','lastPublishedVersionCheckedAt',
     'lastNativeUpdateStatus','lastNativeUpdateError','lastNativeUpdateSucceeded',
     'syncProgress','syncStartedAt','manualSyncRequest','manualSyncHandledId',
@@ -70,7 +71,10 @@ async function refresh(){
     'Último envío iniciado en GitHub: '+
       new Date(s.lastSync).toLocaleString('es-MX'):
     'Aún no hay un envío registrado.';
-  if(s.orderHistoryLastRemoteAt || s.orderHistoryLastCheckedAt){
+  if(s.orderHistoryCombinedMessage&&
+    Date.parse(s.orderHistoryCombinedAt)>=Date.parse(s.orderHistoryLastCheckedAt||'1970-01-01')){
+    $('orderHistoryMessage').textContent=s.orderHistoryCombinedMessage;
+  }else if(s.orderHistoryLastRemoteAt || s.orderHistoryLastCheckedAt){
     const dates=[s.orderHistoryLastRemoteAt,s.orderHistoryLastCheckedAt]
       .filter(value=>Number.isFinite(Date.parse(value)));
     const when=dates.sort((a,b)=>Date.parse(b)-Date.parse(a))[0]||null;
@@ -255,7 +259,7 @@ $('orderStageVisa').addEventListener('click',async()=>{
 });
 $('orderHistory').addEventListener('click',async()=>{
   $('orderHistory').disabled=true;
-  $('orderHistoryMessage').textContent='Consultando la sección Órdenes de Actinver…';
+  $('orderHistoryMessage').textContent='Consultando Órdenes y las páginas de Movimientos de Actinver…';
   const result=await send({type:'ORDER_HISTORY'});
   $('orderHistoryMessage').textContent=result?.message||result?.error||
     'No se pudo verificar el historial de órdenes.';
