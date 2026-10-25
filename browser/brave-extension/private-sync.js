@@ -221,7 +221,7 @@ async function uploadPrivateDiagnostic(raw) {
     'PRIVATE_START','PRIVATE_NAV','PRIVATE_READ','PRIVATE_DONE',
     'ORDERS_START','ORDERS_NAV','ORDERS_READ','ORDERS_SAVE','ORDERS_DONE']);
   const codes=new Set(['TABS','PAGINATION','TABLE','TIMEOUT','OTHER',
-    'PRIVATE_SUMMARY_MISSING','PRIVATE_HOLDINGS_MISSING',
+    'PRIVATE_SUMMARY_MISSING','PRIVATE_HOLDINGS_MISSING','PRIVATE_HOLDINGS_MISMATCH',
     'PRIVATE_NAV_FAILED','PRIVATE_UPLOAD_FAILED','PRIVATE_OK',
     'ORDERS_NAV_FAILED','ORDERS_TABLE_MISSING','ORDERS_SAVE_FAILED','ORDERS_OK','ORDERS_ERROR',
     'ORDERS_READER_MISSING','ORDERS_INJECTION_FAILED','ORDERS_INVALID_RESULT',
@@ -339,6 +339,10 @@ async function runPortfolioSync(marketTabId) {
       if(navStep!=='direct-portfolio'){
         navError=true;
       }else{
+        // Only this disposable, inactive tab may activate read-only portfolio
+        // category tabs and numeric pagination; never the user's visible tab.
+        await chrome.scripting.executeScript({target:{tabId:temporary.id},
+          world:'ISOLATED',func:()=>{globalThis.__icPortfolioReadSections=true;}});
         readHoldings=await capturePrivatePortfolio(temporary.id);
       }
     }catch(error){
@@ -362,6 +366,7 @@ async function runPortfolioSync(marketTabId) {
     (!freshHoldings&&navError)?'PRIVATE_NAV_FAILED':
     !freshSummary?'PRIVATE_SUMMARY_MISSING':
     !freshHoldings?'PRIVATE_HOLDINGS_MISSING':
+    !cache?.holdings?.reconciled?'PRIVATE_HOLDINGS_MISMATCH':
     'PRIVATE_UPLOAD_FAILED';
   try{
     await uploadPrivateDiagnostic({
@@ -377,6 +382,7 @@ async function runPortfolioSync(marketTabId) {
     PRIVATE_SUMMARY_MISSING:'No se encontraron saldos válidos.',
     PRIVATE_NAV_FAILED:'Mi portafolio no abrió con la sesión actual.',
     PRIVATE_HOLDINGS_MISSING:'Mi portafolio abrió, pero aún no se reconocen las posiciones.',
+    PRIVATE_HOLDINGS_MISMATCH:'Las posiciones no cuadran con el total invertido; cartera aún sin verificar.',
     PRIVATE_UPLOAD_FAILED:'Se detectaron datos, pero GitHub no confirmó la cartera.'
   }[code]||'Cartera privada pendiente';
   await privateState(label+' Diagnóstico guardado solo en GitHub privado.');
