@@ -1,5 +1,14 @@
 # Estado y continuidad de InvestmentChecker
 
+## Cambio preparado — 25 de octubre de 2026
+
+- Versión de código **2.8.29**, pendiente de publicación/instalación hasta confirmar GitHub Actions y Brave.
+- Popup reducido a tres acciones principales: sincronizar, generar propuestas, preparar datos para copiar (esta última aparece solamente al seleccionar propuestas vigentes).
+- Cuando la generación normal rechaza cotizaciones o cartera caducadas, se ofrece automáticamente una **simulación histórica**, etiquetada y sin opción de aprobación ni copia operativa.
+- No se alteraron los límites temporales de las propuestas vigentes, ni se habilitaron operaciones automáticas.
+- Pruebas específicas Node: `test_order_preflight`, `test_order_copy_only`, `test_popup_progress`, `test_worker_boot`, `test_stable_collector_contract`, todas correctas en la sesión de desarrollo.
+- Pruebas antiguas ajenas al empaquetado actual `test_manual_sync_recovery` y `test_sync_fast_ack` fallan por expectativas del anterior mecanismo manual; requieren revisión independiente.
+
 Última revisión documental: 2026-10-25 (hora de México).
 Repositorio: `youteachtk/investmentChecker`, rama `main`.
 
