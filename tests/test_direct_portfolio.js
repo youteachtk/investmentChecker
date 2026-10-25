@@ -40,7 +40,7 @@ async function test(redirect=false){
       if(captureCount===1)state.privateCache.summary={
         at,values:{total_value:2000,investments:0,buying_power:2000}};
       else{
-        state.privateCache.holdings={at,values:[]};
+        state.privateCache.holdings={at,values:[],verified_portfolio_route:true};
         state.privateLastSync=Date.now();
       }
       return {ok:true};
