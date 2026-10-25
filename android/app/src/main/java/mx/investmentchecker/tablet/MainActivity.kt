@@ -15,6 +15,23 @@ import android.widget.LinearLayout
 import android.widget.TextView
 
 class MainActivity : Activity() {
+    private var awaitingOverlayPermission = false
+
+    private fun launchPanel() {
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 5)
+        }
+        startForegroundService(Intent(this, OverlayService::class.java))
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (awaitingOverlayPermission && Settings.canDrawOverlays(this)) {
+            awaitingOverlayPermission = false
+            launchPanel()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val content = LinearLayout(this).apply {
@@ -34,13 +51,11 @@ class MainActivity : Activity() {
             text = "Mostrar panel flotante"
             setOnClickListener {
                 if (!Settings.canDrawOverlays(this@MainActivity)) {
+                    awaitingOverlayPermission = true
                     startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                         Uri.parse("package:$packageName")))
                 } else {
-                    if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                        requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 5)
-                    }
-                    startForegroundService(Intent(this@MainActivity, OverlayService::class.java))
+                    launchPanel()
                 }
             }
         }
