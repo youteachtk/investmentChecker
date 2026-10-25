@@ -617,7 +617,7 @@ async function inspectMovementsInPage(){
       const headers=[...table.querySelectorAll(
         'thead th,[role="columnheader"],mat-header-cell,.mat-header-cell,.mat-mdc-header-cell'
       )].map(x=>norm(label(x)));
-      const col=(word)=>headers.findIndex(h=>h===word||h.startsWith(word+' '));
+      const col=(word)=>headers.findIndex(h=>h===word||h.startsWith(word));
       const ix={date:col('fecha'),time:col('hora'),folio:col('folio'),
         symbol:col('emisora'),side:col('operacion'),qty:col('titulos'),
         price:col('precio'),fee:col('comision'),vat:col('iva'),total:col('importe total')};
