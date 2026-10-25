@@ -91,7 +91,7 @@ async function inspect(x){
     {options:{direct:true,section:false},expected:'ORDERS_TABLE_READ',count:5},
     {options:{direct:false,section:false},expected:'ORDERS_ROUTE_MISMATCH',count:0},
     {options:{direct:true,layout:'grid'},expected:'ORDERS_TABLE_READ',count:5},
-    {options:{direct:true,layout:'empty-state'},expected:'ORDERS_TABLE_NOT_VERIFIED',count:0},
+    {options:{direct:true,layout:'empty-state'},expected:'ORDERS_NO_PROGRAMMED',count:0},
     {options:{direct:true,rows:false},expected:'ORDERS_TABLE_EMPTY',count:0}
   ]){
     const mock=setup(scenario.options);
