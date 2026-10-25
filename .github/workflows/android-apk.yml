@@ -21,7 +21,7 @@ jobs:
       # GitHub's ubuntu-latest image already includes the Android SDK tools.
       # setup-android@v3 currently fails trying to install removed 'tools'.
       - name: Install Android SDK target
-        run: sdkmanager --install 'platforms;android-35' 'build-tools;35.0.0'
+        run: /usr/local/lib/android/sdk/cmdline-tools/16.0/bin/sdkmanager --sdk_root=/usr/local/lib/android/sdk --install 'platforms;android-35' 'build-tools;35.0.0'
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
