@@ -347,8 +347,21 @@ async function inspectOrdersInPage(){
   const result={schema_version:1,read_only:true,submitted_orders:0,
     stage:'ORDERS_NOT_OPEN',probe_step:'INITIAL',orders_page_seen:false,
     visible_table_count:0,visible_control_count:0,order_nav_candidate_count:0,
-    investment_menu_candidate_count:0,rows_scanned:0,orders:[]};
+    investment_menu_candidate_count:0,rows_scanned:0,orders:[],
+    route_changed:false,orders_route_seen:false,
+    possible_grid_count:0,empty_notice_detected:false};
   const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+  const route=()=>typeof location!=='undefined'?String(location.hash||''):'';
+  const beforeRoute=route();
+  const refreshStructure=()=>{
+    result.route_changed=route()!==beforeRoute;
+    result.orders_route_seen=/ordenes|orden\b/i.test(norm(route()));
+    result.possible_grid_count=Math.min(100,
+      [...document.querySelectorAll('[role="grid"],mat-table,.mat-table,.mat-mdc-table,.cdk-table')]
+        .filter(visible).length);
+    result.empty_notice_detected=/\b(no hay ordenes|sin ordenes|no tienes ordenes|no se encontraron ordenes|no existen ordenes)\b/
+      .test(norm(document.body?.innerText||''));
+  };
   const classify=s=>{
     const v=norm(s);
     if(/^(ejecutada|ejecutado|asignada|asignado|completada|completado|filled)$/.test(v))
@@ -362,10 +375,14 @@ async function inspectOrdersInPage(){
     return 'unknown';
   };
   function readTable(){
-    const tables=[...document.querySelectorAll('table,[role="table"]')].filter(visible);
+    const tables=[...document.querySelectorAll(
+      'table,[role="table"],[role="grid"],mat-table,.mat-table,.mat-mdc-table,.cdk-table'
+    )].filter(visible);
     result.visible_table_count=Math.min(1000,tables.length);
     for(const table of tables){
-      const hs=[...table.querySelectorAll('thead th,[role="columnheader"]')].map(label);
+      const hs=[...table.querySelectorAll(
+        'thead th,[role="columnheader"],mat-header-cell,.mat-header-cell,.mat-mdc-header-cell'
+      )].map(label);
       const symbol=hs.findIndex(h=>/emisora|simbolo|instrumento|accion|titulo valor/.test(h));
       const status=hs.findIndex(h=>/^(estatus|estado|situacion|estatus de orden|estado de orden)$/.test(h));
       if(symbol<0||status<0)continue;
@@ -373,10 +390,12 @@ async function inspectOrdersInPage(){
       const qty=hs.findIndex(h=>/titulos|cantidad|volumen/.test(h));
       const folio=hs.findIndex(h=>/^(folio|numero de orden|no de orden|id orden)$/.test(h));
       const date=hs.findIndex(h=>/^(fecha|fecha de orden|fecha de operacion)$/.test(h));
-      const rows=[...table.querySelectorAll('tbody tr,[role="rowgroup"] [role="row"]')].filter(visible);
+      const rows=[...table.querySelectorAll(
+        'tbody tr,[role="rowgroup"] [role="row"],mat-row,.mat-row,.mat-mdc-row'
+      )].filter(visible);
       const found=[];
       for(const row of rows.slice(0,100)){
-        const v=[...row.querySelectorAll('td,[role="cell"]')]
+        const v=[...row.querySelectorAll('td,[role="cell"],mat-cell,.mat-cell,.mat-mdc-cell')]
           .map(el=>String(el.innerText||el.textContent||'').trim());
         if(v.length<=Math.max(symbol,status))continue;
         const name=v[symbol].toUpperCase().replace(/[\*ⓘℹ]/g,'').trim();
@@ -423,14 +442,18 @@ async function inspectOrdersInPage(){
         result.probe_step='FIND_ORDER_NAVIGATION';
       }
     }
-    if(links.length!==1){result.stage=links.length>1?
-      'ORDERS_NAV_AMBIGUOUS':'ORDERS_SECTION_NOT_FOUND';return result;}
+    if(links.length!==1){
+      refreshStructure();
+      result.stage=links.length>1?
+        'ORDERS_NAV_AMBIGUOUS':'ORDERS_SECTION_NOT_FOUND';return result;
+    }
     result.probe_step='OPEN_ORDER_NAVIGATION';
     links[0].click();
     result.orders_page_seen=true;
     result.probe_step='WAIT_ORDERS_TABLE';
     for(let i=0;i<48;i++){await sleep(250);current=readTable();if(current)break;}
   }else result.orders_page_seen=true;
+  refreshStructure();
   if(!current){result.probe_step='NO_MATCHING_TABLE';
     result.stage='ORDERS_TABLE_NOT_VERIFIED';return result;}
   result.rows_scanned=Math.min(100,current.rows);
