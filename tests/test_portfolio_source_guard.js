@@ -50,6 +50,15 @@ const sender=(hash)=>({tab:{id:17,url:'https://retoactinver.com/RetoActinver/'+h
   assert.equal(incomplete.reason,'HOLDINGS_VALUE_MISMATCH');
   assert.equal(missing.writes.length,0);
   assert.equal(missing.state.portfolioReconciliationStatus,'HOLDINGS_VALUE_MISMATCH');
+  const formerlySaved=setup({holdings:{at:now,values:[{
+    symbol:'PFE',quantity:1,price_mxn:100}],verified_portfolio_route:true,
+    reconciled:false},summary:{at:now,values:summary}});
+  formerlySaved.state.privateLastSync=Date.now()-30000;
+  const replaced=await formerlySaved.receive(msg,sender('#/portafolio'));
+  assert.equal(replaced.ok,true);
+  assert.equal(formerlySaved.writes.length,1,
+    'Old incomplete cache must not suppress newly reconciled GitHub upload');
+
 
   const stale=setup({holdings:{at:now,values:[{symbol:'PFE',quantity:999}]},
     summary:{at:now,values:summary}});
