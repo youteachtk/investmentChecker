@@ -477,9 +477,12 @@ async function orderHistoryStatus(){
     if(!/^https:\/\/(?:www\.)?retoactinver\.com$/.test(origin))
       throw Error('Origen de Actinver no autorizado.');
     diag.phase='ORDERS_NAV';
-    tab=await chrome.tabs.create({url:origin+'/RetoActinver/#/portafolio',
+    tab=await chrome.tabs.create({url:'https://www.retoactinver.com/RetoActinver/#/ordenes',
       active:false,openerTabId:source.id});
-    if(!await waitForPage(tab.id))throw Error('No cargó la página privada.');
+    if(!await waitForPage(tab.id))throw Error('No cargó la página de órdenes.');
+    const landed=await chrome.tabs.get(tab.id);
+    if(!/^https:\/\/www\.retoactinver\.com\/RetoActinver\/#\/ordenes(?:[/?#]|$)/i.test(landed.url||''))
+      throw Error('ORDERS_ROUTE_REDIRECTED');
     diag.phase='ORDERS_READ';
     let result;
     try{
