@@ -27,6 +27,10 @@ class OverlayContract(unittest.TestCase):
         self.assertIn('Aún no hay propuestas vigentes', service)
         self.assertNotIn('Comprar', service)
 
+    def test_brave_is_first_browser_choice(self):
+        activity = (ROOT / 'app/src/main/java/mx/investmentchecker/tablet/MainActivity.kt').read_text()
+        self.assertIn('setPackage("com.brave.browser")', activity)
+
 
 if __name__ == '__main__':
     unittest.main()
