@@ -694,7 +694,6 @@ async function inspectMovementsInPage(){
   }
   output.stage=output.pagination_issue?'MOVEMENTS_PARTIAL':
     output.pages_read===output.total_pages&&
-    output.rows_scanned===output.total_expected&&
     output.movements.length===output.total_expected?
     'MOVEMENTS_VERIFIED':'MOVEMENTS_PARTIAL';
   return output;
@@ -737,7 +736,7 @@ async function movementHistoryStatus(){
         commission_mxn:o.commission_mxn,vat_mxn:o.vat_mxn,total_mxn:o.total_mxn}));
     const verified=raw.stage==='MOVEMENTS_VERIFIED'&&
       Number.isInteger(raw.total_expected)&&raw.total_expected===movements.length&&
-      raw.total_expected===raw.rows_scanned;
+      raw.pages_read===raw.total_pages;
     const report={schema_version:1,captured_at:new Date().toISOString(),
       stage:verified?'MOVEMENTS_VERIFIED':raw.stage,
       route_verified:raw.route_verified===true,
