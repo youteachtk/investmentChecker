@@ -1,3 +1,11 @@
+## v2.8.26 — Aislamiento de cartera real frente a Movimientos (25/oct/2026)
+
+- Se encontró que `actinver/portfolio-latest.json` recogía filas de `#/movimientos` como posiciones porque ambas tablas comparten las columnas «Emisora» y «Títulos». Los movimientos reales permanecen en `actinver/movements-latest.json`; este archivo no se modifica.
+- El lector de posiciones solo acepta la ruta autenticada `#/portafolio` y excluye los encabezados característicos de transacciones («Fecha», «Hora», «Folio», «Operación», «Comisión», «IVA» e «Importe total»). Se mantiene la captura del resumen financiero por separado.
+- El receptor en segundo plano comprueba independientemente la ruta de la pestaña que envía posiciones, rechaza datos de otros apartados y solo combina un resumen con una caché de posiciones **con procedencia verificada**.
+- Una caché previa sin esa comprobación no se reutiliza ni se vuelve a publicar como cartera; debe leerse nuevamente la página real de Mi portafolio. No se elimina el registro antiguo de GitHub hasta tener nueva lectura verificada.
+- Se añadieron pruebas para rutas incorrectas, transición DOM Angular y rechazo de caché sin origen comprobado. Sin cambios a la colección de 226 cotizaciones, lectura real de órdenes y Movimientos, ni al actualizador manual de Windows.
+
 ## v2.8.25 — Corrección de la captura real (24/oct/2026)
 
 - En GitHub privado, la v2.8.24 capturó **12 movimientos válidos** distribuidos en **2 páginas**, pero marcó `MOVEMENTS_PARTIAL` porque encontró **14 filas del DOM**. La verificación ahora comprueba el total de movimientos *válidos* y las páginas leídas, sin exigir que cada fila del DOM sea una operación. No deduplica folios repetidos.
