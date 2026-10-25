@@ -83,8 +83,20 @@ async function inspect(x){
   const to=orderPreflight.indexOf('async function orderHistoryStatus(){',from);
   assert.ok(from>=0 && to>from,'Embedded orders reader must exist');
   const embedded=orderPreflight.slice(from,to);
-  assert.ok(orderPreflight.includes("https://www.retoactinver.com/RetoActinver/#/ordenes"),
-    'Orders history must open the user-verified direct route');
+  assert.ok(orderPreflight.includes("url:origin+'/RetoActinver/#/ordenes'"),
+    'Orders history must open the direct route on the authenticated Actinver host');
+  assert.ok(orderPreflight.includes('waitForReadOnlyOrdersRoute(tab.id)'),
+    'Do not depend on a full browser load to inspect Angular Orders');
+  const waitStart=orderPreflight.indexOf('async function waitForReadOnlyOrdersRoute(');
+  const waitEnd=orderPreflight.indexOf('async function scheduledOrdersStatus(){',waitStart);
+  assert.ok(waitStart>=0&&waitEnd>waitStart);
+  const loadingChrome={tabs:{get:async id=>({id,status:'loading',
+    url:'https://retoactinver.com/RetoActinver/#/ordenes'})},
+    scripting:{executeScript:async()=>[{result:{hash:'#/ordenes',ready:'interactive'}}]}};
+  const waitFn=vm.runInNewContext(orderPreflight.slice(waitStart,waitEnd)+
+    '\nwaitForReadOnlyOrdersRoute', {chrome:loadingChrome,Date,setTimeout});
+  assert.equal(await waitFn(11),true,
+    'Orders should be ready while Chrome still reports status loading');
   assert.ok(embedded.includes('CHECK_DIRECT_ORDERS_ROUTE'));
   assert.ok(!embedded.includes('menus[0].click()'),'Do not click speculative menus');
   for(const scenario of [
