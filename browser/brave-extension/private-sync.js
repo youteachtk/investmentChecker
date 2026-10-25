@@ -104,6 +104,26 @@ function sanitizePrivateCapture(raw) {
   }
   return {captured_at:raw.captured_at,summary:summary && Object.keys(summary).length>=3?summary:null,holdings};
 }
+// Compare real holdings valuations against the investment subtotal.
+// Do not accept a partial stocks-only table as a complete portfolio.
+function reconcilePrivatePositions(summary,holdings){
+  if(!summary||!Number.isFinite(summary.investments)||!Array.isArray(holdings))
+    return {ok:false,reason:'MISSING_VALUES'};
+  let valued=0;
+  for(const item of holdings){
+    const value=Number.isFinite(item.value_mxn)?item.value_mxn:
+      Number.isFinite(item.price_mxn)?item.quantity*item.price_mxn:null;
+    if(!Number.isFinite(value)||value<0)
+      return {ok:false,reason:'MISSING_POSITION_VALUE'};
+    valued+=value;
+  }
+  const diff=Math.round((summary.investments-valued)*100)/100;
+  const tolerance=Math.max(100,summary.investments*.025);
+  return {ok:Math.abs(diff)<=tolerance,reason:Math.abs(diff)<=tolerance?
+    'MATCH':'HOLDINGS_VALUE_MISMATCH',
+    difference_mxn:diff,calculated_value_mxn:Math.round(valued*100)/100};
+}
+
 async function acceptPrivateCapture(msg,sender) {
   const s=await chrome.storage.local.get('privateEnabled');
   if(!s.privateEnabled) return {ok:false,error:'Sincronización privada no habilitada.'};
@@ -119,7 +139,7 @@ async function acceptPrivateCapture(msg,sender) {
   if(cache.holdings?.verified_portfolio_route!==true)delete cache.holdings;
   if(capture.summary) cache.summary={at:capture.captured_at,values:capture.summary};
   if(capture.holdings) cache.holdings={at:capture.captured_at,values:capture.holdings,
-    verified_portfolio_route:true};
+    verified_portfolio_route:true,reconciled:false};
   await chrome.storage.local.set({privateCache:cache});
   if(!cache.summary || !cache.holdings || cache.holdings.verified_portfolio_route!==true) {
     const missing=cache.summary?'posiciones (Tu inversión)':'resumen (Monitores)';
@@ -131,11 +151,28 @@ async function acceptPrivateCapture(msg,sender) {
     await privateState('La captura de cartera está incompleta o caducada; se actualizará al acceder a Actinver.');
     return {ok:true,partial:true};
   }
-  // Avoid duplicate writes from React re-renders and the background tab.
-  if (previous.privateLastSync && Date.now()-previous.privateLastSync<120000)
-    return {ok:true,recentlySaved:true};
   const payload={schema_version:1,captured_at:new Date().toISOString(),
     summary:cache.summary.values,holdings:cache.holdings.values};
+  const reconciled=reconcilePrivatePositions(payload.summary,payload.holdings);
+  if(!reconciled.ok){
+    cache.holdings.reconciled=false;
+    await chrome.storage.local.set({privateCache:cache,
+      portfolioReconciliationStatus:reconciled.reason,
+      portfolioReconciliationDifferenceMXN:reconciled.difference_mxn??null});
+    const detail=reconciled.reason==='HOLDINGS_VALUE_MISMATCH'?
+      'La suma de las posiciones no coincide con Inversiones. Faltan filas o categorías.':
+      'Faltan valores para verificar todas las posiciones.';
+    await privateState('Cartera incompleta: '+detail+' No se sobrescribió GitHub privado.');
+    return {ok:true,partial:true,verified:false,
+      status:'PORTFOLIO_INCOMPLETE',reason:reconciled.reason};
+  }
+  cache.holdings.reconciled=true;
+  await chrome.storage.local.set({privateCache:cache,
+    portfolioReconciliationStatus:'MATCH',
+    portfolioReconciliationDifferenceMXN:reconciled.difference_mxn});
+  // Avoid duplicate writes only after valuation and source checks succeeded.
+  if (previous.privateLastSync && Date.now()-previous.privateLastSync<120000)
+    return {ok:true,recentlySaved:true,verified:true};
   // An empty table is only compatible with a negligible invested balance.
   // Never interpret unrecognized or missing rows as a liquidated portfolio.
   if(payload.holdings.length===0 &&
@@ -318,7 +355,8 @@ async function runPortfolioSync(marketTabId) {
     Date.now()-Date.parse(cache.summary.at)<PRIVATE_TTL_MS);
   freshHoldings=!!(cache?.holdings?.verified_portfolio_route===true &&
     Date.now()-Date.parse(cache.holdings.at)<PRIVATE_TTL_MS);
-  const hasUpload=!!(freshSummary&&freshHoldings&&state.privateLastSync &&
+  const hasUpload=!!(freshSummary&&freshHoldings&&
+    cache?.holdings?.reconciled===true&&state.privateLastSync &&
     Date.now()-state.privateLastSync<PRIVATE_TTL_MS);
   const code=hasUpload?'PRIVATE_OK':
     (!freshHoldings&&navError)?'PRIVATE_NAV_FAILED':
