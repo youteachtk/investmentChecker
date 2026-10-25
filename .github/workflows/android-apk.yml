@@ -18,10 +18,20 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      # GitHub's ubuntu-latest image already includes the Android SDK tools.
-      # setup-android@v3 currently fails trying to install removed 'tools'.
+      - name: Install Android command line tools
+        run: |
+          mkdir -p "$RUNNER_TEMP/android-sdk/cmdline-tools"
+          curl --fail --location --silent --show-error --output "$RUNNER_TEMP/android-tools.zip" \
+            'https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip'
+          unzip -q "$RUNNER_TEMP/android-tools.zip" -d "$RUNNER_TEMP/android-sdk/cmdline-tools"
+          mv "$RUNNER_TEMP/android-sdk/cmdline-tools/cmdline-tools" "$RUNNER_TEMP/android-sdk/cmdline-tools/latest"
+          echo "ANDROID_HOME=$RUNNER_TEMP/android-sdk" >> "$GITHUB_ENV"
+          echo "$RUNNER_TEMP/android-sdk/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
       - name: Install Android SDK target
-        run: /usr/local/lib/android/sdk/cmdline-tools/16.0/bin/sdkmanager --sdk_root=/usr/local/lib/android/sdk --install 'platforms;android-35' 'build-tools;35.0.0'
+        run: |
+          set +o pipefail
+          yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses
+          sdkmanager --sdk_root="$ANDROID_HOME" --install 'platforms;android-35' 'build-tools;35.0.0'
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
