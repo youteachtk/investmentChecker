@@ -1,3 +1,10 @@
+## v2.8.24 — Movimientos ejecutados y órdenes programadas por separado (24/oct/2026)
+
+- **Movimientos**: lee exclusivamente `#/movimientos`, usando las diez columnas vistas en Actinver (fecha, hora, folio, emisora, operación, títulos, precio, comisión, IVA e importe total); recorre botones **numéricos** de paginación de manera limitada y conserva ejecuciones múltiples con el mismo folio. El registro se guarda **solo en el repositorio privado** `actinver/movements-latest.json`. Nunca se declara completo si la cantidad de filas no coincide con el total indicado en la página.
+- **Órdenes programadas**: consulta `#/ordenes` de forma separada; el aviso textual «No hay órdenes programadas» es válido como ausencia de órdenes *programadas*, pero no prueba ausencia de movimientos ejecutados y no se infieren cero operaciones.
+- El botón de Brave ahora indica ambas lecturas. No se envían compras, ventas, cancelaciones ni propuestas nuevas. Se conservan sin alterar las capturas de 226 cotizaciones y la cartera privada.
+- Sin cambios al instalador manual de Windows ni a los mecanismos de actualización; se publica solamente una nueva versión de la **extensión** para usar con el ejecutable reutilizable ya instalado.
+
 ## v2.8.23 — Ruta real del historial de órdenes (24/oct/2026)
 
 Corregido el destino de consulta: la inspección de órdenes abre **directamente** `https://www.retoactinver.com/RetoActinver/#/ordenes`, que fue proporcionado y verificado por el usuario, en una pestaña secundaria de solo lectura. La versión anterior partía erróneamente de `#/portafolio` e intentaba descubrir el historial por menús. Ahora el lector exige `#/ordenes`, no pulsa navegación ni controles de operaciones y distingue rutas incorrectas o redirecciones a inicio de sesión de las tablas vacías. Se mantienen las protecciones contra órdenes enviadas y los registros sanitizados en GitHub privado. Que el paquete esté publicado no acredita que el puente de Windows lo haya instalado; el estado local se debe verificar separadamente.
