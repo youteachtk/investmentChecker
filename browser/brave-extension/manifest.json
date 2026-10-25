@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.8.24",
-  "description": "2.8.24: Movimientos reales paginados y órdenes programadas leídas por separado, sin enviar operaciones.",
+  "version": "2.8.25",
+  "description": "2.8.25: verifica 12 movimientos válidos aun con filas HTML extra y lee Órdenes sin esperar carga completa.",
   "permissions": [
     "storage",
     "scripting",
