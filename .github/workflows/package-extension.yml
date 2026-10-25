@@ -13,6 +13,7 @@ on:
       - 'tests/test_order_preflight.js'
       - 'tests/test_order_ui_probe.js'
       - 'tests/test_orders_history.js'
+      - 'tests/test_movements_readonly.js'
       - 'tests/test_order_staging.js'
       - 'tests/test_installer_assets.js'
       - 'tests/test_auto_reload.js'
@@ -60,6 +61,8 @@ jobs:
         run: node tests/test_order_ui_probe.js
       - name: Verify private order execution status inspection
         run: node tests/test_orders_history.js
+      - name: Verify movement history pagination and repeated-folio executions
+        run: node tests/test_movements_readonly.js
       - name: Verify approved Visa order staging without submission
         run: node tests/test_order_staging.js
       - name: Confirm Windows updater includes order history reader and future scripts
