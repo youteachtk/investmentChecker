@@ -209,10 +209,14 @@ async function uploadPrivateDiagnostic(raw) {
       'CLASSIFY_ORDER_ROWS','COMPLETED','UNRECOGNIZED']);
     payload.probe_step=steps.has(raw.probe_step)?raw.probe_step:'UNRECOGNIZED';
     for(const key of ['visible_table_count','visible_control_count',
-      'order_nav_candidate_count','investment_menu_candidate_count']){
+      'order_nav_candidate_count','investment_menu_candidate_count',
+      'possible_grid_count']){
       payload[key]=Number.isInteger(raw[key])&&raw[key]>=0&&raw[key]<=1000?
         raw[key]:null;
     }
+    payload.route_changed=raw.route_changed===true;
+    payload.orders_route_seen=raw.orders_route_seen===true;
+    payload.empty_notice_detected=raw.empty_notice_detected===true;
     payload.client_version=chrome.runtime.getManifest().version;
   }
   if(portfolio){
