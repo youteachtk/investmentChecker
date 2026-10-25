@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.8.21",
-  "description": "2.8.21: búsqueda segura del historial en controles Angular y menús anidados de Actinver.",
+  "version": "2.8.22",
+  "description": "2.8.22: reconoce cuadrículas Angular de órdenes y comprueba navegación y avisos de historial vacío sin datos privados.",
   "permissions": [
     "storage",
     "scripting",
