@@ -30,6 +30,7 @@ class OverlayContract(unittest.TestCase):
     def test_brave_is_first_browser_choice(self):
         activity = (ROOT / 'app/src/main/java/mx/investmentchecker/tablet/MainActivity.kt').read_text()
         self.assertIn('setPackage("com.brave.browser")', activity)
+        self.assertIn('https://www.retoactinver.com/inicio-sesion/', activity)
 
 
 if __name__ == '__main__':
