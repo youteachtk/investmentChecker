@@ -8,6 +8,7 @@ body{font-family:system-ui,Arial,sans-serif;width:340px;margin:0;padding:17px;ba
 h1{font-size:20px;margin:0 0 6px}p{margin:8px 0;line-height:1.5;color:#c8cbd1}
 h1 small{font-size:12px;font-weight:400;color:#b0b7c4}
 button{display:block;width:100%;border:none;border-radius:9px;padding:12px;margin:11px 0;background:#22c55e;color:#07130a;font-weight:750;cursor:pointer}
+[hidden]{display:none!important}
 button.secondary{background:#353f4c;color:#fff}
 button:disabled{opacity:.55;cursor:wait}
 .status{border:1px solid #465266;background:#1d2530;border-radius:9px;padding:12px;white-space:pre-wrap;line-height:1.5;margin-top:12px}
@@ -39,7 +40,6 @@ a{color:#a2d9ff}
 <p>Mercado y cartera unidos. Se sincronizan automáticamente mientras Actinver esté abierto en Brave.</p>
 <div id="connection" class="minor">Comprobando conexión…</div>
 <div id="updateState" class="minor" role="status">Comprobando versión publicada…</div>
-<button id="checkUpdate" class="secondary">Comprobar actualización de InvestmentChecker</button>
 <button id="run">Sincronizar todo ahora</button>
 <div id="status" class="status" role="status">Preparando sincronización…</div>
 <section id="syncDetails" class="syncdetails" aria-live="polite">
@@ -47,14 +47,13 @@ a{color:#a2d9ff}
   <progress id="syncProgress" value="0" max="226" aria-label="Instrumentos capturados"></progress>
   <div id="syncCount" class="minor">0 / 226 instrumentos en esta ejecución</div>
   <div id="syncFreshness" class="minor">Último envío a GitHub: no disponible</div>
-  <button id="verifyQuotes" class="secondary">Verificar 226 cotizaciones en GitHub</button>
   <div id="syncVerified" class="minor">Sin comprobación reciente en GitHub.</div>
 </section>
 <p class="minor">Cotizaciones → GitHub público. Cartera → GitHub privado. Los datos de compra se copian manualmente: sin autollenado ni envío de órdenes.</p>
 <section class="trade" aria-labelledby="tradeHeader">
   <h2 id="tradeHeader">Propuestas para el Reto Actinver</h2>
   <p class="minor">Propuestas para copiar manualmente. InvestmentChecker nunca abre ni rellena formularios de compra. Solo tú decides y confirmas en Actinver.</p>
-  <button id="orderPreview" class="secondary">Analizar mercado y preparar propuestas</button>
+  <button id="orderPreview" class="secondary">Generar propuestas</button>
   <div id="orderMessage" class="message" role="status">Sin propuestas revisadas.</div>
   <div id="orderList"></div>
   <div id="orderCopy" aria-live="polite"></div>
@@ -62,13 +61,12 @@ a{color:#a2d9ff}
     <input id="orderConsent" type="checkbox">
     Apruebo solamente mostrar los datos seleccionados para copiarlos manualmente. Ningún botón del complemento opera en Actinver.
   </label>
-  <button id="orderApprove" disabled>Preparar datos para copiar</button>
-  <button id="orderHistory" class="secondary">Consultar movimientos realizados y órdenes programadas</button>
+  <button id="orderApprove" hidden disabled>Preparar datos para copiar</button>
   <p id="orderHistoryMessage" class="minor" role="status">Movimientos y órdenes sin verificar.</p>
   <p class="minor">En el concurso no se usan scripts ni macros para rellenar, confirmar o enviar operaciones. Copia y pega tú los valores; comprueba la orden antes de confirmar.</p>
 </section>
 <details id="settings">
-  <summary>Configuración y diagnóstico</summary>
+  <summary>Configuración avanzada</summary>
   <label for="token">Token PÚBLICO — cotizaciones (Actions)</label>
   <input id="token" type="password" autocomplete="off" spellcheck="false" placeholder="Token ya guardado">
   <button class="secondary" id="save">Guardar token público</button>
