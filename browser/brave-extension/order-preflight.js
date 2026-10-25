@@ -10,10 +10,15 @@ const ORDER_SECTORS={
   KO:'consumer',PG:'consumer',CVX:'energy',XOM:'energy',PFE:'health',
   ABBV:'health',UNH:'health',LLY:'health',AAPL:'technology',MSFT:'technology',
   NVDA:'technology',PLTR:'technology',BRKB:'diversified',CAT:'industrials',
-  BA:'industrials',JPM:'financial',BAC:'financial'
+  BA:'industrials',JPM:'financial',BAC:'financial',DIS:'consumer',
+  XLV:'health',XLE:'energy',VYM:'diversified',SHV:'fixed_income',
+  SHY:'fixed_income',TLT:'fixed_income',VTI:'broad_market',
+  SPY:'broad_market',VOO:'broad_market',BRKB:'diversified',
+  VNQ:'real_estate',XLF:'financial',VGT:'technology',XLK:'technology',
+  EWZ:'international',EEM:'international',PEP:'consumer',
+  TSM_N:'technology',TSLA:'technology',LLY:'health',MCD:'consumer'
 };
-const ORDER_PREFERRED=['V','WMT','CVX','COST','MA','KO','AAPL','PFE',
-  'MSFT','CAT','BRKB','ABBV','JPM','PG','UNH'];
+// There is intentionally no preferred ticker list: selection is score-driven.
 const ORDER_EXCLUDE=new Set(['SOXL','SOXS','TQQQ','SQQQ','TECL','TECS',
   'SPXL','SPXS','QLD','FAS','FAZ','TNA','TZA','PSQ']);
 function orderNumber(v){
@@ -45,15 +50,17 @@ function orderCSV(text){
   return rows.map(row=>Object.fromEntries(keys.map((k,i)=>[k,row[i]||''])));
 }
 function orderDrafts(quotes,portfolio,ranking,now=Date.now()){
-  const fail=(status,reason)=>({ok:false,status,reason,orders:[]});
+  const fail=(status,reason)=>({ok:false,status,reason,orders:[],
+    execution_enabled:false,auto_fill_enabled:false});
   if(!quotes||quotes.total!==226||!Array.isArray(quotes.quotes)||
-     quotes.quotes.length!==226) return fail('INVALID_QUOTES','Faltan cotizaciones validadas.');
+     quotes.quotes.length!==226)
+    return fail('INVALID_QUOTES','Faltan cotizaciones validadas de los 226 instrumentos.');
   const qa=orderAge(quotes.captured_at,now),va=orderAge(quotes.validated_at,now);
   if(qa< -300000||qa>900000||va< -300000||va>900000)
-    return fail('STALE_QUOTES','Cotizaciones vencidas o no validadas en GitHub.');
+    return fail('STALE_QUOTES','Cotizaciones vencidas. Sin precios actuales no se preparan compras.');
   const pa=orderAge(portfolio?.captured_at,now);
   if(pa< -300000||pa>2100000)
-    return fail('STALE_PORTFOLIO','Cartera privada vencida.');
+    return fail('STALE_PORTFOLIO','Cartera vencida: vuelve a sincronizar antes de preparar compras.');
   const summary=portfolio?.summary,holds=portfolio?.holdings;
   if(!summary||!Array.isArray(holds)||holds.length>100)
     return fail('INCOMPLETE_PORTFOLIO','Faltan posiciones o saldos.');
@@ -64,45 +71,75 @@ function orderDrafts(quotes,portfolio,ranking,now=Date.now()){
   const unsettled=orderNumber(summary.unsettled)||0;
   if(Math.abs(total-cash-invested-unsettled)>Math.max(100,total*.015))
     return fail('BALANCE_MISMATCH','Los saldos no concuerdan.');
-  if(holds.length===0 && invested>Math.max(100,total*.01))
-    return fail('INCOMPLETE_PORTFOLIO','Hay inversión positiva sin posiciones legibles.');
-  const owned=new Set();
+  if(holds.length===0&&invested>Math.max(100,total*.01))
+    return fail('INCOMPLETE_PORTFOLIO','Hay inversiones sin posiciones verificables.');
+  const owned=new Set(),ownedSectors=new Set();
+  let holdingsValue=0;
   for(const h of holds){
     const sym=String(h?.symbol||'').trim().toUpperCase();
+    const qty=orderNumber(h.quantity);
     if(!/^[A-Z0-9 .&+/-]{1,48}$/.test(sym)||
-       orderNumber(h.quantity)===null||h.quantity<=0||owned.has(sym))
+       qty===null||qty<=0||owned.has(sym))
       return fail('INVALID_HOLDINGS','Posiciones ambiguas o duplicadas.');
-    owned.add(sym);
+    const value=orderNumber(h.value_mxn) ??
+      (orderNumber(h.price_mxn)!==null?qty*h.price_mxn:null);
+    if(value===null||value<0)
+      return fail('INCOMPLETE_PORTFOLIO','Faltan valores de posiciones; no se calcula una compra.');
+    holdingsValue+=value;owned.add(sym);
+    if(ORDER_SECTORS[sym])ownedSectors.add(ORDER_SECTORS[sym]);
   }
+  if(Math.abs(holdingsValue-invested)>Math.max(100,invested*.025))
+    return fail('HOLDINGS_VALUE_MISMATCH','El valor de las tenencias no coincide con Inversiones.');
   const score=new Map();
   for(const r of ranking){
     const sym=String(r.simbolo_actinver||'').trim().toUpperCase();
-    const n=Number(r.research_score);
-    if(sym&&r.research_score!==''&&Number.isFinite(n))score.set(sym,n);
+    if(!sym||r.research_score===''||r.research_score===undefined)continue;
+    const n=Number(r.research_score),vol=Number(r.annual_volatility_pct),
+      rsi=Number(r.rsi_14);
+    if(Number.isFinite(n)&&n>=0&&n<=100){
+      score.set(sym,{score:n,vol:Number.isFinite(vol)?vol:null,
+        rsi:Number.isFinite(rsi)?rsi:null,
+        risk:String(r.risk_label||'unclassified'),
+        market_date:String(r.last_market_date||'')});
+    }
   }
   if(!score.size)return fail('INVALID_RANKING','Clasificación histórica no disponible.');
   const eligible=[];
+  let covered=0,unknown=0;
   for(const q of quotes.quotes){
     const symbol=String(q.symbol||'').trim().toUpperCase();
-    if(q.category!=='ACCIONES'||owned.has(symbol)||ORDER_EXCLUDE.has(symbol))continue;
+    const history=score.get(symbol);
+    if(!history){unknown++;continue;}covered++;
+    if(!['ACCIONES','ETFs'].includes(q.category)||owned.has(symbol)||
+       ORDER_EXCLUDE.has(symbol)||history.score<60||
+       (history.vol!==null&&history.vol>=60))continue;
+    const historyDate=Date.parse(history.market_date+'T23:59:59Z');
+    if(!Number.isFinite(historyDate)||
+       now-historyDate>7*86400000||historyDate-now>86400000)continue;
     const bid=orderNumber(q.bid),ask=orderNumber(q.ask);
     const bv=orderNumber(q.bid_volume),av=orderNumber(q.ask_volume);
-    const change=orderNumber(q.variation),scoreVal=score.get(symbol);
-    if([bid,ask,bv,av,change,scoreVal].some(x=>!Number.isFinite(x)))continue;
+    const change=orderNumber(q.variation);
+    if([bid,ask,bv,av,change].some(x=>!Number.isFinite(x)))continue;
     if(bid<=0||ask<=0||ask<bid||Math.min(bv,av)<100)continue;
     const spread=200*(ask-bid)/(ask+bid);
-    if(spread>.9||change>3||scoreVal<60)continue;
-    eligible.push({symbol,sector:ORDER_SECTORS[symbol]||'other',
-      bid,ask,ask_volume:av,historical_score:scoreVal,
-      spread_pct:Math.round(spread*1000)/1000,daily_change_pct:change});
+    if(spread>1.5||Math.abs(change)>4)continue;
+    const sector=ORDER_SECTORS[symbol]||'other';
+    const finalScore=history.score-4*spread-
+      (history.rsi===null?0:Math.max(0,history.rsi-65)*1.1)-
+      (history.vol!==null&&history.vol>=35?8:0)-
+      (ownedSectors.has(sector)?6:0);
+    eligible.push({symbol,category:q.category,sector,bid,ask,
+      ask_volume:av,historical_score:history.score,
+      comparison_score:Math.round(finalScore*100)/100,
+      spread_pct:Math.round(spread*1000)/1000,
+      daily_change_pct:change,annual_volatility_pct:history.vol,
+      rsi_14:history.rsi});
   }
-  eligible.sort((a,b)=>{
-    const ap=ORDER_PREFERRED.indexOf(a.symbol),bp=ORDER_PREFERRED.indexOf(b.symbol);
-    return (ap>=0?0:1)-(bp>=0?0:1)||
-      (ap>=0?ap:999)-(bp>=0?bp:999)||
-      b.historical_score-a.historical_score||a.spread_pct-b.spread_pct;
-  });
-  const budget=cash*.65,per=budget/5;
+  // No ticker ever receives a special position or bonus for its name.
+  eligible.sort((a,b)=>b.comparison_score-a.comparison_score||
+    a.spread_pct-b.spread_pct||a.symbol.localeCompare(b.symbol));
+  // Bounded examples only, never a directive to invest an automatic 65% of cash.
+  const budget=Math.min(cash*.10,total*.08),per=budget/5;
   let spent=0;
   const orders=[],sectors=new Set();
   for(const pass of [0,1]){
@@ -110,8 +147,9 @@ function orderDrafts(quotes,portfolio,ranking,now=Date.now()){
       if(orders.length>=5)break;
       if(orders.some(y=>y.symbol===x.symbol))continue;
       if(pass===0&&sectors.has(x.sector))continue;
-      const allocation=Math.min(per,budget-spent,total*.20);
-      const quantity=Math.min(Math.floor(allocation/(x.ask*(1+ORDER_FEE_RATE))),x.ask_volume);
+      const allocation=Math.min(per,budget-spent,total*.025);
+      const quantity=Math.min(Math.floor(allocation/(x.ask*(1+ORDER_FEE_RATE))),
+        x.ask_volume);
       if(quantity<1)continue;
       const gross=Math.round(quantity*x.ask*100)/100;
       const fee=Math.round(gross*ORDER_FEE_RATE*100)/100;
@@ -119,18 +157,26 @@ function orderDrafts(quotes,portfolio,ranking,now=Date.now()){
       orders.push({symbol:x.symbol,side:'BUY',order_type:'LIMIT_DRAFT',
         quantity,limit_mxn:x.ask,estimated_fee_mxn:fee,
         estimated_total_mxn:amount,spread_pct:x.spread_pct,
-        historical_score:x.historical_score,sector:x.sector});
+        historical_score:x.historical_score,comparison_score:x.comparison_score,
+        annual_volatility_pct:x.annual_volatility_pct,
+        rsi_14:x.rsi_14,sector:x.sector,category:x.category});
       spent+=amount;sectors.add(x.sector);
     }
   }
-  if(!orders.length)return fail('NO_ELIGIBLE_NEW_BUYS','No hay compras nuevas que cumplan los filtros.');
+  if(!orders.length)
+    return fail('NO_ELIGIBLE_NEW_BUYS','No hay compras que cumplan filtros de cotización, riesgo y diversificación.');
   return {ok:true,status:'DRAFTS_READY_FOR_REVIEW',orders,
+    policy_version:3,copy_only:true,
+    universe_total:quotes.quotes.length,research_covered:covered,
+    research_pending:unknown,eligible_count:eligible.length,
+    quote_age_minutes:Math.round(qa/60000),
     quotes_captured_at:quotes.captured_at,portfolio_captured_at:portfolio.captured_at,
-    buying_power_mxn:cash,estimated_spend_mxn:Math.round(spent*100)/100,
+    buying_power_mxn:cash,review_budget_mxn:Math.round(budget*100)/100,
+    estimated_spend_mxn:Math.round(spent*100)/100,
     expires_at:new Date(Math.min(now+ORDER_MAX_AGE_MS,
       Date.parse(quotes.captured_at)+900000,
       Date.parse(portfolio.captured_at)+2100000)).toISOString(),
-    execution_enabled:false};
+    execution_enabled:false,auto_fill_enabled:false};
 }
 async function orderLoadPrivatePortfolio(){
   const {privateEnabled,privateRepo,privateToken}=await chrome.storage.local.get([
@@ -174,7 +220,9 @@ async function orderPreview(){
 }
 async function orderApprove(msg){
   const stored=(await chrome.storage.local.get('orderDraftCache')).orderDraftCache;
-  if(!stored||!stored.ok||stored.approved||Date.now()>=Date.parse(stored.expires_at))
+  if(!stored||!stored.ok||stored.policy_version!==3||stored.copy_only!==true||
+     stored.execution_enabled!==false||stored.auto_fill_enabled!==false||
+     stored.approved||Date.now()>=Date.parse(stored.expires_at))
     return {ok:false,error:'La propuesta caducó o ya fue revisada. Actualiza cotizaciones.'};
   if(stored.draft_id!==msg.draft_id||msg.confirmed!==true)
     return {ok:false,error:'Falta consentimiento explícito para este lote.'};
@@ -184,13 +232,12 @@ async function orderApprove(msg){
      picked.some(sym=>!stored.orders.some(o=>o.symbol===sym)))
     return {ok:false,error:'Selección de operaciones no válida.'};
   const approved=stored.orders.filter(o=>picked.includes(o.symbol));
-  // This is only draft preparation. The broker adapter is locked until
-  // actual trade-screen fields and confirmation behavior have been verified.
+  // Approval allows copying text only, never interacting with a broker form.
   await chrome.storage.local.set({orderDraftCache:{...stored,approved:true,
     approved_at:new Date().toISOString(),approved_symbols:picked}});
   return {ok:true,status:'APPROVED_FOR_PREPARATION',orders:approved,
-    execution_enabled:false,submitted_orders:0,
-    message:'Lote aprobado para preparación. Ninguna orden se envió a Actinver.'};
+    execution_enabled:false,auto_fill_enabled:false,copy_only:true,submitted_orders:0,
+    message:'Datos disponibles para copiar manualmente. Ninguna orden se envió a Actinver.'};
 }
 
 async function orderInspectUi(){
