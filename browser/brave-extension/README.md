@@ -1,3 +1,11 @@
+## v2.8.25 — Corrección de la captura real (24/oct/2026)
+
+- En GitHub privado, la v2.8.24 capturó **12 movimientos válidos** distribuidos en **2 páginas**, pero marcó `MOVEMENTS_PARTIAL` porque encontró **14 filas del DOM**. La verificación ahora comprueba el total de movimientos *válidos* y las páginas leídas, sin exigir que cada fila del DOM sea una operación. No deduplica folios repetidos.
+- La pestaña auxiliar de `#/ordenes` ahora conserva el dominio de la sesión existente y espera al estado **interactivo** del documento Angular, incluso si Brave todavía no reporta la pestaña como `complete`. No se activa ningún control de compra/venta.
+- Si aparece el aviso literal «No hay órdenes programadas», termina la lectura sin agotar innecesariamente la espera del lector. Se conserva separada la consulta de movimientos realizados.
+- Pruebas de regresión agregadas para **14 filas DOM / 12 movimientos reales** y ruta de órdenes interactiva mientras el estado del navegador sigue en `loading`.
+- Sin cambios al ejecutable de actualización manual, a la sincronización de 226 cotizaciones ni al envío de operaciones (deshabilitado).
+
 ## v2.8.24 — Movimientos ejecutados y órdenes programadas por separado (24/oct/2026)
 
 - **Movimientos**: lee exclusivamente `#/movimientos`, usando las diez columnas vistas en Actinver (fecha, hora, folio, emisora, operación, títulos, precio, comisión, IVA e importe total); recorre botones **numéricos** de paginación de manera limitada y conserva ejecuciones múltiples con el mismo folio. El registro se guarda **solo en el repositorio privado** `actinver/movements-latest.json`. Nunca se declara completo si la cantidad de filas no coincide con el total indicado en la página.
