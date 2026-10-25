@@ -4,8 +4,8 @@ Objetivo: Samsung Galaxy Tab S7+, aplicación independiente de Windows, con pane
 
 ## Estado
 
-- Implementado: pantalla de inicio, solicitud de permiso de superposición, servicio con notificación visible, panel flotante que puede arrastrarse, botón para cerrarlo, acceso al sitio público del concurso.
-- Pendiente: redimensionamiento manual del panel, restauración de posición, lectura de datos privados y cotizaciones, conexión con el motor de propuestas, generación/verificación de propuestas, acciones de copia.
+- Implementado: pantalla de inicio, solicitud de permiso de superposición, servicio con notificación visible, panel flotante arrastrable y ajustable en ancho, persistencia de posición/tamaño, botón para cerrarlo, acceso al sitio público del concurso.
+- Pendiente: lectura de datos privados y cotizaciones, conexión con el motor de propuestas, generación/verificación de propuestas, acciones de copia.
 - **No se muestran propuestas inventadas ni vigentes antes de una sincronización verificada.**
 - Sin APK publicado todavía: se requiere una compilación Gradle/Android SDK y prueba en la tablet.
 
