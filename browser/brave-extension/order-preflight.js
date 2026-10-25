@@ -460,8 +460,10 @@ async function orderHistoryStatus(){
       active:false,openerTabId:source.id});
     if(!await waitForPage(tab.id))throw Error('No cargó la página de órdenes.');
     const landed=await chrome.tabs.get(tab.id);
-    if(!/^https:\/\/www\.retoactinver\.com\/RetoActinver\/#\/ordenes(?:[/?#]|$)/i.test(landed.url||''))
+    if(!/^https:\/\/www\.retoactinver\.com\/RetoActinver\/#\/ordenes(?:[/?#]|$)/i.test(landed.url||'')){
+      diag.code='ORDERS_ROUTE_REDIRECTED';
       throw Error('ORDERS_ROUTE_REDIRECTED');
+    }
     diag.phase='ORDERS_READ';
     let result;
     try{
@@ -491,7 +493,7 @@ async function orderHistoryStatus(){
       throw Error('Inspección de órdenes no verificable.');
     }
     const statuses=new Set(['executed','partial','pending','cancelled','rejected','unknown']);
-    const stages=new Set(['ORDERS_SECTION_NOT_FOUND','ORDERS_NAV_AMBIGUOUS',
+    const stages=new Set(['ORDERS_ROUTE_MISMATCH','ORDERS_SECTION_NOT_FOUND','ORDERS_NAV_AMBIGUOUS',
       'ORDERS_TABLE_NOT_VERIFIED','ORDERS_TABLE_EMPTY','ORDERS_TABLE_READ',
       'ORDERS_ROWS_UNRECOGNIZED']);
     const orders=(Array.isArray(raw.orders)?raw.orders:[]).slice(0,100)
@@ -509,7 +511,8 @@ async function orderHistoryStatus(){
     const stage=stages.has(raw.stage)?raw.stage:'ORDERS_TABLE_NOT_VERIFIED';
     diag.phase='ORDERS_READ';
     diag.code=stage==='ORDERS_TABLE_READ'||stage==='ORDERS_TABLE_EMPTY'?
-      'ORDERS_OK':stage==='ORDERS_SECTION_NOT_FOUND'||stage==='ORDERS_NAV_AMBIGUOUS'?
+      'ORDERS_OK':stage==='ORDERS_ROUTE_MISMATCH'||
+      stage==='ORDERS_SECTION_NOT_FOUND'||stage==='ORDERS_NAV_AMBIGUOUS'?
       'ORDERS_NAV_FAILED':'ORDERS_TABLE_MISSING';
     const report={schema_version:1,captured_at:new Date().toISOString(),
       stage,orders_page_seen:raw.orders_page_seen===true,
@@ -549,7 +552,8 @@ async function orderHistoryStatus(){
         'La sección de órdenes aún no se reconoció ('+stage+
         '). No se puede afirmar que haya cero órdenes.'};
   }catch(error){
-    if(!['ORDERS_READER_MISSING','ORDERS_INJECTION_FAILED','ORDERS_INVALID_RESULT'].includes(diag.code))
+    if(!['ORDERS_READER_MISSING','ORDERS_INJECTION_FAILED','ORDERS_INVALID_RESULT',
+      'ORDERS_ROUTE_REDIRECTED'].includes(diag.code))
       diag.code=diag.phase==='ORDERS_SAVE'?'ORDERS_SAVE_FAILED':'ORDERS_ERROR';
     return {ok:false,error:String(error?.message||'Error consultando órdenes.')};
   }finally{
