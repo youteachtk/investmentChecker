@@ -27,7 +27,7 @@ function setup({section=true,rows=true,navMode='button',layout='table'}={}){
     if(sel.startsWith('tbody tr,[role="rowgroup"] [role="row"]'))return rows?trs:[];
     return [];
   }});
-  const document={body:{innerText:layout==='empty-state'&&open?'No hay órdenes':' '},querySelectorAll:sel=>{
+  const document={body:{get innerText(){return layout==='empty-state'&&open?'No hay órdenes':' ';}},querySelectorAll:sel=>{
     if(sel==='table,[role="table"]')return open&&layout==='table'?[table]:[];
     if(sel.includes('mat-table'))return open&&layout!=='empty-state'?[table]:[];
     if(sel.startsWith('a,button'))return section&&navMode!=='caption'?[nav]:[];
