@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "action": "inspect_order_history",
-  "id": "orders-grid-20261025T020222Z",
-  "issued_at": "2026-10-25T02:02:22Z",
+  "id": "chat-read-orders-direct-20261025T022715Z",
+  "issued_at": "2026-10-25T02:27:15Z",
   "latest_version": "2.8.23"
 }
