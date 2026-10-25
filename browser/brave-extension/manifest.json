@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.8.29",
-  "description": "2.8.29: interfaz mínima y simulación histórica sin órdenes operativas ni autollenado.",
+  "version": "2.8.30",
+  "description": "2.8.30: panel independiente persistente para consultar propuestas junto a Actinver.",
   "permissions": [
     "storage",
     "scripting",
@@ -18,8 +18,7 @@
     "https://raw.githubusercontent.com/*"
   ],
   "action": {
-    "default_title": "investmentChecker",
-    "default_popup": "popup.html"
+    "default_title": "Abrir panel InvestmentChecker"
   },
   "background": {
     "service_worker": "background.js"
