@@ -1,3 +1,7 @@
+## v2.8.22 — Tablas Angular y verificación de ruta en Órdenes (24/oct/2026)
+
+El historial ahora reconoce tablas HTML y estructuras Angular como `mat-table`, `mat-row`, `mat-cell`, `[role=grid]` y `.mat-mdc-table`. La verificación registra exclusivamente indicadores sin datos personales: cambio de ruta, presencia de ruta «órdenes», número de posibles cuadrículas y existencia de un aviso explícito de historial vacío. Ningún aviso sin una tabla verificada se convierte automáticamente en la conclusión «cero órdenes». Se añadieron pruebas para cuadrículas Angular y estado vacío. Se mantienen intactos el lector probado de 226 cotizaciones, la cartera privada y la prohibición de enviar órdenes.
+
 ## v2.8.21 — Navegación Angular al historial de órdenes (24/oct/2026)
 
 Después de confirmar que el lector integrado 2.8.20 accedió al documento de Actinver pero registró `ORDERS_SECTION_NOT_FOUND`, se amplió la búsqueda de navegación de solo lectura para incluir `mat-list-item`, `mat-expansion-panel-header`, controles `role=button` y títulos anidados dentro de elementos clicables. Se prueba el caso de etiquetas anidadas además del menú existente. El lector solo activa controles de navegación identificados como «Órdenes» o «Tu inversión» y no pulsa comprar, vender, cancelar ni confirmar; las cantidades de órdenes siguen sin considerarse verificadas hasta encontrar una tabla con columnas explícitas de símbolo y estatus. Se conserva GitHub privado para cualquier diagnóstico y no se modifica la captura probada de cotizaciones o cartera.
