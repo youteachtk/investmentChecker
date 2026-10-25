@@ -496,9 +496,13 @@ async function orderHistoryStatus(){
       diag.probe_step=raw.probe_step;
       diag.orders_page_seen=raw.orders_page_seen===true;
       for(const key of ['visible_table_count','visible_control_count',
-        'order_nav_candidate_count','investment_menu_candidate_count']){
+        'order_nav_candidate_count','investment_menu_candidate_count',
+        'possible_grid_count']){
         diag[key]=raw[key];
       }
+      diag.route_changed=raw.route_changed===true;
+      diag.orders_route_seen=raw.orders_route_seen===true;
+      diag.empty_notice_detected=raw.empty_notice_detected===true;
     }
     if(!raw||raw.schema_version!==1||raw.read_only!==true||raw.submitted_orders!==0){
       diag.code='ORDERS_INVALID_RESULT';
