@@ -1,3 +1,12 @@
+## v2.8.28 — Propuestas para copiar manualmente, sin automatizar compras (25/oct/2026)
+
+- Se elimina la prioridad fija de Visa y otras emisoras. La selección utiliza el puntaje histórico, diferencial compra-venta, sobrecompra RSI, volatilidad y exposición sectorial; sin bonificaciones por nombre. Se consideran acciones y ETF no apalancados. De los 226 instrumentos disponibles, solo los que tienen investigación histórica validada se pueden puntuar; los demás figuran como pendientes, sin puntajes inventados.
+- Las propuestas exigen 226 cotizaciones actuales (máximo 15 minutos), una cartera privada reciente (máximo 35 minutos), precios bid/ask válidos, volumen mínimo de 100 a ambos lados, diferencial máximo 1.5 %, movimientos diarios de máximo 4 % en valor absoluto y vigencia de la investigación histórica. Se comprueba la conciliación de las tenencias.
+- Presupuesto meramente orientativo de revisión: máximo 10 % del efectivo o 8 % del patrimonio, lo que sea menor, distribuido en hasta cinco propuestas. No es una recomendación de invertir esa fracción; no crea órdenes.
+- Tras elegir y aprobar el lote se muestran botones **Copiar emisora**, **Copiar títulos** y **Copiar límite** con los valores exactos. El usuario pega e introduce la orden personalmente en Reto Actinver. La propuesta caduca y no debe usarse con cotizaciones vencidas.
+- Los antiguos controles de autollenado e inspección de formularios Visa desaparecen del popup. El service worker rechaza también los mensajes legados `ORDER_STAGE_VISA` y `ORDER_INSPECT_UI`: ninguna automatización escribe ni hace clic en el formulario de operaciones. El historial de movimientos y órdenes permanece en modo lectura.
+- Se añadió prueba de regresión de portapapeles que verifica copiado exclusivamente bajo clic del usuario, ausencia de mensajes al broker y bloqueo de propuestas vencidas. No se modifica el actualizador manual de Windows, ni la captura de cotizaciones, movimientos o cartera.
+
 ## v2.8.27 — Cartera con categorías, paginación y conciliación obligatoria (25/oct/2026)
 
 - La v2.8.26 entregó cuatro emisoras (`AAPL`, `CVX`, `KO`, `PFE`) con un valor reconstruido de MXN 182,974.05 frente a MXN 235,624.89 reportados en «Inversiones». Los movimientos verificados muestran compras históricas de `QQQ`, pero **no prueban por sí solos una tenencia actual**; jamás se convierten en posiciones automáticamente.
