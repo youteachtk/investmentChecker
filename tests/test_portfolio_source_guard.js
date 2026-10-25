@@ -26,7 +26,7 @@ function setup(cache={}){
   return {state,writes,receive};
 }
 const summary={total_value:10000,investments:4000,buying_power:6000,unsettled:0};
-const items=[{symbol:'AAPL',quantity:2}];
+const items=[{symbol:'AAPL',quantity:2,price_mxn:2000}];
 const msg={payload:{captured_at:now,summary,holdings:items}};
 const sender=(hash)=>({tab:{id:17,url:'https://retoactinver.com/RetoActinver/'+hash}});
 (async()=>{
@@ -41,6 +41,16 @@ const sender=(hash)=>({tab:{id:17,url:'https://retoactinver.com/RetoActinver/'+h
   assert.equal(good.writes.length,1);
   assert.equal(good.state.privateCache.holdings.verified_portfolio_route,true);
   assert.equal(good.writes[0].holdings[0].symbol,'AAPL');
+  const missing=setup();
+  const incomplete=await missing.receive({payload:{captured_at:now,
+    summary,holdings:[{symbol:'AAPL',quantity:2,price_mxn:500}]}},
+    sender('#/portafolio'));
+  assert.equal(incomplete.ok,true);
+  assert.equal(incomplete.partial,true);
+  assert.equal(incomplete.reason,'HOLDINGS_VALUE_MISMATCH');
+  assert.equal(missing.writes.length,0);
+  assert.equal(missing.state.portfolioReconciliationStatus,'HOLDINGS_VALUE_MISMATCH');
+
   const stale=setup({holdings:{at:now,values:[{symbol:'PFE',quantity:999}]},
     summary:{at:now,values:summary}});
   const partial=await stale.receive(
