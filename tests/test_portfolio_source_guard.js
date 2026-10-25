@@ -17,7 +17,7 @@ function setup(cache={}){
       .map(k=>[k,state[k]])),
     set:async obj=>Object.assign(state,obj)
   };
-  const context={Date,Number,Math,Object,String,Promise,
+  const context={Date,Number,Math,Object,String,Promise,privateUploading:false,
     PRIVATE_TTL_MS:1800000,privateSitePattern:/^https:\/\/(?:www\.)?retoactinver\.com(?:[\/:#?]|$)/i,
     chrome:{storage:{local:storage}},privateState:async()=>{},
     uploadPrivatePortfolio:async payload=>{writes.push(payload)},
