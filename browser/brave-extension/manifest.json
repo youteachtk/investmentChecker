@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.8.23",
-  "description": "2.8.23: órdenes desde la ruta real #/ordenes, lectura directa y confirmación de redirecciones.",
+  "version": "2.8.24",
+  "description": "2.8.24: Movimientos reales paginados y órdenes programadas leídas por separado, sin enviar operaciones.",
   "permissions": [
     "storage",
     "scripting",
