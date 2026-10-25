@@ -7,11 +7,15 @@ on:
       - 'android/**'
       - '.github/workflows/android-apk.yml'
 
+concurrency:
+  group: investmentchecker-android-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -44,3 +48,12 @@ jobs:
           name: InvestmentChecker-Android-test
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+      - name: Publish stable test APK link
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view android-test-latest > /dev/null 2>&1 || \
+            gh release create android-test-latest --title 'InvestmentChecker Android - versión de prueba' \
+              --notes 'APK de prueba; todavía sin sincronización de Actinver ni propuestas vigentes.' --prerelease
+          cp android/app/build/outputs/apk/debug/app-debug.apk "$RUNNER_TEMP/InvestmentChecker-Android.apk"
+          gh release upload android-test-latest "$RUNNER_TEMP/InvestmentChecker-Android.apk" --clobber
