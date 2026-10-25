@@ -1,5 +1,13 @@
 # Estado y continuidad de InvestmentChecker
 
+## Cambio 2026-10-25 — Panel persistente v2.8.30
+
+- La acción de la barra de Brave abre `popup.html` en una **ventana independiente y redimensionable** de 440 × 720, en vez de un popup que se cierra al cambiar de foco.
+- Un segundo clic recupera y enfoca la ventana existente en lugar de duplicarla.
+- El contenido y las restricciones de propuestas/copia manual no cambian. No se ejecutan ni se rellenan órdenes.
+- No hay modo «siempre encima»: el usuario puede acomodar la ventana al lado de Actinver usando Windows.
+- Prueba `tests/test_persistent_panel.js` comprueba creación y reutilización. Publicación/instalación local deben validarse por separado.
+
 ## Cambio preparado — 25 de octubre de 2026
 
 - Versión de código **2.8.29**, pendiente de publicación/instalación hasta confirmar GitHub Actions y Brave.
