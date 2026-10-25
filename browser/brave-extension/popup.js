@@ -90,11 +90,16 @@ async function refresh(){
         '. Diagnóstico privado todavía no confirmado.');
   }
   const draft=s.orderDraftCache;
-  $('orderStageVisa').disabled=!(draft?.approved===true &&
-    draft.approved_symbols?.includes('V')&&
-    Date.parse(draft.expires_at)>Date.now());
-  if(draft?.ok && !draft.approved && Date.parse(draft.expires_at)>Date.now() &&
-     draft.draft_id!==orderDraft?.draft_id)renderOrders(draft);
+  if(draft?.policy_version===3 && draft?.copy_only===true &&
+     draft.execution_enabled===false&&draft.auto_fill_enabled===false&&
+     draft?.ok&&Date.parse(draft.expires_at)>Date.now()){
+    if(draft.approved)renderApprovedOrders(draft);
+    else if(draft.draft_id!==orderDraft?.draft_id)renderOrders(draft);
+  }else if(renderedCopyId){
+    $('orderCopy').replaceChildren();
+    renderedCopyId=null;
+    $('orderMessage').textContent='La propuesta caducó. Vuelve a analizar el mercado con datos recientes.';
+  }
 }
 $('checkUpdate').addEventListener('click',async()=>{
   $('checkUpdate').disabled=true;
@@ -163,6 +168,7 @@ void refresh();
 
 // Batch trade preparation. Approval NEVER submits a transaction to Actinver.
 let orderDraft=null;
+let renderedCopyId=null;
 const fmtMX=n=>Number(n).toLocaleString('es-MX',{
   minimumFractionDigits:2,maximumFractionDigits:2
 });
@@ -179,12 +185,16 @@ function refreshOrderApproval(){
 }
 function renderOrders(result){
   resetOrderSelection();
+  renderedCopyId=null;
+  $('orderCopy').replaceChildren();
   if(!result?.ok){
     $('orderMessage').textContent=result?.reason||result?.error||
       'Sin propuestas válidas. Actualiza cotizaciones y cartera.';
     return;
   }
-  if(result.execution_enabled!==false || !Array.isArray(result.orders)) {
+  if(result.policy_version!==3 || result.copy_only!==true ||
+     result.execution_enabled!==false || result.auto_fill_enabled!==false ||
+     !Array.isArray(result.orders)) {
     $('orderMessage').textContent='No se pudo verificar que la ejecución esté bloqueada.';
     return;
   }
@@ -192,8 +202,28 @@ function renderOrders(result){
   $('orderMessage').textContent=
     'Datos recientes verificados. Vigencia hasta: '+
     new Date(result.expires_at).toLocaleTimeString('es-MX')+
-    '. Efectivo disponible: $'+fmtMX(result.buying_power_mxn)+
-    '. Importe estimado del lote: $'+fmtMX(result.estimated_spend_mxn)+'.';
+    '. Efectivo disponible: 
+  for(const o of result.orders){
+    const container=document.createElement('div');container.className='order-line';
+    const label=document.createElement('label');
+    const input=document.createElement('input');input.type='checkbox';
+    input.value=o.symbol;
+    input.addEventListener('change',refreshOrderApproval);
+    const text=document.createElement('span');
+    const ticker=document.createElement('strong');
+    ticker.textContent=o.symbol+' · '+o.quantity+' títulos';
+    const detail=document.createElement('span');detail.className='order-detail';
+    detail.textContent='Límite $'+fmtMX(o.limit_mxn)+
+      ' · máximo estimado $'+fmtMX(o.estimated_total_mxn)+
+      ' · diferencial '+Number(o.spread_pct).toFixed(3)+'%'+
+      ' · evaluación '+Number(o.comparison_score).toFixed(2)+
+      ' · puntuación histórica '+Number(o.historical_score).toFixed(2);
+    text.append(ticker,detail);label.append(input,text);
+    container.append(label);$('orderList').append(container);
+  }
+}
++fmtMX(result.buying_power_mxn)+
+    '. Tope orientativo de esta propuesta: 
   for(const o of result.orders){
     const container=document.createElement('div');container.className='order-line';
     const label=document.createElement('label');
@@ -209,6 +239,91 @@ function renderOrders(result){
       ' · diferencial '+Number(o.spread_pct).toFixed(3)+'%';
     text.append(ticker,detail);label.append(input,text);
     container.append(label);$('orderList').append(container);
+  }
+}
++fmtMX(result.review_budget_mxn)+
+    '. Importe estimado: 
+  for(const o of result.orders){
+    const container=document.createElement('div');container.className='order-line';
+    const label=document.createElement('label');
+    const input=document.createElement('input');input.type='checkbox';
+    input.value=o.symbol;
+    input.addEventListener('change',refreshOrderApproval);
+    const text=document.createElement('span');
+    const ticker=document.createElement('strong');
+    ticker.textContent=o.symbol+' · '+o.quantity+' títulos';
+    const detail=document.createElement('span');detail.className='order-detail';
+    detail.textContent='Límite $'+fmtMX(o.limit_mxn)+
+      ' · máximo estimado $'+fmtMX(o.estimated_total_mxn)+
+      ' · diferencial '+Number(o.spread_pct).toFixed(3)+'%';
+    text.append(ticker,detail);label.append(input,text);
+    container.append(label);$('orderList').append(container);
+  }
+}
++fmtMX(result.estimated_spend_mxn)+'. '+
+    'De '+result.universe_total+' instrumentos, '+result.research_covered+
+    ' tienen historial comparable y '+result.research_pending+
+    ' siguen pendientes de investigación. Ningún instrumento tiene prioridad fija.';
+  for(const o of result.orders){
+    const container=document.createElement('div');container.className='order-line';
+    const label=document.createElement('label');
+    const input=document.createElement('input');input.type='checkbox';
+    input.value=o.symbol;
+    input.addEventListener('change',refreshOrderApproval);
+    const text=document.createElement('span');
+    const ticker=document.createElement('strong');
+    ticker.textContent=o.symbol+' · '+o.quantity+' títulos';
+    const detail=document.createElement('span');detail.className='order-detail';
+    detail.textContent='Límite $'+fmtMX(o.limit_mxn)+
+      ' · máximo estimado $'+fmtMX(o.estimated_total_mxn)+
+      ' · diferencial '+Number(o.spread_pct).toFixed(3)+'%';
+    text.append(ticker,detail);label.append(input,text);
+    container.append(label);$('orderList').append(container);
+  }
+}
+
+function copyTextButton(label,value){
+  const b=document.createElement('button');
+  b.type='button';b.textContent=label;
+  b.addEventListener('click',async()=>{
+    try{
+      if(!navigator.clipboard?.writeText)throw Error('Portapapeles no disponible');
+      await navigator.clipboard.writeText(String(value));
+      $('orderMessage').textContent=label+' copiado. Pega tú el valor en Actinver; verifica la orden antes de confirmarla.';
+    }catch(_){
+      $('orderMessage').textContent='No se pudo copiar automáticamente. Selecciona manualmente el valor mostrado en la ficha.';
+    }
+  });
+  return b;
+}
+function renderApprovedOrders(draft){
+  if(!draft||draft.policy_version!==3||!draft.copy_only||
+     draft.execution_enabled!==false||draft.auto_fill_enabled!==false||
+     Date.parse(draft.expires_at)<=Date.now())return;
+  if(renderedCopyId===draft.draft_id)return;
+  resetOrderSelection();
+  renderedCopyId=draft.draft_id;
+  $('orderCopy').replaceChildren();
+  const selected=new Set(draft.approved_symbols||[]);
+  $('orderMessage').textContent='Datos preparados para copiar, vigentes hasta '+
+    new Date(draft.expires_at).toLocaleTimeString('es-MX')+
+    '. Tú debes rellenar y confirmar cada operación en Actinver.';
+  for(const o of draft.orders.filter(order=>selected.has(order.symbol))){
+    const box=document.createElement('div');box.className='order-line';
+    const header=document.createElement('strong');
+    header.textContent=o.symbol+' · '+o.quantity+' títulos';
+    const detail=document.createElement('div');detail.className='order-detail';
+    detail.textContent='Compra con límite $'+fmtMX(o.limit_mxn)+
+      ' · Comisión estimada $'+fmtMX(o.estimated_fee_mxn)+
+      ' · Importe máximo estimado $'+fmtMX(o.estimated_total_mxn);
+    const actions=document.createElement('div');actions.className='copy-tools';
+    actions.append(
+      copyTextButton('Copiar emisora',o.symbol),
+      copyTextButton('Copiar títulos',String(o.quantity)),
+      copyTextButton('Copiar límite',Number(o.limit_mxn).toFixed(2))
+    );
+    box.append(header,detail,actions);
+    $('orderCopy').append(box);
   }
 }
 $('orderPreview').addEventListener('click',async()=>{
@@ -232,29 +347,9 @@ $('orderApprove').addEventListener('click',async()=>{
     resetOrderSelection();
     return;
   }
-  $('orderMessage').textContent='Lote revisado y preparado: '+
-    result.orders.map(o=>o.symbol+' ('+o.quantity+')').join(', ')+
-    '. Ninguna orden fue enviada a Actinver.';
+  const approvedDraft={...orderDraft,approved:true,approved_symbols:selected};
   resetOrderSelection();
-  await refresh();
-});
-$('orderInspect').addEventListener('click',async()=>{
-  $('orderInspect').disabled=true;
-  $('orderMessage').textContent='Buscando V, abriendo Detalle y el formulario de compra sin enviar órdenes…';
-  const response=await send({type:'ORDER_INSPECT_UI'});
-  $('orderMessage').textContent=response?.message||response?.error||
-    'No se pudo inspeccionar la pantalla.';
-  $('orderInspect').disabled=false;
-});
-
-
-
-$('orderStageVisa').addEventListener('click',async()=>{
-  $('orderStageVisa').disabled=true;
-  $('orderMessage').textContent='Cargando propuesta aprobada de V, sin enviar orden…';
-  const response=await send({type:'ORDER_STAGE_VISA'});
-  $('orderMessage').textContent=response?.message||response?.error||
-    'No se pudo verificar el formulario de compra.';
+  renderApprovedOrders(approvedDraft);
   await refresh();
 });
 $('orderHistory').addEventListener('click',async()=>{
