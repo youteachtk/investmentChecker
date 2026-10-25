@@ -114,10 +114,84 @@
         if (price >= 0 && Number.isFinite(money(cols[price]))) entry.price_mxn = money(cols[price]);
         out.push(entry);
       }
-      if (out.length) break;
+      // All visible holdings tables may represent separate Acciones and ETF sections.
     }
     return out.length>0 && out.length<=100 ? out :
       confirmedEmptyTable ? [] : null;
+  }
+  // Only an explicitly flagged INACTIVE temporary tab may navigate read-only
+  // portfolio category tabs and verified numeric pagination controls.
+  async function readPortfolioSections(first){
+    const seen=new Map();
+    const merge=items=>{
+      for(const item of items||[]){
+        const prior=seen.get(item.symbol);
+        if(!prior || ((!Number.isFinite(prior.price_mxn)&&Number.isFinite(item.price_mxn))||
+          (!Number.isFinite(prior.value_mxn)&&Number.isFinite(item.value_mxn))))
+          seen.set(item.symbol,item);
+      }
+    };
+    merge(first);
+    const readPage=async()=>{
+      for(let attempt=0;attempt<16;attempt++){
+        const rows=holdings();
+        if(Array.isArray(rows)){merge(rows);return rows;}
+        if(attempt<15)await new Promise(r=>setTimeout(r,250));
+      }
+      return null;
+    };
+    const pageInfo=()=>{
+      const text=canon(document.body?.innerText||'');
+      const section=text.match(/seccion\s*:\s*(\d{1,2})\s+de\s+(\d{1,2})/);
+      return section?{page:Number(section[1]),pages:Number(section[2])}:null;
+    };
+    const scanPages=async()=>{
+      let page=pageInfo();
+      if(!page||page.pages<2||page.pages>20)return;
+      for(let i=0;i<page.pages-1;i++){
+        if(!page||page.page>=page.pages)break;
+        const before=JSON.stringify(holdings());
+        const wanted=String(page.page+1);
+        const controls=[...document.querySelectorAll('button,a,[role="button"]')]
+          .filter(e=>visible(e)&&typeof e.click==='function'&&canon(e.innerText||e.textContent)===wanted);
+        if(controls.length!==1)break;
+        controls[0].click(); // Only the exact numeric pagination control.
+        let advanced=false;
+        for(let wait=0;wait<32;wait++){
+          await new Promise(r=>setTimeout(r,250));
+          const next=pageInfo(),rows=holdings();
+          if(next?.page===page.page+1 && JSON.stringify(rows)!==before){
+            merge(rows);page=next;advanced=true;break;
+          }
+        }
+        if(!advanced)break;
+      }
+    };
+    await scanPages();
+    // Category tabs, not trading controls. If Actinver exposes categories
+    // through buttons/menus rather than tabs, stop and report incompleteness.
+    const tabs=[...document.querySelectorAll(
+      '[role="tab"],mat-tab-label,.mat-tab-label,.mat-mdc-tab'
+    )].filter(e=>visible(e)&&typeof e.click==='function'&&
+      /^(acciones|etfs?|etf's|fondos|fibras)$/.test(canon(e.innerText||e.textContent)));
+    const scanned=new Set();
+    for(const tab of tabs.slice(0,8)){
+      const name=canon(tab.innerText||tab.textContent);
+      if(scanned.has(name))continue;
+      scanned.add(name);
+      const before=JSON.stringify(holdings());
+      tab.click(); // Exact recognized read-only portfolio category tab.
+      let changed=false;
+      for(let wait=0;wait<32;wait++){
+        await new Promise(r=>setTimeout(r,250));
+        const rows=holdings();
+        if(Array.isArray(rows)&&JSON.stringify(rows)!==before){
+          merge(rows);changed=true;break;
+        }
+      }
+      if(changed)await scanPages();
+    }
+    return [...seen.values()];
   }
   try {
     // Angular can finish loading its shell before the account values.
@@ -132,6 +206,9 @@
       // A newly rendered empty table might still be loading its real rows.
       if(foundSummary && Array.isArray(foundHoldings) && foundHoldings.length>0)break;
       if(attempt<23)await new Promise(r=>setTimeout(r,500));
+    }
+    if(onPortfolioRoute()&&globalThis.__icPortfolioReadSections===true){
+      foundHoldings=await readPortfolioSections(foundHoldings);
     }
     const result={captured_at:new Date().toISOString(),
       summary:foundSummary,holdings:foundHoldings};
