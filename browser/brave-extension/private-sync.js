@@ -109,13 +109,19 @@ async function acceptPrivateCapture(msg,sender) {
   if(!s.privateEnabled) return {ok:false,error:'Sincronización privada no habilitada.'};
   if(!sender?.tab?.id || !privateSitePattern.test(sender.tab.url||'')) return {ok:false,error:'Origen no autorizado.'};
   const capture=sanitizePrivateCapture(msg.payload);
+  // Independently verify the source tab: old collectors could read movement rows.
+  if(capture.holdings && !/^https:\/\/(?:www\.)?retoactinver\.com\/RetoActinver\/#\/portafolio(?:[/?#]|$)/i.test(sender.tab.url||''))
+    return {ok:false,error:'No se aceptan tenencias fuera de Mi portafolio.'};
   if(!capture.summary && !capture.holdings) return {ok:false,error:'No se detectó información de cartera.'};
   const previous=await chrome.storage.local.get(['privateCache','privateLastSync']);
   const cache=previous.privateCache||{};
+  // Pre-2.8.26 cached rows have no verified source and are unsafe to reuse.
+  if(cache.holdings?.verified_portfolio_route!==true)delete cache.holdings;
   if(capture.summary) cache.summary={at:capture.captured_at,values:capture.summary};
-  if(capture.holdings) cache.holdings={at:capture.captured_at,values:capture.holdings};
+  if(capture.holdings) cache.holdings={at:capture.captured_at,values:capture.holdings,
+    verified_portfolio_route:true};
   await chrome.storage.local.set({privateCache:cache});
-  if(!cache.summary || !cache.holdings) {
+  if(!cache.summary || !cache.holdings || cache.holdings.verified_portfolio_route!==true) {
     const missing=cache.summary?'posiciones (Tu inversión)':'resumen (Monitores)';
     await privateState('Captura parcial local. Falta '+missing+'. Reintento automático pendiente; ningún dato privado ha salido de Brave.');
     return {ok:true,partial:true};
@@ -273,7 +279,7 @@ async function runPortfolioSync(marketTabId) {
   try{readSummary=await capturePrivatePortfolio(marketTabId);}
   catch(error){readSummary={ok:false,error:'No se pudo leer el resumen'};}
   let cache=(await chrome.storage.local.get('privateCache')).privateCache;
-  let freshHoldings=!!(cache?.holdings &&
+  let freshHoldings=!!(cache?.holdings?.verified_portfolio_route===true &&
     Date.now()-Date.parse(cache.holdings.at)<PRIVATE_TTL_MS);
   if(!freshHoldings&&!privateDiscoveryBusy){
     privateDiscoveryBusy=true;
@@ -310,9 +316,9 @@ async function runPortfolioSync(marketTabId) {
   cache=state.privateCache;
   const freshSummary=!!(cache?.summary &&
     Date.now()-Date.parse(cache.summary.at)<PRIVATE_TTL_MS);
-  freshHoldings=!!(cache?.holdings &&
+  freshHoldings=!!(cache?.holdings?.verified_portfolio_route===true &&
     Date.now()-Date.parse(cache.holdings.at)<PRIVATE_TTL_MS);
-  const hasUpload=!!(state.privateLastSync &&
+  const hasUpload=!!(freshSummary&&freshHoldings&&state.privateLastSync &&
     Date.now()-state.privateLastSync<PRIVATE_TTL_MS);
   const code=hasUpload?'PRIVATE_OK':
     (!freshHoldings&&navError)?'PRIVATE_NAV_FAILED':
