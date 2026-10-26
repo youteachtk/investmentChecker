@@ -9,10 +9,8 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.graphics.Color
-import android.text.InputType
 import android.view.Gravity
 import android.widget.Button
-import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 
@@ -48,43 +46,25 @@ class MainActivity : Activity() {
             setPadding(0, 0, 0, 20)
         }
         content.addView(line("InvestmentChecker · Tablet", 24f))
-        content.addView(line("Propuestas de solo lectura. Requieren cotizaciones, clasificación y portafolio vigentes. La captura de Actinver desde Android sigue pendiente.", 16f))
-        val tokenStore = SecureTokenStore(this)
-        val repoInput = EditText(this).apply {
-            hint = "Repositorio privado: usuario/repositorio"
-            setSingleLine(true)
-            setText(tokenStore.repo())
-        }
-        val tokenInput = EditText(this).apply {
-            hint = "Token de acceso (solo la primera vez)"
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-            setSingleLine(true)
-        }
-        val status = line("Estado: sin sincronizar", 15f)
-        content.addView(repoInput)
-        content.addView(tokenInput)
+        content.addView(line("Abre Actinver aquí, inicia sesión y selecciona tu cartera. La lectura es local; no se solicitan claves de GitHub.", 16f))
+        val status = line("Estado: cartera sin capturar", 15f)
         content.addView(Button(this).apply {
-            text = "Guardar conexión privada"
+            text = "Iniciar sesión y leer cartera de Actinver"
             setOnClickListener {
-                try {
-                    tokenStore.save(repoInput.text.toString().trim(), tokenInput.text.toString().trim())
-                    tokenInput.text.clear()
-                    status.text = "Conexión configurada."
-                } catch (_: Exception) { status.text = "Formato de repositorio no válido." }
+                startActivity(Intent(this@MainActivity, ActinverCaptureActivity::class.java))
             }
         })
         content.addView(Button(this).apply {
             text = "Actualizar propuestas"
             setOnClickListener {
-                val token = tokenStore.token()
-                val repo = tokenStore.repo()
-                if (token == null || repo.isBlank()) {
-                    status.text = "Primero configura el repositorio privado y el token."
+                val raw = getSharedPreferences("actinver_capture", MODE_PRIVATE).getString("portfolio", null)
+                if (raw == null) {
+                    status.text = "Primero lee tu cartera en Actinver desde esta tablet."
                 } else {
                     status.text = "Leyendo datos y comprobando vigencia..."
                     Thread {
                         try {
-                            val inputs = ProposalSources.load(repo, token)
+                            val inputs = ProposalSources.loadPublic(org.json.JSONObject(raw))
                             runOnUiThread {
                                 ProposalEngineBridge(this@MainActivity).calculate(inputs) { proposal ->
                                     val safe = proposal.optBoolean("ok") && proposal.optBoolean("copy_only") &&
