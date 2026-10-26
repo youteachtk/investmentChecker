@@ -1,6 +1,6 @@
 {
-  "captured_at": "2026-10-26T19:21:26.189Z",
-  "validated_at": "2026-10-26T19:21:36.429803+00:00",
+  "captured_at": "2026-10-26T20:40:37.164Z",
+  "validated_at": "2026-10-26T20:40:47.445276+00:00",
   "total": 226,
   "counts": {
     "ACCIONES": 145,
@@ -13,7 +13,7 @@
       "symbol": "AA1",
       "last": 707.66,
       "variation": 0.0,
-      "bid_volume": 2700.0,
+      "bid_volume": 900.0,
       "bid": 697.01,
       "ask_volume": 900.0,
       "ask": 730.99
@@ -23,50 +23,50 @@
       "symbol": "AAL",
       "last": 227.81,
       "variation": 1.25,
-      "bid_volume": 16500.0,
-      "bid": 226.94,
-      "ask_volume": 16500.0,
-      "ask": 228.05
+      "bid_volume": 66000.0,
+      "bid": 221.31,
+      "ask_volume": 82500.0,
+      "ask": 228.62
     },
     {
       "category": "ACCIONES",
       "symbol": "AAPL",
-      "last": 6370.0,
-      "variation": -1.57,
-      "bid_volume": 500.0,
-      "bid": 6371.47,
-      "ask_volume": 400.0,
-      "ask": 6397.0
+      "last": 6392.0,
+      "variation": -1.23,
+      "bid_volume": 400.0,
+      "bid": 6366.77,
+      "ask_volume": 200.0,
+      "ask": 6393.14
     },
     {
       "category": "ACCIONES",
       "symbol": "ABBV",
       "last": 5315.0,
       "variation": -0.36,
-      "bid_volume": 400.0,
+      "bid_volume": 500.0,
       "bid": 5197.21,
       "ask_volume": 500.0,
-      "ask": 5410.19
+      "ask": 5452.79
     },
     {
       "category": "ACCIONES",
       "symbol": "ABNB",
-      "last": 3155.0,
-      "variation": -2.77,
-      "bid_volume": 1200.0,
-      "bid": 3150.0,
-      "ask_volume": 400.0,
-      "ask": 3165.13
+      "last": 3165.14,
+      "variation": -2.46,
+      "bid_volume": 400.0,
+      "bid": 2658.01,
+      "ask_volume": 15.0,
+      "ask": 3200.0
     },
     {
       "category": "ACCIONES",
       "symbol": "AC",
-      "last": 218.51,
-      "variation": 0.22,
-      "bid_volume": 200.0,
-      "bid": 218.51,
-      "ask_volume": 920.0,
-      "ask": 218.61
+      "last": 218.0,
+      "variation": -0.01,
+      "bid_volume": 2200.0,
+      "bid": 217.91,
+      "ask_volume": 8338.0,
+      "ask": 218.67
     },
     {
       "category": "ACCIONES",
@@ -74,7 +74,7 @@
       "last": 21.52,
       "variation": 0.0,
       "bid_volume": 1.0,
-      "bid": 21.52,
+      "bid": 21.5,
       "ask_volume": 253.0,
       "ask": 22.0
     },
@@ -83,117 +83,117 @@
       "symbol": "AFRM",
       "last": 1286.5,
       "variation": -5.82,
-      "bid_volume": 1500.0,
+      "bid_volume": 1200.0,
       "bid": 1270.02,
-      "ask_volume": 1200.0,
-      "ask": 1322.99
+      "ask_volume": 900.0,
+      "ask": 1312.48
     },
     {
       "category": "ACCIONES",
       "symbol": "AGNC",
-      "last": 165.82,
-      "variation": 0.5,
-      "bid_volume": 113000.0,
-      "bid": 159.01,
-      "ask_volume": 1000.0,
-      "ask": 163.0
+      "last": 163.0,
+      "variation": -1.21,
+      "bid_volume": 135600.0,
+      "bid": 159.53,
+      "ask_volume": 67800.0,
+      "ask": 164.16
     },
     {
       "category": "ACCIONES",
       "symbol": "ALPEK A",
       "last": 15.76,
       "variation": 1.48,
-      "bid_volume": 1554.0,
-      "bid": 15.76,
-      "ask_volume": 700.0,
-      "ask": 15.78
+      "bid_volume": 15512.0,
+      "bid": 15.75,
+      "ask_volume": 25199.0,
+      "ask": 15.77
     },
     {
       "category": "ACCIONES",
       "symbol": "ALSEA",
-      "last": 52.08,
-      "variation": 0.15,
-      "bid_volume": 435.0,
-      "bid": 52.07,
-      "ask_volume": 471.0,
-      "ask": 52.08
+      "last": 51.99,
+      "variation": -0.02,
+      "bid_volume": 44500.0,
+      "bid": 51.81,
+      "ask_volume": 14040.0,
+      "ask": 52.12
     },
     {
       "category": "ACCIONES",
       "symbol": "AMAT",
-      "last": 7250.0,
-      "variation": 3.13,
+      "last": 7198.0,
+      "variation": 2.39,
       "bid_volume": 400.0,
-      "bid": 7240.79,
-      "ask_volume": 300.0,
-      "ask": 7276.4
+      "bid": 7116.34,
+      "ask_volume": 400.0,
+      "ask": 7375.29
     },
     {
       "category": "ACCIONES",
       "symbol": "AMD",
-      "last": 9880.0,
-      "variation": 2.71,
+      "last": 9853.32,
+      "variation": 2.44,
       "bid_volume": 400.0,
-      "bid": 9860.92,
-      "ask_volume": 5.0,
-      "ask": 9892.04
+      "bid": 9765.01,
+      "ask_volume": 600.0,
+      "ask": 9899.63
     },
     {
       "category": "ACCIONES",
       "symbol": "AMX B",
       "last": 22.53,
       "variation": -1.96,
-      "bid_volume": 6534.0,
-      "bid": 22.51,
-      "ask_volume": 4059.0,
-      "ask": 22.52
+      "bid_volume": 35500.0,
+      "bid": 22.47,
+      "ask_volume": 3916.0,
+      "ask": 22.5
     },
     {
       "category": "ACCIONES",
       "symbol": "AMZN",
-      "last": 4611.97,
-      "variation": -0.46,
-      "bid_volume": 16.0,
-      "bid": 4611.97,
-      "ask_volume": 1200.0,
-      "ask": 4613.89
+      "last": 4632.01,
+      "variation": -0.03,
+      "bid_volume": 1200.0,
+      "bid": 4620.19,
+      "ask_volume": 10.0,
+      "ask": 4655.0
     },
     {
       "category": "ACCIONES",
       "symbol": "ASUR B",
-      "last": 470.05,
-      "variation": 1.11,
-      "bid_volume": 65.0,
-      "bid": 470.04,
-      "ask_volume": 98.0,
-      "ask": 470.16
+      "last": 467.74,
+      "variation": 0.62,
+      "bid_volume": 635.0,
+      "bid": 467.51,
+      "ask_volume": 7832.0,
+      "ask": 469.6
     },
     {
       "category": "ACCIONES",
       "symbol": "AVGO",
-      "last": 6130.0,
-      "variation": 2.17,
-      "bid_volume": 200.0,
-      "bid": 6134.36,
-      "ask_volume": 200.0,
-      "ask": 6149.99
+      "last": 6116.0,
+      "variation": 1.93,
+      "bid_volume": 400.0,
+      "bid": 6100.01,
+      "ask_volume": 600.0,
+      "ask": 6139.99
     },
     {
       "category": "ACCIONES",
       "symbol": "AXP",
-      "last": 5824.5,
-      "variation": -0.18,
-      "bid_volume": 400.0,
-      "bid": 5819.7,
-      "ask_volume": 5.0,
-      "ask": 5833.82
+      "last": 5833.82,
+      "variation": -0.02,
+      "bid_volume": 600.0,
+      "bid": 5790.01,
+      "ask_volume": 504.0,
+      "ask": 5977.59
     },
     {
       "category": "ACCIONES",
       "symbol": "B N",
       "last": 710.0,
       "variation": -0.56,
-      "bid_volume": 12000.0,
+      "bid_volume": 20000.0,
       "bid": 705.01,
       "ask_volume": 20000.0,
       "ask": 723.89
@@ -203,110 +203,110 @@
       "symbol": "BA",
       "last": 3514.0,
       "variation": -0.31,
-      "bid_volume": 800.0,
+      "bid_volume": 1200.0,
       "bid": 3440.01,
-      "ask_volume": 800.0,
+      "ask_volume": 1200.0,
       "ask": 3524.99
     },
     {
       "category": "ACCIONES",
       "symbol": "BABA N",
-      "last": 1851.76,
-      "variation": -0.04,
-      "bid_volume": 1600.0,
-      "bid": 1854.26,
-      "ask_volume": 800.0,
-      "ask": 1861.86
+      "last": 1855.01,
+      "variation": 0.13,
+      "bid_volume": 4.0,
+      "bid": 1855.0,
+      "ask_volume": 14.0,
+      "ask": 1877.2
     },
     {
       "category": "ACCIONES",
       "symbol": "BAC",
-      "last": 940.0,
-      "variation": -0.53,
-      "bid_volume": 11700.0,
-      "bid": 938.01,
-      "ask_volume": 7800.0,
-      "ask": 942.03
+      "last": 938.0,
+      "variation": -0.74,
+      "bid_volume": 7899.0,
+      "bid": 936.0,
+      "ask_volume": 15600.0,
+      "ask": 953.99
     },
     {
       "category": "ACCIONES",
       "symbol": "BBAJIO O",
-      "last": 58.68,
-      "variation": -0.19,
-      "bid_volume": 1961.0,
-      "bid": 58.63,
-      "ask_volume": 353.0,
-      "ask": 58.68
+      "last": 58.57,
+      "variation": -0.37,
+      "bid_volume": 2000.0,
+      "bid": 58.5,
+      "ask_volume": 35628.0,
+      "ask": 58.74
     },
     {
       "category": "ACCIONES",
       "symbol": "BIMBO A",
-      "last": 63.75,
-      "variation": 1.48,
-      "bid_volume": 1241.0,
-      "bid": 63.75,
-      "ask_volume": 2700.0,
-      "ask": 63.78
+      "last": 63.28,
+      "variation": 0.73,
+      "bid_volume": 3124.0,
+      "bid": 63.39,
+      "ask_volume": 8028.0,
+      "ask": 63.49
     },
     {
       "category": "ACCIONES",
       "symbol": "BMY",
-      "last": 1147.64,
-      "variation": 0.0,
-      "bid_volume": 900.0,
-      "bid": 1104.01,
-      "ask_volume": 2700.0,
-      "ask": 1159.19
+      "last": 1135.0,
+      "variation": -1.1,
+      "bid_volume": 2700.0,
+      "bid": 1117.81,
+      "ask_volume": 900.0,
+      "ask": 1172.99
     },
     {
       "category": "ACCIONES",
       "symbol": "BOLSA A",
-      "last": 37.0,
-      "variation": -0.19,
-      "bid_volume": 841.0,
-      "bid": 36.99,
-      "ask_volume": 841.0,
-      "ask": 37.07
+      "last": 37.08,
+      "variation": 0.03,
+      "bid_volume": 52100.0,
+      "bid": 36.93,
+      "ask_volume": 16967.0,
+      "ask": 37.15
     },
     {
       "category": "ACCIONES",
       "symbol": "BRKB",
-      "last": 10145.94,
-      "variation": 0.07,
-      "bid_volume": 300.0,
-      "bid": 10144.41,
-      "ask_volume": 100.0,
-      "ask": 10174.99
+      "last": 10168.0,
+      "variation": 0.29,
+      "bid_volume": 600.0,
+      "bid": 10125.01,
+      "ask_volume": 1.0,
+      "ask": 10180.0
     },
     {
       "category": "ACCIONES",
       "symbol": "BYND",
-      "last": 124.0,
-      "variation": -9.49,
-      "bid_volume": 1300.0,
-      "bid": 123.22,
-      "ask_volume": 1300.0,
-      "ask": 127.99
+      "last": 125.0,
+      "variation": -8.76,
+      "bid_volume": 7.0,
+      "bid": 125.0,
+      "ask_volume": 466.0,
+      "ask": 128.0
     },
     {
       "category": "ACCIONES",
       "symbol": "C",
       "last": 2254.1,
       "variation": 0.05,
-      "bid_volume": 1200.0,
-      "bid": 2246.92,
-      "ask_volume": 1200.0,
-      "ask": 2257.27
+      "bid_volume": 1800.0,
+      "bid": 2240.12,
+      "ask_volume": 1800.0,
+      "ask": 2289.99
     },
     {
       "category": "ACCIONES",
       "symbol": "CAT",
-      "last": 12889.89,
-      "variation": 0.51,
-      "bid_volume": 505.0,
+      "last": 12880.0,
+      "variation": 0.43,
+      "bid_volume": 600.0,
       "bid": 12781.01,
       "ask_volume": 400.0,
-      "ask": 13196.69
+      "ask": 13094.39
     },
     {
       "category": "ACCIONES",
@@ -315,78 +315,78 @@
       "variation": 2.59,
       "bid_volume": 37500.0,
       "bid": 487.51,
-      "ask_volume": 30000.0,
-      "ask": 509.99
+      "ask_volume": 37500.0,
+      "ask": 507.99
     },
     {
       "category": "ACCIONES",
       "symbol": "CEMEX CPO",
-      "last": 18.97,
-      "variation": -0.63,
-      "bid_volume": 4800.0,
-      "bid": 18.96,
-      "ask_volume": 84.0,
-      "ask": 18.97
+      "last": 18.94,
+      "variation": -0.79,
+      "bid_volume": 1168.0,
+      "bid": 18.91,
+      "ask_volume": 16200.0,
+      "ask": 18.99
     },
     {
       "category": "ACCIONES",
       "symbol": "CHDRAUI B",
-      "last": 88.12,
-      "variation": -3.07,
-      "bid_volume": 110.0,
-      "bid": 88.07,
-      "ask_volume": 99.0,
-      "ask": 88.13
+      "last": 86.99,
+      "variation": -4.31,
+      "bid_volume": 621.0,
+      "bid": 87.15,
+      "ask_volume": 178.0,
+      "ask": 88.04
     },
     {
       "category": "ACCIONES",
       "symbol": "CLF",
       "last": 260.5,
       "variation": 0.0,
-      "bid_volume": 14200.0,
-      "bid": 249.91,
-      "ask_volume": 14200.0,
-      "ask": 262.49
+      "bid_volume": 35500.0,
+      "bid": 241.51,
+      "ask_volume": 28400.0,
+      "ask": 254.09
     },
     {
       "category": "ACCIONES",
       "symbol": "COST",
-      "last": 18563.17,
-      "variation": -0.98,
+      "last": 18647.0,
+      "variation": -0.53,
       "bid_volume": 300.0,
-      "bid": 18535.76,
-      "ask_volume": 200.0,
-      "ask": 18600.21
+      "bid": 18300.01,
+      "ask_volume": 600.0,
+      "ask": 18699.98
     },
     {
       "category": "ACCIONES",
       "symbol": "CRM",
-      "last": 4550.0,
-      "variation": -1.6,
-      "bid_volume": 400.0,
-      "bid": 4548.83,
+      "last": 4570.19,
+      "variation": -1.17,
+      "bid_volume": 500.0,
+      "bid": 4564.01,
       "ask_volume": 200.0,
-      "ask": 4564.0
+      "ask": 4599.99
     },
     {
       "category": "ACCIONES",
       "symbol": "CSCO",
-      "last": 2045.05,
+      "last": 2045.0,
       "variation": 3.19,
-      "bid_volume": 2400.0,
-      "bid": 2044.09,
-      "ask_volume": 400.0,
-      "ask": 2051.14
+      "bid_volume": 1.0,
+      "bid": 1910.11,
+      "ask_volume": 2.0,
+      "ask": 2058.3
     },
     {
       "category": "ACCIONES",
       "symbol": "CUERVO",
-      "last": 15.94,
-      "variation": -2.33,
-      "bid_volume": 200.0,
-      "bid": 15.93,
-      "ask_volume": 1441.0,
-      "ask": 15.96
+      "last": 15.84,
+      "variation": -2.94,
+      "bid_volume": 14847.0,
+      "bid": 15.72,
+      "ask_volume": 10000.0,
+      "ask": 15.86
     },
     {
       "category": "ACCIONES",
@@ -395,48 +395,48 @@
       "variation": -2.05,
       "bid_volume": 1200.0,
       "bid": 1672.01,
-      "ask_volume": 400.0,
+      "ask_volume": 800.0,
       "ask": 1740.99
     },
     {
       "category": "ACCIONES",
       "symbol": "CVX",
-      "last": 4316.0,
-      "variation": -0.87,
+      "last": 4300.0,
+      "variation": -1.24,
       "bid_volume": 400.0,
-      "bid": 4303.52,
+      "bid": 4100.01,
       "ask_volume": 600.0,
-      "ask": 4322.26
+      "ask": 4319.99
     },
     {
       "category": "ACCIONES",
       "symbol": "DAL",
-      "last": 1465.0,
-      "variation": -8.44,
-      "bid_volume": 2500.0,
+      "last": 1468.21,
+      "variation": -8.24,
+      "bid_volume": 1500.0,
       "bid": 1450.01,
-      "ask_volume": 2000.0,
-      "ask": 1506.49
+      "ask_volume": 14.0,
+      "ask": 1494.99
     },
     {
       "category": "ACCIONES",
       "symbol": "DIS",
-      "last": 2041.77,
-      "variation": -2.63,
-      "bid_volume": 1200.0,
-      "bid": 2042.96,
-      "ask_volume": 800.0,
-      "ask": 2049.66
+      "last": 2053.0,
+      "variation": -2.1,
+      "bid_volume": 1600.0,
+      "bid": 1999.21,
+      "ask_volume": 1600.0,
+      "ask": 2071.99
     },
     {
       "category": "ACCIONES",
       "symbol": "DVN",
       "last": 963.0,
       "variation": 0.39,
-      "bid_volume": 4200.0,
+      "bid_volume": 2.0,
       "bid": 931.51,
-      "ask_volume": 1400.0,
-      "ask": 979.99
+      "ask_volume": 1.0,
+      "ask": 980.0
     },
     {
       "category": "ACCIONES",
@@ -445,17 +445,17 @@
       "variation": 0.0,
       "bid_volume": 0.0,
       "bid": 0.0,
-      "ask_volume": 2.0,
+      "ask_volume": 3.0,
       "ask": 1600.0
     },
     {
       "category": "ACCIONES",
       "symbol": "F",
-      "last": 215.4,
-      "variation": -1.64,
-      "bid_volume": 10.0,
-      "bid": 215.0,
-      "ask_volume": 34400.0,
+      "last": 214.95,
+      "variation": -1.85,
+      "bid_volume": 7.0,
+      "bid": 214.0,
+      "ask_volume": 17200.0,
       "ask": 219.99
     },
     {
@@ -473,60 +473,60 @@
       "symbol": "FCX",
       "last": 1207.2,
       "variation": -0.78,
-      "bid_volume": 3600.0,
-      "bid": 1205.6,
+      "bid_volume": 2400.0,
+      "bid": 1205.01,
       "ask_volume": 2400.0,
-      "ask": 1241.59
+      "ask": 1329.99
     },
     {
       "category": "ACCIONES",
       "symbol": "FDX",
       "last": 5576.2,
       "variation": 0.0,
-      "bid_volume": 600.0,
-      "bid": 5485.81,
-      "ask_volume": 400.0,
+      "bid_volume": 400.0,
+      "bid": 5396.61,
+      "ask_volume": 600.0,
       "ask": 5685.99
     },
     {
       "category": "ACCIONES",
       "symbol": "FEMSA UBD",
-      "last": 232.98,
-      "variation": -3.13,
-      "bid_volume": 629.0,
-      "bid": 232.78,
-      "ask_volume": 26.0,
-      "ask": 232.99
+      "last": 232.54,
+      "variation": -3.31,
+      "bid_volume": 3700.0,
+      "bid": 231.65,
+      "ask_volume": 102.0,
+      "ask": 232.19
     },
     {
       "category": "ACCIONES",
       "symbol": "FIBRAMQ 12",
-      "last": 46.69,
-      "variation": 4.83,
-      "bid_volume": 378.0,
-      "bid": 46.53,
-      "ask_volume": 6654.0,
-      "ask": 46.69
+      "last": 46.7,
+      "variation": 4.85,
+      "bid_volume": 2382.0,
+      "bid": 46.7,
+      "ask_volume": 20022.0,
+      "ask": 47.0
     },
     {
       "category": "ACCIONES",
       "symbol": "FIBRAPL 14",
-      "last": 82.78,
-      "variation": 2.78,
-      "bid_volume": 495.0,
-      "bid": 82.67,
-      "ask_volume": 614.0,
-      "ask": 82.78
+      "last": 82.95,
+      "variation": 2.99,
+      "bid_volume": 9900.0,
+      "bid": 82.55,
+      "ask_volume": 1000.0,
+      "ask": 83.02
     },
     {
       "category": "ACCIONES",
       "symbol": "FSLR",
       "last": 3110.0,
       "variation": -2.73,
-      "bid_volume": 1200.0,
-      "bid": 3110.01,
-      "ask_volume": 400.0,
-      "ask": 3186.79
+      "bid_volume": 600.0,
+      "bid": 3113.01,
+      "ask_volume": 200.0,
+      "ask": 3212.49
     },
     {
       "category": "ACCIONES",
@@ -541,91 +541,91 @@
     {
       "category": "ACCIONES",
       "symbol": "FUNO 11",
-      "last": 33.14,
-      "variation": 0.61,
-      "bid_volume": 2760.0,
-      "bid": 33.12,
-      "ask_volume": 779.0,
-      "ask": 33.14
+      "last": 33.11,
+      "variation": 0.52,
+      "bid_volume": 5851.0,
+      "bid": 33.05,
+      "ask_volume": 3279.0,
+      "ask": 33.2
     },
     {
       "category": "ACCIONES",
       "symbol": "GAP B",
-      "last": 418.47,
-      "variation": 1.01,
-      "bid_volume": 20.0,
-      "bid": 418.47,
-      "ask_volume": 154.0,
-      "ask": 418.96
+      "last": 417.18,
+      "variation": 0.7,
+      "bid_volume": 1413.0,
+      "bid": 416.71,
+      "ask_volume": 4775.0,
+      "ask": 418.41
     },
     {
       "category": "ACCIONES",
       "symbol": "GCARSO A1",
-      "last": 171.1,
-      "variation": 3.5,
-      "bid_volume": 318.0,
-      "bid": 170.44,
-      "ask_volume": 252.0,
-      "ask": 171.1
+      "last": 170.86,
+      "variation": 3.36,
+      "bid_volume": 3700.0,
+      "bid": 169.73,
+      "ask_volume": 7300.0,
+      "ask": 171.49
     },
     {
       "category": "ACCIONES",
       "symbol": "GCC",
-      "last": 180.78,
-      "variation": 1.66,
-      "bid_volume": 109.0,
-      "bid": 180.6,
-      "ask_volume": 202.0,
-      "ask": 180.78
+      "last": 181.68,
+      "variation": 2.16,
+      "bid_volume": 649.0,
+      "bid": 179.79,
+      "ask_volume": 5.0,
+      "ask": 183.64
     },
     {
       "category": "ACCIONES",
       "symbol": "GE",
       "last": 5365.0,
       "variation": 0.52,
-      "bid_volume": 500.0,
-      "bid": 5349.01,
+      "bid_volume": 400.0,
+      "bid": 5312.08,
       "ask_volume": 400.0,
-      "ask": 5495.39
+      "ask": 5452.79
     },
     {
       "category": "ACCIONES",
       "symbol": "GENTERA",
-      "last": 37.21,
-      "variation": -0.27,
-      "bid_volume": 1986.0,
-      "bid": 37.21,
-      "ask_volume": 2487.0,
-      "ask": 37.22
+      "last": 37.08,
+      "variation": -0.62,
+      "bid_volume": 25200.0,
+      "bid": 37.1,
+      "ask_volume": 110.0,
+      "ask": 37.2
     },
     {
       "category": "ACCIONES",
       "symbol": "GFINBUR O",
-      "last": 47.37,
-      "variation": 0.62,
-      "bid_volume": 1047.0,
-      "bid": 47.32,
-      "ask_volume": 564.0,
-      "ask": 47.38
+      "last": 47.2,
+      "variation": 0.25,
+      "bid_volume": 1303.0,
+      "bid": 47.06,
+      "ask_volume": 300.0,
+      "ask": 47.39
     },
     {
       "category": "ACCIONES",
       "symbol": "GFNORTE O",
-      "last": 213.64,
-      "variation": 0.07,
-      "bid_volume": 1450.0,
-      "bid": 213.63,
-      "ask_volume": 579.0,
-      "ask": 213.68
+      "last": 214.07,
+      "variation": 0.27,
+      "bid_volume": 4708.0,
+      "bid": 214.31,
+      "ask_volume": 2000.0,
+      "ask": 214.9
     },
     {
       "category": "ACCIONES",
       "symbol": "GM",
-      "last": 1411.0,
-      "variation": -0.44,
+      "last": 1415.0,
+      "variation": -0.15,
       "bid_volume": 2000.0,
       "bid": 1378.61,
-      "ask_volume": 2000.0,
+      "ask_volume": 500.0,
       "ask": 1417.99
     },
     {
@@ -641,112 +641,112 @@
     {
       "category": "ACCIONES",
       "symbol": "GMEXICO B",
-      "last": 230.04,
-      "variation": 0.41,
-      "bid_volume": 960.0,
-      "bid": 230.03,
-      "ask_volume": 200.0,
-      "ask": 230.05
+      "last": 228.22,
+      "variation": -0.38,
+      "bid_volume": 835.0,
+      "bid": 228.21,
+      "ask_volume": 10325.0,
+      "ask": 228.81
     },
     {
       "category": "ACCIONES",
       "symbol": "GOOGL",
-      "last": 5894.98,
-      "variation": -1.43,
+      "last": 5882.0,
+      "variation": -1.64,
       "bid_volume": 1.0,
-      "bid": 5890.0,
-      "ask_volume": 375.0,
+      "bid": 5880.03,
+      "ask_volume": 598.0,
       "ask": 5894.97
     },
     {
       "category": "ACCIONES",
       "symbol": "GRUMA B",
-      "last": 248.09,
-      "variation": -1.16,
-      "bid_volume": 117.0,
-      "bid": 248.09,
-      "ask_volume": 270.0,
-      "ask": 248.1
+      "last": 247.46,
+      "variation": -1.41,
+      "bid_volume": 975.0,
+      "bid": 247.96,
+      "ask_volume": 5.0,
+      "ask": 248.14
     },
     {
       "category": "ACCIONES",
       "symbol": "HD",
-      "last": 5885.01,
-      "variation": -1.26,
-      "bid_volume": 600.0,
-      "bid": 5776.48,
-      "ask_volume": 405.0,
+      "last": 5930.0,
+      "variation": -0.5,
+      "bid_volume": 15.0,
+      "bid": 5776.47,
+      "ask_volume": 505.0,
       "ask": 5969.99
     },
     {
       "category": "ACCIONES",
       "symbol": "INTC",
-      "last": 1703.4,
-      "variation": 5.03,
-      "bid_volume": 5500.0,
-      "bid": 1697.51,
-      "ask_volume": 2200.0,
-      "ask": 1705.58
+      "last": 1680.0,
+      "variation": 3.59,
+      "bid_volume": 2200.0,
+      "bid": 1671.32,
+      "ask_volume": 6616.0,
+      "ask": 1699.89
     },
     {
       "category": "ACCIONES",
       "symbol": "JNJ",
-      "last": 4919.0,
-      "variation": -0.19,
-      "bid_volume": 500.0,
-      "bid": 4806.81,
-      "ask_volume": 400.0,
-      "ask": 5043.19
+      "last": 4925.0,
+      "variation": -0.07,
+      "bid_volume": 300.0,
+      "bid": 4846.21,
+      "ask_volume": 600.0,
+      "ask": 5039.13
     },
     {
       "category": "ACCIONES",
       "symbol": "JPM",
-      "last": 6207.54,
-      "variation": -0.09,
-      "bid_volume": 400.0,
-      "bid": 6201.7,
-      "ask_volume": 300.0,
-      "ask": 6226.88
+      "last": 6227.0,
+      "variation": 0.22,
+      "bid_volume": 10.0,
+      "bid": 6195.0,
+      "ask_volume": 500.0,
+      "ask": 6229.99
     },
     {
       "category": "ACCIONES",
       "symbol": "KIMBER A",
-      "last": 37.82,
-      "variation": -0.11,
-      "bid_volume": 3800.0,
-      "bid": 37.82,
-      "ask_volume": 6170.0,
-      "ask": 37.87
+      "last": 37.75,
+      "variation": -0.29,
+      "bid_volume": 32518.0,
+      "bid": 37.66,
+      "ask_volume": 205.0,
+      "ask": 37.75
     },
     {
       "category": "ACCIONES",
       "symbol": "KO",
-      "last": 1715.0,
-      "variation": -1.44,
-      "bid_volume": 4200.0,
-      "bid": 1712.04,
-      "ask_volume": 8400.0,
-      "ask": 1749.99
+      "last": 1720.0,
+      "variation": -1.15,
+      "bid_volume": 2107.0,
+      "bid": 1715.02,
+      "ask_volume": 1.0,
+      "ask": 1750.0
     },
     {
       "category": "ACCIONES",
       "symbol": "KOF UBL",
-      "last": 213.89,
-      "variation": -3.16,
-      "bid_volume": 309.0,
-      "bid": 213.66,
-      "ask_volume": 439.0,
-      "ask": 213.89
+      "last": 214.75,
+      "variation": -2.77,
+      "bid_volume": 5000.0,
+      "bid": 214.11,
+      "ask_volume": 7800.0,
+      "ask": 215.48
     },
     {
       "category": "ACCIONES",
       "symbol": "LAB B",
-      "last": 15.65,
-      "variation": 2.56,
-      "bid_volume": 3521.0,
-      "bid": 15.65,
-      "ask_volume": 894.0,
-      "ask": 15.66
+      "last": 15.66,
+      "variation": 2.62,
+      "bid_volume": 9320.0,
+      "bid": 15.62,
+      "ask_volume": 30177.0,
+      "ask": 15.68
     },
     {
       "category": "ACCIONES",
@@ -761,251 +761,251 @@
     {
       "category": "ACCIONES",
       "symbol": "LCID",
-      "last": 65.95,
-      "variation": -0.38,
+      "last": 63.52,
+      "variation": -4.05,
       "bid_volume": 18400.0,
-      "bid": 63.53,
-      "ask_volume": 10.0,
-      "ask": 65.94
+      "bid": 62.11,
+      "ask_volume": 8.0,
+      "ask": 65.9
     },
     {
       "category": "ACCIONES",
       "symbol": "LIVEPOL C-1",
-      "last": 100.16,
-      "variation": -2.12,
-      "bid_volume": 194.0,
-      "bid": 100.16,
-      "ask_volume": 400.0,
-      "ask": 100.98
+      "last": 100.73,
+      "variation": -1.56,
+      "bid_volume": 311.0,
+      "bid": 100.5,
+      "ask_volume": 100.0,
+      "ask": 101.5
     },
     {
       "category": "ACCIONES",
       "symbol": "LLY",
       "last": 23667.0,
       "variation": 0.29,
-      "bid_volume": 400.0,
-      "bid": 23593.25,
+      "bid_volume": 300.0,
+      "bid": 23500.01,
       "ask_volume": 500.0,
-      "ask": 23709.14
+      "ask": 23856.99
     },
     {
       "category": "ACCIONES",
       "symbol": "LUV",
       "last": 787.0,
       "variation": 0.98,
-      "bid_volume": 5400.0,
-      "bid": 781.21,
-      "ask_volume": 3600.0,
-      "ask": 817.82
+      "bid_volume": 4500.0,
+      "bid": 775.01,
+      "ask_volume": 2700.0,
+      "ask": 812.19
     },
     {
       "category": "ACCIONES",
       "symbol": "LVS",
       "last": 673.0,
       "variation": 1.51,
-      "bid_volume": 3300.0,
-      "bid": 673.01,
-      "ask_volume": 1100.0,
-      "ask": 695.99
+      "bid_volume": 1.0,
+      "bid": 675.0,
+      "ask_volume": 0.0,
+      "ask": 0.0
     },
     {
       "category": "ACCIONES",
       "symbol": "MA",
-      "last": 11385.6,
-      "variation": -1.9,
-      "bid_volume": 500.0,
-      "bid": 11366.51,
+      "last": 11377.87,
+      "variation": -1.96,
+      "bid_volume": 2.0,
+      "bid": 10490.0,
       "ask_volume": 200.0,
       "ask": 11409.99
     },
     {
       "category": "ACCIONES",
       "symbol": "MARA",
-      "last": 129.34,
-      "variation": -2.02,
-      "bid_volume": 25650.0,
-      "bid": 128.14,
-      "ask_volume": 50750.0,
-      "ask": 129.99
+      "last": 127.26,
+      "variation": -3.6,
+      "bid_volume": 5.0,
+      "bid": 127.0,
+      "ask_volume": 50200.0,
+      "ask": 129.49
     },
     {
       "category": "ACCIONES",
       "symbol": "MCD",
-      "last": 4633.71,
-      "variation": 0.04,
-      "bid_volume": 400.0,
-      "bid": 4628.93,
+      "last": 4650.0,
+      "variation": 0.39,
+      "bid_volume": 600.0,
+      "bid": 4610.01,
       "ask_volume": 200.0,
-      "ask": 4645.99
+      "ask": 4656.99
     },
     {
       "category": "ACCIONES",
       "symbol": "MEGA CPO",
-      "last": 53.79,
-      "variation": -0.77,
-      "bid_volume": 450.0,
-      "bid": 53.78,
-      "ask_volume": 627.0,
-      "ask": 53.79
+      "last": 53.54,
+      "variation": -1.24,
+      "bid_volume": 4000.0,
+      "bid": 53.42,
+      "ask_volume": 19500.0,
+      "ask": 53.8
     },
     {
       "category": "ACCIONES",
       "symbol": "MELI N",
-      "last": 30796.55,
-      "variation": -9.02,
-      "bid_volume": 1.0,
-      "bid": 30730.0,
-      "ask_volume": 120.0,
-      "ask": 30790.84
+      "last": 30995.46,
+      "variation": -8.43,
+      "bid_volume": 2.0,
+      "bid": 30802.0,
+      "ask_volume": 400.0,
+      "ask": 31278.99
     },
     {
       "category": "ACCIONES",
       "symbol": "META",
-      "last": 11758.17,
-      "variation": -1.97,
-      "bid_volume": 200.0,
-      "bid": 11732.02,
-      "ask_volume": 300.0,
-      "ask": 11779.31
+      "last": 11667.0,
+      "variation": -2.73,
+      "bid_volume": 500.0,
+      "bid": 11660.02,
+      "ask_volume": 608.0,
+      "ask": 11756.5
     },
     {
       "category": "ACCIONES",
       "symbol": "MFRISCO A-1",
-      "last": 18.36,
-      "variation": -1.77,
-      "bid_volume": 261.0,
-      "bid": 18.36,
-      "ask_volume": 2258.0,
+      "last": 18.5,
+      "variation": -1.02,
+      "bid_volume": 11.0,
+      "bid": 18.35,
+      "ask_volume": 2402.0,
       "ask": 18.5
     },
     {
       "category": "ACCIONES",
       "symbol": "MRK",
-      "last": 2708.0,
-      "variation": 0.0,
-      "bid_volume": 800.0,
-      "bid": 2600.01,
-      "ask_volume": 800.0,
-      "ask": 2629.99
+      "last": 2600.0,
+      "variation": -3.99,
+      "bid_volume": 5.0,
+      "bid": 2538.91,
+      "ask_volume": 1.0,
+      "ask": 2630.0
     },
     {
       "category": "ACCIONES",
       "symbol": "MRNA",
-      "last": 3650.0,
-      "variation": -2.14,
-      "bid_volume": 600.0,
+      "last": 3688.0,
+      "variation": -1.13,
+      "bid_volume": 400.0,
       "bid": 3605.01,
-      "ask_volume": 400.0,
-      "ask": 3669.99
+      "ask_volume": 100.0,
+      "ask": 3740.06
     },
     {
       "category": "ACCIONES",
       "symbol": "MSFT",
-      "last": 9858.0,
-      "variation": 0.7,
-      "bid_volume": 390.0,
-      "bid": 9850.01,
-      "ask_volume": 102.0,
-      "ask": 9870.0
+      "last": 9889.29,
+      "variation": 1.02,
+      "bid_volume": 300.0,
+      "bid": 9850.15,
+      "ask_volume": 4.0,
+      "ask": 9889.0
     },
     {
       "category": "ACCIONES",
       "symbol": "MU",
-      "last": 16925.0,
-      "variation": 3.57,
-      "bid_volume": 375.0,
-      "bid": 16902.23,
-      "ask_volume": 1.0,
-      "ask": 16945.0
+      "last": 16730.0,
+      "variation": 2.37,
+      "bid_volume": 112.0,
+      "bid": 16741.8,
+      "ask_volume": 4.0,
+      "ask": 16850.0
     },
     {
       "category": "ACCIONES",
       "symbol": "NCLH N",
-      "last": 279.19,
-      "variation": -0.29,
+      "last": 283.6,
+      "variation": 1.29,
       "bid_volume": 33300.0,
       "bid": 280.01,
-      "ask_volume": 22200.0,
-      "ask": 289.79
+      "ask_volume": 9.0,
+      "ask": 292.0
     },
     {
       "category": "ACCIONES",
       "symbol": "NFLX",
-      "last": 1178.81,
-      "variation": -4.07,
-      "bid_volume": 16.0,
-      "bid": 1178.0,
-      "ask_volume": 1900.0,
-      "ask": 1179.99
+      "last": 1186.0,
+      "variation": -3.48,
+      "bid_volume": 105.0,
+      "bid": 1186.0,
+      "ask_volume": 794.0,
+      "ask": 1189.1
     },
     {
       "category": "ACCIONES",
       "symbol": "NKE",
-      "last": 700.08,
-      "variation": 0.73,
-      "bid_volume": 20800.0,
-      "bid": 693.09,
-      "ask_volume": 20800.0,
-      "ask": 703.99
+      "last": 703.6,
+      "variation": 1.24,
+      "bid_volume": 26000.0,
+      "bid": 693.1,
+      "ask_volume": 15600.0,
+      "ask": 704.99
     },
     {
       "category": "ACCIONES",
       "symbol": "NU N",
-      "last": 235.99,
-      "variation": -16.72,
-      "bid_volume": 10.0,
-      "bid": 235.6,
-      "ask_volume": 29.0,
-      "ask": 235.99
+      "last": 234.05,
+      "variation": -17.41,
+      "bid_volume": 5.0,
+      "bid": 233.5,
+      "ask_volume": 3750.0,
+      "ask": 236.33
     },
     {
       "category": "ACCIONES",
       "symbol": "NVAX",
       "last": 173.01,
       "variation": -5.4,
-      "bid_volume": 3800.0,
-      "bid": 173.57,
-      "ask_volume": 3800.0,
-      "ask": 177.79
+      "bid_volume": 7600.0,
+      "bid": 170.81,
+      "ask_volume": 11400.0,
+      "ask": 179.19
     },
     {
       "category": "ACCIONES",
       "symbol": "NVDA",
-      "last": 4023.0,
-      "variation": 2.29,
-      "bid_volume": 4200.0,
-      "bid": 4013.01,
-      "ask_volume": 700.0,
-      "ask": 4022.38
+      "last": 4010.0,
+      "variation": 1.96,
+      "bid_volume": 2100.0,
+      "bid": 4003.01,
+      "ask_volume": 2800.0,
+      "ask": 4017.99
     },
     {
       "category": "ACCIONES",
       "symbol": "OMA B",
-      "last": 230.24,
-      "variation": 0.46,
-      "bid_volume": 943.0,
-      "bid": 230.02,
-      "ask_volume": 200.0,
-      "ask": 230.27
+      "last": 229.62,
+      "variation": 0.19,
+      "bid_volume": 7900.0,
+      "bid": 229.1,
+      "ask_volume": 11300.0,
+      "ask": 230.23
     },
     {
       "category": "ACCIONES",
       "symbol": "ORBIA",
-      "last": 23.64,
-      "variation": 2.65,
-      "bid_volume": 400.0,
-      "bid": 23.64,
-      "ask_volume": 700.0,
-      "ask": 23.65
+      "last": 23.6,
+      "variation": 2.48,
+      "bid_volume": 30900.0,
+      "bid": 23.52,
+      "ask_volume": 209.0,
+      "ask": 23.68
     },
     {
       "category": "ACCIONES",
       "symbol": "ORCL",
-      "last": 2358.48,
-      "variation": 0.36,
-      "bid_volume": 1200.0,
-      "bid": 2351.84,
-      "ask_volume": 900.0,
+      "last": 2339.0,
+      "variation": -0.47,
+      "bid_volume": 900.0,
+      "bid": 2335.82,
+      "ask_volume": 600.0,
       "ask": 2359.99
     },
     {
@@ -1021,112 +1021,112 @@
     {
       "category": "ACCIONES",
       "symbol": "PE&OLES",
-      "last": 807.03,
-      "variation": -1.81,
-      "bid_volume": 49.0,
-      "bid": 806.61,
-      "ask_volume": 3.0,
-      "ask": 807.03
+      "last": 802.87,
+      "variation": -2.32,
+      "bid_volume": 2425.0,
+      "bid": 802.31,
+      "ask_volume": 1150.0,
+      "ask": 806.86
     },
     {
       "category": "ACCIONES",
       "symbol": "PEP",
-      "last": 2510.0,
-      "variation": -0.73,
-      "bid_volume": 1200.0,
-      "bid": 2508.87,
-      "ask_volume": 900.0,
-      "ask": 2518.28
+      "last": 2509.0,
+      "variation": -0.77,
+      "bid_volume": 1500.0,
+      "bid": 2508.01,
+      "ask_volume": 1800.0,
+      "ask": 2519.99
     },
     {
       "category": "ACCIONES",
       "symbol": "PFE",
-      "last": 550.36,
-      "variation": -1.72,
-      "bid_volume": 33000.0,
-      "bid": 550.36,
-      "ask_volume": 26430.0,
-      "ask": 554.24
+      "last": 553.0,
+      "variation": -1.25,
+      "bid_volume": 18.0,
+      "bid": 550.35,
+      "ask_volume": 6.0,
+      "ask": 553.0
     },
     {
       "category": "ACCIONES",
       "symbol": "PG",
       "last": 2950.37,
       "variation": -2.08,
-      "bid_volume": 1800.0,
+      "bid_volume": 1200.0,
       "bid": 2910.01,
-      "ask_volume": 1276.0,
+      "ask_volume": 376.0,
       "ask": 2979.98
     },
     {
       "category": "ACCIONES",
       "symbol": "PINFRA",
-      "last": 307.46,
-      "variation": -0.13,
-      "bid_volume": 122.0,
-      "bid": 307.46,
-      "ask_volume": 87.0,
-      "ask": 307.53
+      "last": 308.5,
+      "variation": 0.21,
+      "bid_volume": 163.0,
+      "bid": 308.5,
+      "ask_volume": 1540.0,
+      "ask": 308.84
     },
     {
       "category": "ACCIONES",
       "symbol": "PINS",
       "last": 388.1,
       "variation": -7.6,
-      "bid_volume": 19200.0,
-      "bid": 385.01,
-      "ask_volume": 9600.0,
-      "ask": 395.98
+      "bid_volume": 1.0,
+      "bid": 390.0,
+      "ask_volume": 15.0,
+      "ask": 395.99
     },
     {
       "category": "ACCIONES",
       "symbol": "PLTR",
-      "last": 3690.0,
-      "variation": 0.54,
-      "bid_volume": 800.0,
-      "bid": 3700.01,
-      "ask_volume": 1.0,
-      "ask": 3707.0
+      "last": 3704.4,
+      "variation": 0.94,
+      "bid_volume": 400.0,
+      "bid": 3684.58,
+      "ask_volume": 600.0,
+      "ask": 3711.65
     },
     {
       "category": "ACCIONES",
       "symbol": "PYPL",
-      "last": 1012.2,
-      "variation": -4.73,
-      "bid_volume": 5200.0,
-      "bid": 1010.95,
-      "ask_volume": 2600.0,
-      "ask": 1014.99
+      "last": 1019.0,
+      "variation": -4.09,
+      "bid_volume": 6500.0,
+      "bid": 1010.01,
+      "ask_volume": 6500.0,
+      "ask": 1023.99
     },
     {
       "category": "ACCIONES",
       "symbol": "Q",
-      "last": 186.99,
-      "variation": -1.78,
-      "bid_volume": 100.0,
-      "bid": 186.86,
-      "ask_volume": 41.0,
-      "ask": 186.95
+      "last": 187.67,
+      "variation": -1.42,
+      "bid_volume": 8900.0,
+      "bid": 186.96,
+      "ask_volume": 1300.0,
+      "ask": 187.89
     },
     {
       "category": "ACCIONES",
       "symbol": "QCOM",
-      "last": 3320.0,
-      "variation": 1.07,
+      "last": 3329.0,
+      "variation": 1.34,
       "bid_volume": 800.0,
-      "bid": 3326.95,
-      "ask_volume": 600.0,
-      "ask": 3342.54
+      "bid": 3323.7,
+      "ask_volume": 800.0,
+      "ask": 3340.99
     },
     {
       "category": "ACCIONES",
       "symbol": "R A",
-      "last": 155.67,
-      "variation": 0.31,
-      "bid_volume": 199.0,
-      "bid": 155.56,
-      "ask_volume": 69.0,
-      "ask": 155.67
+      "last": 155.21,
+      "variation": 0.01,
+      "bid_volume": 2700.0,
+      "bid": 153.89,
+      "ask_volume": 4500.0,
+      "ask": 156.42
     },
     {
       "category": "ACCIONES",
@@ -1134,29 +1134,29 @@
       "last": 5250.0,
       "variation": 2.56,
       "bid_volume": 400.0,
-      "bid": 5170.95,
-      "ask_volume": 400.0,
-      "ask": 5198.56
+      "bid": 5079.91,
+      "ask_volume": 500.0,
+      "ask": 5229.99
     },
     {
       "category": "ACCIONES",
       "symbol": "RIOT",
       "last": 242.0,
       "variation": 3.22,
-      "bid_volume": 4800.0,
-      "bid": 237.7,
-      "ask_volume": 90.0,
+      "bid_volume": 1.0,
+      "bid": 235.0,
+      "ask_volume": 80.0,
       "ask": 242.0
     },
     {
       "category": "ACCIONES",
       "symbol": "RIVN",
-      "last": 215.0,
-      "variation": -2.67,
-      "bid_volume": 14600.0,
-      "bid": 215.64,
-      "ask_volume": 600.0,
-      "ask": 216.7
+      "last": 213.0,
+      "variation": -3.57,
+      "bid_volume": 58400.0,
+      "bid": 211.5,
+      "ask_volume": 43800.0,
+      "ask": 237.51
     },
     {
       "category": "ACCIONES",
@@ -1165,238 +1165,238 @@
       "variation": -1.05,
       "bid_volume": 600.0,
       "bid": 2840.01,
-      "ask_volume": 200.0,
-      "ask": 2981.99
+      "ask_volume": 4.0,
+      "ask": 2919.0
     },
     {
       "category": "ACCIONES",
       "symbol": "SBUX",
-      "last": 1910.0,
-      "variation": 1.21,
-      "bid_volume": 1800.0,
+      "last": 1900.0,
+      "variation": 0.68,
+      "bid_volume": 600.0,
       "bid": 1885.51,
-      "ask_volume": 1200.0,
+      "ask_volume": 900.0,
       "ask": 1919.99
     },
     {
       "category": "ACCIONES",
       "symbol": "SHOP N",
-      "last": 3099.0,
-      "variation": -1.93,
-      "bid_volume": 1200.0,
-      "bid": 3049.21,
-      "ask_volume": 1200.0,
-      "ask": 3197.86
+      "last": 3130.0,
+      "variation": -0.95,
+      "bid_volume": 200.0,
+      "bid": 3024.01,
+      "ask_volume": 1.0,
+      "ask": 3197.87
     },
     {
       "category": "ACCIONES",
       "symbol": "SIGMAF A",
-      "last": 19.37,
-      "variation": -0.1,
-      "bid_volume": 2478.0,
-      "bid": 19.36,
-      "ask_volume": 889.0,
-      "ask": 19.37
+      "last": 19.27,
+      "variation": -0.62,
+      "bid_volume": 64100.0,
+      "bid": 19.17,
+      "ask_volume": 48600.0,
+      "ask": 19.41
     },
     {
       "category": "ACCIONES",
       "symbol": "SITES1 A-1",
-      "last": 15.91,
-      "variation": -0.56,
-      "bid_volume": 240.0,
-      "bid": 15.82,
-      "ask_volume": 710.0,
-      "ask": 15.9
+      "last": 16.09,
+      "variation": 0.56,
+      "bid_volume": 14097.0,
+      "bid": 15.81,
+      "ask_volume": 330.0,
+      "ask": 16.09
     },
     {
       "category": "ACCIONES",
       "symbol": "SOFI",
-      "last": 269.0,
-      "variation": -1.1,
-      "bid_volume": 27200.0,
-      "bid": 268.51,
-      "ask_volume": 13600.0,
-      "ask": 269.89
+      "last": 268.3,
+      "variation": -1.36,
+      "bid_volume": 29.0,
+      "bid": 268.0,
+      "ask_volume": 27180.0,
+      "ask": 270.49
     },
     {
       "category": "ACCIONES",
       "symbol": "SPCE",
-      "last": 46.79,
-      "variation": 1.23,
-      "bid_volume": 5.0,
-      "bid": 46.75,
-      "ask_volume": 226.0,
-      "ask": 47.0
+      "last": 47.25,
+      "variation": 2.23,
+      "bid_volume": 140.0,
+      "bid": 47.25,
+      "ask_volume": 10.0,
+      "ask": 47.35
     },
     {
       "category": "ACCIONES",
       "symbol": "T",
-      "last": 385.0,
-      "variation": -1.85,
-      "bid_volume": 9505.0,
-      "bid": 385.4,
-      "ask_volume": 9565.0,
-      "ask": 386.92
+      "last": 387.0,
+      "variation": -1.34,
+      "bid_volume": 10.0,
+      "bid": 386.0,
+      "ask_volume": 10.0,
+      "ask": 394.0
     },
     {
       "category": "ACCIONES",
       "symbol": "TGT",
       "last": 2785.0,
       "variation": -3.97,
-      "bid_volume": 800.0,
-      "bid": 2680.12,
-      "ask_volume": 615.0,
+      "bid_volume": 1200.0,
+      "bid": 2690.41,
+      "ask_volume": 1215.0,
       "ask": 2789.99
     },
     {
       "category": "ACCIONES",
       "symbol": "TLEVISA CPO",
-      "last": 8.53,
-      "variation": -3.18,
-      "bid_volume": 2370.0,
-      "bid": 8.53,
-      "ask_volume": 540.0,
-      "ask": 8.54
+      "last": 8.48,
+      "variation": -3.75,
+      "bid_volume": 363.0,
+      "bid": 8.47,
+      "ask_volume": 2797.0,
+      "ask": 8.5
     },
     {
       "category": "ACCIONES",
       "symbol": "TMO",
       "last": 12655.48,
       "variation": 0.61,
-      "bid_volume": 400.0,
-      "bid": 12620.34,
+      "bid_volume": 600.0,
+      "bid": 12474.41,
       "ask_volume": 600.0,
-      "ask": 12683.39
+      "ask": 12977.39
     },
     {
       "category": "ACCIONES",
       "symbol": "TSLA",
-      "last": 7328.0,
-      "variation": 5.43,
-      "bid_volume": 400.0,
-      "bid": 7312.19,
-      "ask_volume": 1.0,
-      "ask": 7328.0
+      "last": 7251.84,
+      "variation": 4.34,
+      "bid_volume": 600.0,
+      "bid": 7246.27,
+      "ask_volume": 400.0,
+      "ask": 7284.98
     },
     {
       "category": "ACCIONES",
       "symbol": "TSM N",
-      "last": 7942.0,
-      "variation": 2.35,
-      "bid_volume": 100.0,
-      "bid": 7941.5,
+      "last": 7877.39,
+      "variation": 1.51,
+      "bid_volume": 400.0,
+      "bid": 7837.51,
       "ask_volume": 400.0,
-      "ask": 7966.42
+      "ask": 7904.99
     },
     {
       "category": "ACCIONES",
       "symbol": "TWLO",
       "last": 4886.83,
       "variation": 0.0,
-      "bid_volume": 200.0,
+      "bid_volume": 100.0,
       "bid": 4746.61,
       "ask_volume": 200.0,
-      "ask": 4980.99
+      "ask": 5039.59
     },
     {
       "category": "ACCIONES",
       "symbol": "TX",
       "last": 1009.88,
       "variation": -3.22,
-      "bid_volume": 500.0,
-      "bid": 1002.12,
-      "ask_volume": 5.0,
-      "ask": 1005.0
+      "bid_volume": 1500.0,
+      "bid": 975.01,
+      "ask_volume": 500.0,
+      "ask": 1024.99
     },
     {
       "category": "ACCIONES",
       "symbol": "UAL",
       "last": 1875.0,
       "variation": 2.18,
-      "bid_volume": 1200.0,
-      "bid": 1878.61,
-      "ask_volume": 900.0,
-      "ask": 1887.5
+      "bid_volume": 1500.0,
+      "bid": 1825.01,
+      "ask_volume": 1200.0,
+      "ask": 1909.99
     },
     {
       "category": "ACCIONES",
       "symbol": "UBER",
-      "last": 1228.33,
-      "variation": -1.26,
-      "bid_volume": 1.0,
-      "bid": 1227.0,
-      "ask_volume": 4400.0,
-      "ask": 1229.75
+      "last": 1226.8,
+      "variation": -1.38,
+      "bid_volume": 5.0,
+      "bid": 1225.0,
+      "ask_volume": 6600.0,
+      "ask": 1230.8
     },
     {
       "category": "ACCIONES",
       "symbol": "UNH",
-      "last": 7610.0,
-      "variation": -2.44,
-      "bid_volume": 500.0,
-      "bid": 7580.61,
-      "ask_volume": 200.0,
-      "ask": 7607.99
+      "last": 7603.62,
+      "variation": -2.52,
+      "bid_volume": 492.0,
+      "bid": 7578.0,
+      "ask_volume": 606.0,
+      "ask": 7680.99
     },
     {
       "category": "ACCIONES",
       "symbol": "UPST",
       "last": 427.01,
       "variation": -3.8,
-      "bid_volume": 4800.0,
-      "bid": 416.51,
-      "ask_volume": 3200.0,
-      "ask": 437.49
+      "bid_volume": 6400.0,
+      "bid": 416.53,
+      "ask_volume": 8000.0,
+      "ask": 437.48
     },
     {
       "category": "ACCIONES",
       "symbol": "V",
-      "last": 7495.0,
-      "variation": -1.67,
+      "last": 7502.5,
+      "variation": -1.57,
       "bid_volume": 300.0,
-      "bid": 7475.07,
+      "bid": 7440.14,
       "ask_volume": 200.0,
-      "ask": 7498.99
+      "ask": 7509.09
     },
     {
       "category": "ACCIONES",
       "symbol": "VESTA",
-      "last": 69.5,
-      "variation": 2.48,
-      "bid_volume": 500.0,
-      "bid": 69.48,
-      "ask_volume": 1003.0,
-      "ask": 69.54
+      "last": 69.48,
+      "variation": 2.45,
+      "bid_volume": 48200.0,
+      "bid": 69.22,
+      "ask_volume": 27200.0,
+      "ask": 69.78
     },
     {
       "category": "ACCIONES",
       "symbol": "VOLAR A",
-      "last": 10.4,
-      "variation": -2.8,
-      "bid_volume": 300.0,
-      "bid": 10.4,
-      "ask_volume": 2232.0,
-      "ask": 10.41
+      "last": 10.33,
+      "variation": -3.46,
+      "bid_volume": 22201.0,
+      "bid": 10.3,
+      "ask_volume": 9.0,
+      "ask": 10.36
     },
     {
       "category": "ACCIONES",
       "symbol": "VZ",
-      "last": 798.97,
-      "variation": -3.97,
-      "bid_volume": 15200.0,
-      "bid": 795.02,
-      "ask_volume": 19006.0,
-      "ask": 817.38
+      "last": 801.73,
+      "variation": -3.64,
+      "bid_volume": 3800.0,
+      "bid": 798.98,
+      "ask_volume": 5.0,
+      "ask": 817.39
     },
     {
       "category": "ACCIONES",
       "symbol": "WALMEX",
-      "last": 50.38,
-      "variation": -0.69,
-      "bid_volume": 1836.0,
-      "bid": 50.38,
-      "ask_volume": 1400.0,
-      "ask": 50.4
+      "last": 50.29,
+      "variation": -0.87,
+      "bid_volume": 160.0,
+      "bid": 50.25,
+      "ask_volume": 500.0,
+      "ask": 50.32
     },
     {
       "category": "ACCIONES",
@@ -1404,48 +1404,48 @@
       "last": 1535.0,
       "variation": -0.07,
       "bid_volume": 2400.0,
-      "bid": 1530.98,
+      "bid": 1403.01,
       "ask_volume": 2400.0,
-      "ask": 1537.6
+      "ask": 1545.18
     },
     {
       "category": "ACCIONES",
       "symbol": "WMT",
-      "last": 2216.0,
-      "variation": -0.72,
-      "bid_volume": 1.0,
-      "bid": 2220.0,
+      "last": 2221.46,
+      "variation": -0.47,
+      "bid_volume": 4000.0,
+      "bid": 2227.1,
       "ask_volume": 5000.0,
-      "ask": 2227.36
+      "ask": 2269.99
     },
     {
       "category": "ACCIONES",
       "symbol": "WYNN",
-      "last": 1400.0,
-      "variation": 2.94,
-      "bid_volume": 1510.0,
+      "last": 1390.0,
+      "variation": 2.21,
+      "bid_volume": 1810.0,
       "bid": 1370.01,
-      "ask_volume": 1200.0,
-      "ask": 1416.99
+      "ask_volume": 3.0,
+      "ask": 1420.0
     },
     {
       "category": "ACCIONES",
       "symbol": "XOM",
-      "last": 3422.0,
-      "variation": 0.32,
-      "bid_volume": 400.0,
-      "bid": 3418.04,
-      "ask_volume": 1200.0,
+      "last": 3415.23,
+      "variation": 0.12,
+      "bid_volume": 1000.0,
+      "bid": 3357.91,
+      "ask_volume": 1000.0,
       "ask": 3494.39
     },
     {
       "category": "ACCIONES",
       "symbol": "XYZ",
-      "last": 1427.0,
-      "variation": 0.0,
-      "bid_volume": 1600.0,
-      "bid": 1345.21,
-      "ask_volume": 2400.0,
+      "last": 1380.0,
+      "variation": -3.29,
+      "bid_volume": 2400.0,
+      "bid": 1355.01,
+      "ask_volume": 1600.0,
       "ask": 1413.59
     },
     {
@@ -1453,9 +1453,9 @@
       "symbol": "ZM",
       "last": 1805.0,
       "variation": 0.0,
-      "bid_volume": 900.0,
+      "bid_volume": 300.0,
       "bid": 1776.21,
-      "ask_volume": 300.0,
+      "ask_volume": 900.0,
       "ask": 1861.79
     },
     {
@@ -1463,10 +1463,10 @@
       "symbol": "AAXJ",
       "last": 1990.0,
       "variation": 0.19,
-      "bid_volume": 3200.0,
+      "bid_volume": 2400.0,
       "bid": 1955.72,
-      "ask_volume": 2400.0,
-      "ask": 2035.19
+      "ask_volume": 1600.0,
+      "ask": 2051.09
     },
     {
       "category": "ETFs",
@@ -1474,37 +1474,37 @@
       "last": 2921.46,
       "variation": -0.1,
       "bid_volume": 3175.0,
-      "bid": 2923.69,
-      "ask_volume": 3600.0,
-      "ask": 2931.41
+      "bid": 2921.5,
+      "ask_volume": 1905.0,
+      "ask": 2926.66
     },
     {
       "category": "ETFs",
       "symbol": "ANGELD 10",
-      "last": 28.23,
-      "variation": -0.39,
-      "bid_volume": 24747.0,
-      "bid": 28.0,
-      "ask_volume": 2.0,
+      "last": 27.85,
+      "variation": -1.73,
+      "bid_volume": 10.0,
+      "bid": 27.5,
+      "ask_volume": 3.0,
       "ask": 28.39
     },
     {
       "category": "ETFs",
       "symbol": "BIL",
-      "last": 1700.5,
-      "variation": -0.5,
-      "bid_volume": 3750.0,
-      "bid": 1699.63,
-      "ask_volume": 2250.0,
-      "ask": 1702.66
+      "last": 1701.12,
+      "variation": -0.46,
+      "bid_volume": 2250.0,
+      "bid": 1699.23,
+      "ask_volume": 3750.0,
+      "ask": 1702.32
     },
     {
       "category": "ETFs",
       "symbol": "BOTZ",
-      "last": 618.35,
-      "variation": -0.11,
-      "bid_volume": 4600.0,
-      "bid": 599.42,
+      "last": 617.0,
+      "variation": -0.32,
+      "bid_volume": 2.0,
+      "bid": 600.0,
       "ask_volume": 2300.0,
       "ask": 619.99
     },
@@ -1513,40 +1513,40 @@
       "symbol": "DIA",
       "last": 9704.77,
       "variation": -0.46,
-      "bid_volume": 1500.0,
-      "bid": 9683.63,
+      "bid_volume": 1800.0,
+      "bid": 9452.71,
       "ask_volume": 1200.0,
-      "ask": 9724.4
+      "ask": 9723.9
     },
     {
       "category": "ETFs",
       "symbol": "DIABLOI 10",
-      "last": 9.97,
-      "variation": 0.2,
+      "last": 10.05,
+      "variation": 1.01,
       "bid_volume": 699.0,
       "bid": 9.95,
-      "ask_volume": 42446.0,
-      "ask": 10.04
+      "ask_volume": 495.0,
+      "ask": 10.07
     },
     {
       "category": "ETFs",
       "symbol": "EEM",
-      "last": 1150.3,
-      "variation": 0.34,
-      "bid_volume": 19200.0,
-      "bid": 1130.89,
-      "ask_volume": 12800.0,
-      "ask": 1151.74
+      "last": 1149.0,
+      "variation": 0.23,
+      "bid_volume": 2250.0,
+      "bid": 1146.14,
+      "ask_volume": 1.0,
+      "ask": 1300.0
     },
     {
       "category": "ETFs",
       "symbol": "EWZ",
-      "last": 633.0,
-      "variation": -20.28,
-      "bid_volume": 250.0,
-      "bid": 631.5,
-      "ask_volume": 2250.0,
-      "ask": 632.9
+      "last": 632.78,
+      "variation": -20.3,
+      "bid_volume": 3750.0,
+      "bid": 633.14,
+      "ask_volume": 3750.0,
+      "ask": 634.66
     },
     {
       "category": "ETFs",
@@ -1554,58 +1554,58 @@
       "last": 2972.5,
       "variation": 0.0,
       "bid_volume": 5.0,
-      "bid": 2976.52,
-      "ask_volume": 1600.0,
-      "ask": 2991.49
+      "bid": 2969.41,
+      "ask_volume": 400.0,
+      "ask": 3050.0
     },
     {
       "category": "ETFs",
       "symbol": "FAZ",
       "last": 648.73,
       "variation": 0.5,
-      "bid_volume": 5500.0,
+      "bid_volume": 6600.0,
       "bid": 624.01,
-      "ask_volume": 4405.0,
+      "ask_volume": 5505.0,
       "ask": 655.19
     },
     {
       "category": "ETFs",
       "symbol": "GDX",
-      "last": 1501.26,
-      "variation": 0.08,
-      "bid_volume": 2200.0,
-      "bid": 1501.46,
+      "last": 1503.0,
+      "variation": 0.2,
+      "bid_volume": 2210.0,
+      "bid": 1488.01,
       "ask_volume": 8800.0,
-      "ask": 1506.52
+      "ask": 1509.99
     },
     {
       "category": "ETFs",
       "symbol": "GLD",
-      "last": 6819.0,
-      "variation": -0.34,
-      "bid_volume": 900.0,
-      "bid": 6816.9,
-      "ask_volume": 1200.0,
-      "ask": 6839.45
+      "last": 6816.9,
+      "variation": -0.37,
+      "bid_volume": 4.0,
+      "bid": 6820.0,
+      "ask_volume": 1800.0,
+      "ask": 6959.59
     },
     {
       "category": "ETFs",
       "symbol": "IAU",
       "last": 1396.65,
       "variation": -0.68,
-      "bid_volume": 5186.0,
-      "bid": 1396.65,
-      "ask_volume": 10320.0,
-      "ask": 1402.35
+      "bid_volume": 2600.0,
+      "bid": 1398.01,
+      "ask_volume": 10360.0,
+      "ask": 1405.59
     },
     {
       "category": "ETFs",
       "symbol": "ICLN",
       "last": 289.0,
       "variation": -3.02,
-      "bid_volume": 74400.0,
+      "bid_volume": 12400.0,
       "bid": 287.62,
-      "ask_volume": 49600.0,
+      "ask_volume": 74400.0,
       "ask": 295.04
     },
     {
@@ -1613,7 +1613,7 @@
       "symbol": "INDA",
       "last": 865.0,
       "variation": -0.38,
-      "bid_volume": 8600.0,
+      "bid_volume": 17200.0,
       "bid": 863.01,
       "ask_volume": 17200.0,
       "ask": 882.39
@@ -1621,12 +1621,12 @@
     {
       "category": "ETFs",
       "symbol": "IVV",
-      "last": 14253.87,
-      "variation": 0.13,
+      "last": 14262.0,
+      "variation": 0.19,
       "bid_volume": 390.0,
-      "bid": 14263.21,
-      "ask_volume": 400.0,
-      "ask": 14284.99
+      "bid": 14252.82,
+      "ask_volume": 650.0,
+      "ask": 14283.54
     },
     {
       "category": "ETFs",
@@ -1643,7 +1643,7 @@
       "symbol": "LIT",
       "last": 1149.0,
       "variation": 0.88,
-      "bid_volume": 1500.0,
+      "bid_volume": 500.0,
       "bid": 1130.01,
       "ask_volume": 21.0,
       "ask": 1149.0
@@ -1655,18 +1655,18 @@
       "variation": 0.17,
       "bid_volume": 8000.0,
       "bid": 910.01,
-      "ask_volume": 7992.0,
+      "ask_volume": 8000.0,
       "ask": 913.32
     },
     {
       "category": "ETFs",
       "symbol": "NAFTRAC ISHRS",
-      "last": 69.3,
-      "variation": -0.3,
-      "bid_volume": 10000.0,
-      "bid": 69.3,
-      "ask_volume": 5000.0,
-      "ask": 69.4
+      "last": 69.16,
+      "variation": -0.5,
+      "bid_volume": 225000.0,
+      "bid": 69.12,
+      "ask_volume": 300.0,
+      "ask": 69.2
     },
     {
       "category": "ETFs",
@@ -1674,9 +1674,9 @@
       "last": 473.62,
       "variation": -2.73,
       "bid_volume": 38000.0,
-      "bid": 468.01,
-      "ask_volume": 30400.0,
-      "ask": 491.39
+      "bid": 464.11,
+      "ask_volume": 22800.0,
+      "ask": 495.29
     },
     {
       "category": "ETFs",
@@ -1691,39 +1691,39 @@
     {
       "category": "ETFs",
       "symbol": "QLD",
-      "last": 1641.0,
-      "variation": 2.04,
-      "bid_volume": 11500.0,
-      "bid": 1599.61,
-      "ask_volume": 9200.0,
+      "last": 1633.0,
+      "variation": 1.54,
+      "bid_volume": 9200.0,
+      "bid": 1500.01,
+      "ask_volume": 11500.0,
       "ask": 1658.99
     },
     {
       "category": "ETFs",
       "symbol": "QQQ",
-      "last": 13255.25,
-      "variation": 0.7,
-      "bid_volume": 800.0,
-      "bid": 13217.88,
-      "ask_volume": 800.0,
-      "ask": 13263.15
+      "last": 13215.0,
+      "variation": 0.4,
+      "bid_volume": 400.0,
+      "bid": 13200.01,
+      "ask_volume": 1.0,
+      "ask": 13240.0
     },
     {
       "category": "ETFs",
       "symbol": "SHV",
-      "last": 2047.0,
-      "variation": -0.58,
-      "bid_volume": 5250.0,
-      "bid": 2047.3,
-      "ask_volume": 1500.0,
-      "ask": 2048.0
+      "last": 2049.06,
+      "variation": -0.48,
+      "bid_volume": 621.0,
+      "bid": 2045.0,
+      "ask_volume": 8750.0,
+      "ask": 2048.52
     },
     {
       "category": "ETFs",
       "symbol": "SHY",
       "last": 1510.41,
       "variation": -0.76,
-      "bid_volume": 12000.0,
+      "bid_volume": 7200.0,
       "bid": 1510.41,
       "ask_volume": 2400.0,
       "ask": 1513.58
@@ -1731,51 +1731,51 @@
     {
       "category": "ETFs",
       "symbol": "SLV",
-      "last": 903.0,
-      "variation": -0.71,
-      "bid_volume": 16400.0,
-      "bid": 901.14,
-      "ask_volume": 16400.0,
+      "last": 903.31,
+      "variation": -0.68,
+      "bid_volume": 1.0,
+      "bid": 903.0,
+      "ask_volume": 20500.0,
       "ask": 907.99
     },
     {
       "category": "ETFs",
       "symbol": "SOXL",
-      "last": 1719.0,
-      "variation": 10.33,
-      "bid_volume": 1000.0,
-      "bid": 1713.93,
-      "ask_volume": 1000.0,
-      "ask": 1720.13
+      "last": 1683.0,
+      "variation": 8.02,
+      "bid_volume": 607.0,
+      "bid": 1680.02,
+      "ask_volume": 1446.0,
+      "ask": 1687.37
     },
     {
       "category": "ETFs",
       "symbol": "SOXS",
-      "last": 869.08,
-      "variation": -11.59,
-      "bid_volume": 6200.0,
-      "bid": 867.74,
-      "ask_volume": 1.0,
-      "ask": 872.0
+      "last": 890.87,
+      "variation": -9.37,
+      "bid_volume": 12400.0,
+      "bid": 881.01,
+      "ask_volume": 10.0,
+      "ask": 894.99
     },
     {
       "category": "ETFs",
       "symbol": "SOXX",
-      "last": 9202.0,
-      "variation": 3.14,
-      "bid_volume": 7.0,
-      "bid": 9202.0,
-      "ask_volume": 2065.0,
-      "ask": 9225.89
+      "last": 9160.47,
+      "variation": 2.67,
+      "bid_volume": 400.0,
+      "bid": 9115.01,
+      "ask_volume": 8.0,
+      "ask": 9444.0
     },
     {
       "category": "ETFs",
       "symbol": "SPXL",
-      "last": 5203.5,
-      "variation": 0.94,
-      "bid_volume": 2800.0,
-      "bid": 5203.51,
-      "ask_volume": 4200.0,
+      "last": 5220.5,
+      "variation": 1.27,
+      "bid_volume": 153.0,
+      "bid": 5220.5,
+      "ask_volume": 1400.0,
       "ask": 5299.99
     },
     {
@@ -1783,29 +1783,29 @@
       "symbol": "SPXS",
       "last": 458.0,
       "variation": -2.55,
-      "bid_volume": 47400.0,
+      "bid_volume": 23700.0,
       "bid": 450.01,
-      "ask_volume": 31600.0,
+      "ask_volume": 39500.0,
       "ask": 467.39
     },
     {
       "category": "ETFs",
       "symbol": "SPY",
-      "last": 14192.0,
-      "variation": -0.02,
-      "bid_volume": 674.0,
-      "bid": 14182.77,
-      "ask_volume": 43.0,
-      "ask": 14220.0
+      "last": 14183.0,
+      "variation": -0.08,
+      "bid_volume": 400.0,
+      "bid": 14100.01,
+      "ask_volume": 400.0,
+      "ask": 14439.99
     },
     {
       "category": "ETFs",
       "symbol": "SPYM",
-      "last": 1670.0,
-      "variation": -0.01,
-      "bid_volume": 4400.0,
-      "bid": 1669.7,
-      "ask_volume": 4400.0,
+      "last": 1672.26,
+      "variation": 0.12,
+      "bid_volume": 34.0,
+      "bid": 1672.26,
+      "ask_volume": 13200.0,
       "ask": 1675.44
     },
     {
@@ -1813,7 +1813,7 @@
       "symbol": "SQQQ",
       "last": 713.0,
       "variation": -3.81,
-      "bid_volume": 25000.0,
+      "bid_volume": 20009.0,
       "bid": 700.08,
       "ask_volume": 3.0,
       "ask": 737.0
@@ -1831,12 +1831,12 @@
     {
       "category": "ETFs",
       "symbol": "TECL",
-      "last": 3664.66,
-      "variation": 3.38,
+      "last": 3640.0,
+      "variation": 2.68,
       "bid_volume": 2400.0,
-      "bid": 3657.98,
-      "ask_volume": 4800.0,
-      "ask": 3678.53
+      "bid": 3350.01,
+      "ask_volume": 4000.0,
+      "ask": 3699.99
     },
     {
       "category": "ETFs",
@@ -1844,49 +1844,49 @@
       "last": 1092.04,
       "variation": -5.52,
       "bid_volume": 1400.0,
-      "bid": 1085.28,
-      "ask_volume": 1100.0,
-      "ask": 1091.18
+      "bid": 1064.01,
+      "ask_volume": 10.0,
+      "ask": 1100.0
     },
     {
       "category": "ETFs",
       "symbol": "TLT",
       "last": 1506.0,
       "variation": -0.92,
-      "bid_volume": 12000.0,
+      "bid_volume": 9600.0,
       "bid": 1476.21,
-      "ask_volume": 14400.0,
-      "ask": 1520.99
+      "ask_volume": 1.0,
+      "ask": 1521.0
     },
     {
       "category": "ETFs",
       "symbol": "TNA",
-      "last": 1047.0,
-      "variation": 0.1,
+      "last": 1048.0,
+      "variation": 0.19,
       "bid_volume": 11600.0,
-      "bid": 1029.21,
+      "bid": 1020.91,
       "ask_volume": 5.0,
       "ask": 1135.0
     },
     {
       "category": "ETFs",
       "symbol": "TQQQ",
-      "last": 1276.0,
-      "variation": 3.15,
-      "bid_volume": 15000.0,
-      "bid": 1269.01,
-      "ask_volume": 12000.0,
-      "ask": 1280.99
+      "last": 1269.0,
+      "variation": 2.59,
+      "bid_volume": 12000.0,
+      "bid": 1266.02,
+      "ask_volume": 15000.0,
+      "ask": 1278.99
     },
     {
       "category": "ETFs",
       "symbol": "TZA",
       "last": 888.35,
       "variation": -2.26,
-      "bid_volume": 4100.0,
-      "bid": 887.08,
-      "ask_volume": 4100.0,
-      "ask": 891.54
+      "bid_volume": 8200.0,
+      "bid": 872.01,
+      "ask_volume": 12300.0,
+      "ask": 915.59
     },
     {
       "category": "ETFs",
@@ -1903,59 +1903,59 @@
       "symbol": "VEA",
       "last": 1285.01,
       "variation": -0.31,
-      "bid_volume": 8400.0,
-      "bid": 1285.02,
+      "bid_volume": 2800.0,
+      "bid": 1285.06,
       "ask_volume": 16800.0,
-      "ask": 1292.64
+      "ask": 1291.61
     },
     {
       "category": "ETFs",
       "symbol": "VGT",
-      "last": 2244.58,
-      "variation": 0.78,
+      "last": 2246.36,
+      "variation": 0.86,
       "bid_volume": 6400.0,
-      "bid": 2245.95,
+      "bid": 2240.01,
       "ask_volume": 6400.0,
-      "ask": 2255.94
+      "ask": 2251.69
     },
     {
       "category": "ETFs",
       "symbol": "VNQ",
-      "last": 1719.36,
-      "variation": -0.27,
+      "last": 1728.0,
+      "variation": 0.23,
       "bid_volume": 12600.0,
       "bid": 1700.02,
       "ask_volume": 1.0,
-      "ask": 1728.0
+      "ask": 1730.0
     },
     {
       "category": "ETFs",
       "symbol": "VOO",
-      "last": 13087.56,
-      "variation": 0.44,
-      "bid_volume": 1200.0,
-      "bid": 13035.35,
-      "ask_volume": 792.0,
-      "ask": 13090.86
+      "last": 13040.63,
+      "variation": 0.08,
+      "bid_volume": 1.0,
+      "bid": 13052.0,
+      "ask_volume": 725.0,
+      "ask": 13069.82
     },
     {
       "category": "ETFs",
       "symbol": "VT",
-      "last": 2905.0,
-      "variation": -0.56,
-      "bid_volume": 3600.0,
-      "bid": 2905.01,
+      "last": 2906.0,
+      "variation": -0.53,
+      "bid_volume": 2.0,
+      "bid": 2906.0,
       "ask_volume": 4800.0,
-      "ask": 2969.59
+      "ask": 2912.75
     },
     {
       "category": "ETFs",
       "symbol": "VTI",
-      "last": 6960.0,
-      "variation": -0.36,
+      "last": 6969.0,
+      "variation": -0.23,
       "bid_volume": 2000.0,
       "bid": 6960.01,
-      "ask_volume": 2000.0,
+      "ask_volume": 3000.0,
       "ask": 6991.69
     },
     {
@@ -1963,17 +1963,17 @@
       "symbol": "VWO",
       "last": 1050.01,
       "variation": -1.08,
-      "bid_volume": 7000.0,
+      "bid_volume": 3500.0,
       "bid": 1048.01,
-      "ask_volume": 14000.0,
-      "ask": 1053.99
+      "ask_volume": 21000.0,
+      "ask": 1052.29
     },
     {
       "category": "ETFs",
       "symbol": "VYM",
-      "last": 3005.0,
-      "variation": -0.5,
-      "bid_volume": 6000.0,
+      "last": 3019.99,
+      "variation": 0.0,
+      "bid_volume": 4800.0,
       "bid": 3005.28,
       "ask_volume": 4800.0,
       "ask": 3019.99
@@ -1981,42 +1981,42 @@
     {
       "category": "ETFs",
       "symbol": "XLE",
-      "last": 1292.0,
-      "variation": -0.31,
-      "bid_volume": 11200.0,
-      "bid": 1290.31,
+      "last": 1291.0,
+      "variation": -0.39,
+      "bid_volume": 5600.0,
+      "bid": 1290.01,
       "ask_volume": 11200.0,
-      "ask": 1295.93
+      "ask": 1296.74
     },
     {
       "category": "ETFs",
       "symbol": "XLF",
       "last": 1039.0,
       "variation": -0.62,
-      "bid_volume": 14000.0,
-      "bid": 1038.21,
-      "ask_volume": 20.0,
-      "ask": 1041.5
+      "bid_volume": 2.0,
+      "bid": 1000.0,
+      "ask_volume": 3500.0,
+      "ask": 1041.49
     },
     {
       "category": "ETFs",
       "symbol": "XLK",
       "last": 3464.05,
       "variation": 1.28,
-      "bid_volume": 3000.0,
-      "bid": 3461.53,
-      "ask_volume": 4000.0,
-      "ask": 3477.51
+      "bid_volume": 4000.0,
+      "bid": 3400.01,
+      "ask_volume": 5000.0,
+      "ask": 3471.57
     },
     {
       "category": "ETFs",
       "symbol": "XLV",
       "last": 3318.5,
       "variation": -1.01,
-      "bid_volume": 4.0,
-      "bid": 3315.0,
-      "ask_volume": 3300.0,
-      "ask": 3322.71
+      "bid_volume": 5500.0,
+      "bid": 3315.01,
+      "ask_volume": 2200.0,
+      "ask": 3329.99
     },
     {
       "category": "FONDOS",
