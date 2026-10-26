@@ -49,6 +49,30 @@ class MainActivity : Activity() {
         content.addView(line("Abre Actinver aquí, inicia sesión y selecciona tu cartera. La lectura es local; no se solicitan claves de GitHub.", 16f))
         val status = line("Estado: cartera sin capturar", 15f)
         content.addView(Button(this).apply {
+            text = "Actualizar análisis de la PC (GitHub)"
+            setOnClickListener {
+                status.text = "Consultando análisis publicado por la PC..."
+                Thread {
+                    try {
+                        val report = ResearchSources.load()
+                        getSharedPreferences("research_cache", MODE_PRIVATE).edit()
+                            .putString("pc_analysis", report.toString()).apply()
+                        runOnUiThread {
+                            status.text = if (report.optBoolean("fresh"))
+                                "Análisis de la PC actualizado. No es una orden de compra."
+                            else "Análisis histórico de la PC. Requiere datos nuevos para operar."
+                            if (Settings.canDrawOverlays(this@MainActivity)) {
+                                stopService(Intent(this@MainActivity, OverlayService::class.java))
+                                launchPanel()
+                            }
+                        }
+                    } catch (e: Exception) {
+                        runOnUiThread { status.text = "No fue posible actualizar el análisis: ${e.message?.take(80)}" }
+                    }
+                }.start()
+            }
+        })
+        content.addView(Button(this).apply {
             text = "Iniciar sesión y leer cartera de Actinver"
             setOnClickListener {
                 startActivity(Intent(this@MainActivity, ActinverCaptureActivity::class.java))
