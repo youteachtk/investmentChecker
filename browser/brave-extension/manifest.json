@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.8.31",
-  "description": "2.8.31: restaurado el popup normal de Brave; conserva propuestas con copia manual.",
+  "version": "2.8.32",
+  "description": "2.8.32: propuestas por lotes orientadas al objetivo de exposición de 65%; sin operaciones automáticas.",
   "permissions": [
     "storage",
     "scripting",

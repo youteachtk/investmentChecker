@@ -34,7 +34,7 @@ assert.equal(result.execution_enabled,false);
 assert.deepEqual(Array.from(result.orders,o=>o.symbol),['V','UNH']);
 assert.ok(result.orders.every(x=>x.order_type==='LIMIT_DRAFT'));
 assert.ok(result.orders.every(x=>x.quantity>0 && x.limit_mxn>0));
-assert.ok(result.estimated_spend_mxn<=750000*.10);
+assert.ok(result.estimated_spend_mxn<=1000000*.20);
 assert.equal(result.policy_version,3);
 assert.equal(result.copy_only,true);
 assert.equal(result.auto_fill_enabled,false);
@@ -74,6 +74,35 @@ const broad=orderDrafts({...snap,quotes:mixed},portfolio,
   [...ranked,...orderCSV('simbolo_actinver,research_score,annual_volatility_pct,rsi_14,last_market_date\nXLV,90,17,62,2026-10-23\n'.replace(/\\n/g,'\n'))],now);
 assert.equal(broad.ok,true);
 assert.ok(broad.orders.some(o=>o.symbol==='XLV'));
+
+// Competition strategy: successive manual-copy batches should move a
+// verified portfolio toward 65% exposure, not stop at the old 8% cap.
+const liquidQuotes=[...quotes];
+const bulkRows=['simbolo_actinver,research_score,annual_volatility_pct,rsi_14,last_market_date'];
+for(let i=0;i<8;i++){
+  liquidQuotes[i]=mk('CAND'+i,1000);
+  bulkRows.push('CAND'+i+','+(90-i)+',20,55,2026-10-23');
+}
+const bulkRanking=orderCSV(bulkRows.join('\n')+'\n');
+const bulk=orderDrafts({...snap,quotes:liquidQuotes},portfolio,bulkRanking,now);
+assert.equal(bulk.ok,true);
+assert.equal(bulk.target_exposure_pct,65);
+assert.equal(bulk.current_exposure_pct,25);
+assert.equal(bulk.review_budget_mxn,200000);
+assert.ok(bulk.estimated_spend_mxn>180000,'The new batch must deploy materially more than 8%');
+assert.ok(bulk.estimated_spend_mxn<=200000);
+assert.equal(bulk.orders.length,5);
+assert.ok(bulk.orders.every(o=>o.estimated_total_mxn<=50000));
+const reached={...portfolio,
+  summary:{total_value:1000000,investments:650000,buying_power:350000,unsettled:0},
+  holdings:[{symbol:'AAPL',quantity:13,price_mxn:50000}]};
+assert.equal(orderDrafts({...snap,quotes:liquidQuotes},reached,bulkRanking,now).status,
+  'TARGET_REACHED');
+const pending={...portfolio,
+  summary:{total_value:1000000,investments:500000,buying_power:350000,unsettled:150000},
+  holdings:[{symbol:'AAPL',quantity:10,price_mxn:50000}]};
+assert.equal(orderDrafts({...snap,quotes:liquidQuotes},pending,bulkRanking,now).status,
+  'TARGET_REACHED','Unsettled funds must not be budgeted twice');
 
 // User selection is a preparation approval; it can never submit an order.
 let draft={...result,draft_id:'test-unique-id',expires_at:new Date(Date.now()+60000).toISOString(),

@@ -1,5 +1,13 @@
 # Estado y continuidad de InvestmentChecker
 
+## Cambio 2026-10-26 — Lotes de propuestas según exposición objetivo v2.8.32
+
+- El usuario reiteró que InvestmentChecker debe generar las siguientes propuestas para el tramo final del Reto Actinver, con el objetivo de exposición previamente acordado de 60–70 % (centro de cálculo: 65 %).
+- Se sustituye el antiguo tope por lote de min(10 % del efectivo, 8 % del patrimonio) por min(poder de compra, 20 % del patrimonio, diferencia a la exposición del 65 %). Hasta cinco propuestas por lote y hasta 5 % del patrimonio en cada posición nueva, sujetas a títulos enteros, liquidez y filtros existentes.
+- La diferencia hacia la meta descuenta inversiones verificadas y saldos sin liquidar; si ya alcanza 65 %, el sistema detiene nuevas propuestas de compra con estado `TARGET_REACHED`.
+- El popup explica la meta, exposición comprometida, diferencia y presupuesto por lote, y recuerda verificar órdenes realmente ejecutadas y actualizar la cartera antes de generar otro lote.
+- Se conservan por completo la copia manual, la aprobación explícita, la prohibición de autollenado/envío de órdenes y las caducidades de precios y cartera. La versión publicada y la instalada se verifican por separado.
+
 ## Cambio 2026-10-26 — Restaurar popup clásico v2.8.31
 
 - Por solicitud del usuario se revierte **solo** la ventana independiente introducida en 2.8.30.

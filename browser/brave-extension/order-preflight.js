@@ -5,6 +5,9 @@
 const ORDER_PUBLIC='https://raw.githubusercontent.com/youteachtk/investmentChecker/main/output/';
 const ORDER_FEE_RATE=.00116;
 const ORDER_MAX_AGE_MS=5*60*1000;
+const ORDER_TARGET_EXPOSURE=.65;
+const ORDER_MAX_BATCH_SHARE=.20;
+const ORDER_MAX_SINGLE_SHARE=.05;
 const ORDER_SECTORS={
   V:'payments',MA:'payments',AXP:'payments',WMT:'consumer',COST:'consumer',
   KO:'consumer',PG:'consumer',CVX:'energy',XOM:'energy',PFE:'health',
@@ -91,6 +94,13 @@ function orderDrafts(quotes,portfolio,ranking,now=Date.now(),options={}){
   }
   if(Math.abs(holdingsValue-invested)>Math.max(100,invested*.025))
     return fail('HOLDINGS_VALUE_MISMATCH','El valor de las tenencias no coincide con Inversiones.');
+  // Treat unsettled funds as already committed until Actinver reconciles them.
+  // Never suggest spending the same capital twice after recent manual trades.
+  const committed=invested+unsettled;
+  const roomToTarget=Math.max(0,total*ORDER_TARGET_EXPOSURE-committed);
+  if(!simulation && roomToTarget<1)
+    return fail('TARGET_REACHED',
+      'La cartera ya alcanzó la exposición objetivo del 65% incluyendo saldos por liquidar.');
   const score=new Map();
   for(const r of ranking){
     const sym=String(r.simbolo_actinver||'').trim().toUpperCase();
@@ -139,8 +149,10 @@ function orderDrafts(quotes,portfolio,ranking,now=Date.now(),options={}){
   // No ticker ever receives a special position or bonus for its name.
   eligible.sort((a,b)=>b.comparison_score-a.comparison_score||
     a.spread_pct-b.spread_pct||a.symbol.localeCompare(b.symbol));
-  // Bounded examples only, never a directive to invest an automatic 65% of cash.
-  const budget=Math.min(cash*.10,total*.08),per=budget/5;
+  // Consecutive review-only batches work toward a 65% portfolio target.
+  // Each batch is capped at 20% of the portfolio and each new issuer at 5%.
+  // All holdings and unsettled funds are accounted for before suggesting more.
+  const budget=Math.min(cash,total*ORDER_MAX_BATCH_SHARE,roomToTarget),per=budget/5;
   let spent=0;
   const orders=[],sectors=new Set();
   for(const pass of [0,1]){
@@ -148,7 +160,7 @@ function orderDrafts(quotes,portfolio,ranking,now=Date.now(),options={}){
       if(orders.length>=5)break;
       if(orders.some(y=>y.symbol===x.symbol))continue;
       if(pass===0&&sectors.has(x.sector))continue;
-      const allocation=Math.min(per,budget-spent,total*.025);
+      const allocation=Math.min(per,budget-spent,total*ORDER_MAX_SINGLE_SHARE);
       const quantity=Math.min(Math.floor(allocation/(x.ask*(1+ORDER_FEE_RATE))),
         x.ask_volume);
       if(quantity<1)continue;
@@ -172,6 +184,9 @@ function orderDrafts(quotes,portfolio,ranking,now=Date.now(),options={}){
     research_pending:unknown,eligible_count:eligible.length,
     quote_age_minutes:Math.round(qa/60000),
     quotes_captured_at:quotes.captured_at,portfolio_captured_at:portfolio.captured_at,
+    target_exposure_pct:ORDER_TARGET_EXPOSURE*100,
+    current_exposure_pct:Math.round(committed/total*10000)/100,
+    remaining_to_target_mxn:Math.round(roomToTarget*100)/100,
     buying_power_mxn:cash,review_budget_mxn:Math.round(budget*100)/100,
     estimated_spend_mxn:Math.round(spent*100)/100,
     expires_at:new Date(Math.min(now+ORDER_MAX_AGE_MS,

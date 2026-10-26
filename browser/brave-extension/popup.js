@@ -204,11 +204,15 @@ function renderOrders(result){
     'Datos recientes verificados. Vigencia hasta: '+
     new Date(result.expires_at).toLocaleTimeString('es-MX')+
     '. Efectivo disponible: $'+fmtMX(result.buying_power_mxn)+
-    '. Tope orientativo de la propuesta: $'+fmtMX(result.review_budget_mxn)+
+    '. Meta de exposición '+result.target_exposure_pct+'%'+
+    ' (comprometido '+result.current_exposure_pct+'%; faltan $'+
+    fmtMX(result.remaining_to_target_mxn)+').'+
+    ' Tope de este lote: $'+fmtMX(result.review_budget_mxn)+
     '. Importe estimado: $'+fmtMX(result.estimated_spend_mxn)+'. '+
     'De '+result.universe_total+' instrumentos, '+result.research_covered+
     ' tienen historial comparable y '+result.research_pending+
-    ' siguen pendientes de investigación. Sin preferencias fijas por emisora.';
+    ' siguen pendientes de investigación. Sin preferencias fijas por emisora. '+
+    'Antes de generar otro lote, comprueba las ejecuciones y actualiza la cartera.';
   for(const o of result.orders){
     const container=document.createElement('div');container.className='order-line';
     const label=document.createElement('label');

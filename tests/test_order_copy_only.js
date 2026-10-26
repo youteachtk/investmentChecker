@@ -39,6 +39,7 @@ const proposal={ok:true,policy_version:3,copy_only:true,
   draft_id:'copy-test',approved:true,approved_symbols:['V'],
   expires_at:new Date(Date.now()+60000).toISOString(),
   buying_power_mxn:750000,review_budget_mxn:75000,estimated_spend_mxn:30000,
+  target_exposure_pct:65,current_exposure_pct:25,remaining_to_target_mxn:400000,
   universe_total:226,research_covered:135,research_pending:91,
   orders:[{symbol:'V',quantity:4,limit_mxn:7639.99,estimated_fee_mxn:35.45,
     estimated_total_mxn:30595.41,spread_pct:.55,
@@ -58,6 +59,7 @@ const proposal={ok:true,policy_version:3,copy_only:true,
   renderOrders({...proposal,approved:false,draft_id:'review-2'});
   assert.equal(get('orderCopy').children.length,0);
   assert.equal(get('orderList').children.length,1);
+  assert.match(get('orderMessage').textContent,/meta de exposición 65%/i);
   get('orderCopy').replaceChildren();
   renderApprovedOrders({...proposal,draft_id:'expired',
     expires_at:new Date(Date.now()-1000).toISOString()});
