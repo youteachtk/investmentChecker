@@ -22,7 +22,7 @@ on:
       - 'tests/test_auto_reload.js'
       - 'tests/test_event_update.js'
       - 'tests/test_popup_progress.js'
-      - 'tests/test_persistent_panel.js'
+      - 'tests/test_classic_popup.js'
       - 'tests/test_worker_boot.js'
       - 'tests/test_stable_collector_contract.js'
       - 'tests/fixtures/verified_2_7_1_background.js.txt'
@@ -83,8 +83,8 @@ jobs:
         run: node tests/test_event_update.js
       - name: Regression test for live popup telemetry and verified snapshots
         run: node tests/test_popup_progress.js
-      - name: Verify persistent resizable panel remains available while using Actinver
-        run: node tests/test_persistent_panel.js
+      - name: Verify classic Brave action popup restored
+        run: node tests/test_classic_popup.js
       - name: Lock proven 2.7.1 market collector and background capture lifecycle
         run: node tests/test_stable_collector_contract.js
       - name: Smoke test complete 2.8 worker with stable direct capture startup

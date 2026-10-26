@@ -1,5 +1,14 @@
 # Estado y continuidad de InvestmentChecker
 
+## Cambio 2026-10-26 — Restaurar popup clásico v2.8.31
+
+- Por solicitud del usuario se revierte **solo** la ventana independiente introducida en 2.8.30.
+- La barra de Brave vuelve a abrir `popup.html` como popup nativo, que se cierra al perder el foco, exactamente como en 2.8.29.
+- Se elimina el manejador de ventanas persistentes del service worker. No se alteran las rutas de cotizaciones, cartera privada, propuestas ni las restricciones de copia manual.
+- Causa del fallo observado en 2.8.30: la ventana independiente quedaba enfocada y `tabs.create` usaba su ventana predeterminada, incompatible con `openerTabId` perteneciente a la ventana de Actinver. Resultado: `Tab opener must be in the same window as the updated tab`, 0/226 instrumentos.
+- Prueba de regresión `tests/test_classic_popup.js`: verifica la configuración nativa y ausencia de la apertura de ventana independiente.
+- La publicación se valida mediante `.github/workflows/package-extension.yml`; la instalación y sincronización reales en Brave son comprobaciones separadas.
+
 ## Cambio 2026-10-25 — Panel persistente v2.8.30
 
 - La acción de la barra de Brave abre `popup.html` en una **ventana independiente y redimensionable** de 440 × 720, en vez de un popup que se cierra al cambiar de foco.

@@ -4,40 +4,6 @@ const ACTINVER = /^https:\/\/(?:www\.)?retoactinver\.com(?:[\/:#?]|$)/i;
 const stamp = () => new Date().toLocaleString('es-MX');
 const MAX_RUN_AGE_MS = 7 * 60 * 1000;
 
-// A toolbar click opens a normal, resizable window. Unlike an action popup,
-// it stays open while the user switches to Actinver to enter an order manually.
-let panelOpening=null;
-async function openInvestmentCheckerPanel(){
-  if(panelOpening)return panelOpening;
-  panelOpening=(async()=>{
-    const {investmentCheckerPanelId}=await chrome.storage.local.get('investmentCheckerPanelId');
-    if(Number.isInteger(investmentCheckerPanelId)){
-      try{
-        const existing=await chrome.windows.get(investmentCheckerPanelId);
-        if(existing?.id){
-          await chrome.windows.update(existing.id,{focused:true});
-          return existing.id;
-        }
-      }catch(_){}
-    }
-    const panel=await chrome.windows.create({
-      url:chrome.runtime.getURL('popup.html'),type:'popup',
-      width:440,height:720,focused:true
-    });
-    if(Number.isInteger(panel?.id)){
-      await chrome.storage.local.set({investmentCheckerPanelId:panel.id});
-      return panel.id;
-    }
-    throw Error('Brave no pudo crear la ventana de InvestmentChecker.');
-  })();
-  try{return await panelOpening;}finally{panelOpening=null;}
-}
-chrome.action?.onClicked?.addListener(()=>{void openInvestmentCheckerPanel();});
-chrome.windows?.onRemoved?.addListener(async id=>{
-  const {investmentCheckerPanelId}=await chrome.storage.local.get('investmentCheckerPanelId');
-  if(id===investmentCheckerPanelId)await chrome.storage.local.remove('investmentCheckerPanelId');
-});
-
 async function setStatus(message, running) {
   await chrome.storage.local.set({syncStatus:message, syncRunning:running});
 }
