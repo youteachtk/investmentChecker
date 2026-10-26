@@ -4,6 +4,9 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.PixelFormat
@@ -16,6 +19,9 @@ import android.view.WindowManager
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
+import org.json.JSONObject
+import java.time.Instant
 
 /** User-started overlay. Does not inspect Brave, capture credentials or place orders. */
 class OverlayService : Service() {
@@ -55,12 +61,57 @@ class OverlayService : Service() {
             setPadding(4, 10, 4, 15)
         }
         root.addView(title)
-        root.addView(TextView(this).apply {
-            text = "SIN SINCRONIZAR\nAún no hay propuestas vigentes."
-            textSize = 15f
-            setTextColor(Color.WHITE)
-            setPadding(4, 10, 4, 16)
-        })
+        val saved = getSharedPreferences("proposal_cache", MODE_PRIVATE).getString("last_verified", null)
+        val proposals = try { saved?.let { JSONObject(it) } } catch (_: Exception) { null }
+        val expiry = try { Instant.parse(proposals?.optString("expires_at") ?: "").toEpochMilli() } catch (_: Exception) { 0L }
+        val valid = proposals?.optBoolean("ok") == true &&
+            proposals.optBoolean("copy_only") && !proposals.optBoolean("simulation_only") &&
+            proposals.optString("status") == "DRAFTS_READY_FOR_REVIEW" &&
+            expiry > System.currentTimeMillis()
+        if (valid) {
+            val orders = proposals!!.optJSONArray("orders")
+            root.addView(TextView(this).apply {
+                text = "PROPUESTAS VIGENTES · Copia manual"
+                textSize = 14f
+                setTextColor(Color.GREEN)
+            })
+            if (orders != null) for (i in 0 until orders.length()) {
+                val order = orders.optJSONObject(i) ?: continue
+                val symbol = order.optString("symbol")
+                val quantity = order.optInt("quantity")
+                val price = order.optDouble("limit_mxn")
+                if (!Regex("^[A-Z0-9_.-]{1,25}$").matches(symbol) || quantity < 1 || !price.isFinite() || price <= 0) continue
+                root.addView(TextView(this).apply {
+                    text = "$symbol · $quantity títulos · Límite MXN ${"%.2f".format(price)}"
+                    textSize = 14f
+                    setTextColor(Color.WHITE)
+                    setPadding(4, 14, 4, 4)
+                })
+                val buttons = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+                for ((label, value) in listOf("Emisora" to symbol, "Títulos" to quantity.toString(), "Precio" to "%.2f".format(java.util.Locale.US, price))) {
+                    buttons.addView(Button(this).apply {
+                        text = label
+                        textSize = 10f
+                        setOnClickListener {
+                            if (System.currentTimeMillis() >= expiry) {
+                                Toast.makeText(this@OverlayService, "Propuestas vencidas: actualizar primero", Toast.LENGTH_LONG).show()
+                            } else {
+                                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                clipboard.setPrimaryClip(ClipData.newPlainText(label, value))
+                            }
+                        }
+                    }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+                }
+                root.addView(buttons)
+            }
+        } else {
+            root.addView(TextView(this).apply {
+                text = "SIN SINCRONIZAR\nAún no hay propuestas vigentes."
+                textSize = 15f
+                setTextColor(Color.WHITE)
+                setPadding(4, 10, 4, 16)
+            })
+        }
         root.addView(Button(this).apply {
             text = "Ocultar panel"
             setOnClickListener { stopSelf() }
