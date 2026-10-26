@@ -7,6 +7,7 @@
 - La diferencia hacia la meta descuenta inversiones verificadas y saldos sin liquidar; si ya alcanza 65 %, el sistema detiene nuevas propuestas de compra con estado `TARGET_REACHED`.
 - El popup explica la meta, exposición comprometida, diferencia y presupuesto por lote, y recuerda verificar órdenes realmente ejecutadas y actualizar la cartera antes de generar otro lote.
 - Se conservan por completo la copia manual, la aprobación explícita, la prohibición de autollenado/envío de órdenes y las caducidades de precios y cartera. La versión publicada y la instalada se verifican por separado.
+- Publicación validada: commit `6580bcc710c71a2a59c87d3087d5005499f4aae1`, GitHub Actions `40385311947` finalizado correctamente, paquete `browser/investmentChecker-brave-v2.8.32.zip` publicado y control remoto `latest_version=2.8.32`. Pruebas de empaquetado: 21/21 correctas; las pruebas heredadas `test_manual_sync_recovery.js` y `test_sync_fast_ack.js` siguen fallando fuera del workflow, como antes del cambio. Falta verificación de instalación y propuestas reales en Brave.
 
 ## Cambio 2026-10-26 — Restaurar popup clásico v2.8.31
 
