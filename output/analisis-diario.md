@@ -1,6 +1,6 @@
 # Actinver research snapshot
 
-Generated UTC: 2026-10-26T19:31:19.952740+00:00
+Generated UTC: 2026-10-26T20:30:04.454677+00:00
 
 Universe: 226. Ranked: 135. Failed downloads: 0.
 Not yet mapped or special-risk: 91.
@@ -12,26 +12,26 @@ Leveraged/inverse ETFs are excluded from rankings by default.
 
 | Instrument | Type | Relative score | Risk | 20d % | 60d % | Volatility % |
 |---|---|---:|---|---:|---:|---:|
-| XLE | ETFs | 87.85 | lower | 12.16586 | 17.6642 | 21.60286 |
-| CVX | ACCIONES | 85.53 | lower | 12.49455 | 18.9763 | 23.15111 |
-| XOM | ACCIONES | 85.51 | lower | 13.44449 | 19.3797 | 23.85026 |
-| BRKB | ACCIONES | 84.54 | lower | 8.89006 | 7.09133 | 13.17514 |
-| V | ACCIONES | 82.83 | lower | 9.7705 | 10.45802 | 18.96468 |
-| XLV | ETFs | 82.01 | lower | 4.36617 | 10.3793 | 17.2101 |
-| KO | ACCIONES | 81.92 | lower | 6.0335 | 6.16692 | 16.60249 |
-| PG | ACCIONES | 81.92 | lower | 7.63938 | 11.0215 | 20.21106 |
-| ABBV | ACCIONES | 81.81 | lower | 7.9481 | 14.54698 | 20.46998 |
-| PFE | ACCIONES | 80.78 | lower | 3.60376 | 18.97241 | 19.85159 |
-| COST | ACCIONES | 79.92 | lower | 8.62047 | 5.31469 | 17.64102 |
-| MA | ACCIONES | 79.9 | lower | 8.1724 | 7.25886 | 18.48974 |
-| AAPL | ACCIONES | 78.84 | lower | 1.51744 | 11.30467 | 19.13895 |
-| SHV | ETFs | 78.57 | lower | 0.32177 | 0.8311 | 0.20142 |
-| BIL | ETFs | 78.09 | lower | 0.30511 | 0.85791 | 0.20352 |
-| USO | ETFs | 77.86 | moderate | 11.63257 | 29.64311 | 42.0325 |
-| DVN | ACCIONES | 75.81 | lower | 10.61416 | 15.27757 | 33.00864 |
-| WMT | ACCIONES | 75.61 | lower | 10.24556 | 8.05484 | 28.17605 |
-| LLY | ACCIONES | 75.42 | lower | 7.69088 | 11.219 | 30.13647 |
-| TSLA | ACCIONES | 74.73 | moderate | 10.1474 | 26.51326 | 40.66003 |
+| XOM | ACCIONES | 86.8 | lower | 13.54909 | 19.48978 | 23.85644 |
+| ROKU | ACCIONES | 86.62 | lower | 2.98683 | 8.42701 | 14.48797 |
+| ABBV | ACCIONES | 85.19 | lower | 8.34484 | 14.96797 | 20.46717 |
+| LLY | ACCIONES | 84.93 | lower | 7.96435 | 11.50143 | 30.14086 |
+| XLE | ETFs | 84.64 | lower | 12.14171 | 17.63886 | 21.6021 |
+| USO | ETFs | 83.76 | moderate | 10.78595 | 28.65991 | 42.18883 |
+| CVX | ACCIONES | 83.25 | lower | 12.42429 | 18.90199 | 23.16009 |
+| MRNA | ACCIONES | 81.11 | high | 0.79583 | 262.73259 | 375.40964 |
+| AAPL | ACCIONES | 81.06 | lower | 1.62825 | 11.42617 | 19.1067 |
+| KO | ACCIONES | 78.91 | lower | 6.33172 | 6.46553 | 16.58383 |
+| TWLO | ACCIONES | 78.7 | high | -8.12949 | 33.59513 | 76.68956 |
+| V | ACCIONES | 77.4 | lower | 9.90374 | 10.59209 | 18.93338 |
+| AMD | ACCIONES | 76.87 | moderate | -12.59973 | 11.57829 | 55.83459 |
+| TMO | ACCIONES | 76.37 | lower | 0.92691 | 19.3479 | 25.71812 |
+| XLV | ETFs | 76.3 | lower | 4.68294 | 10.71432 | 17.18573 |
+| MU | ACCIONES | 75.35 | moderate | -14.24483 | 9.81887 | 52.67447 |
+| JNJ | ACCIONES | 75.13 | lower | -2.0776 | 4.39374 | 23.24882 |
+| DVN | ACCIONES | 73.68 | lower | 10.50717 | 15.16606 | 33.00514 |
+| CSCO | ACCIONES | 73.46 | lower | 3.67938 | -4.58887 | 34.54147 |
+| MRK | ACCIONES | 72.0 | moderate | -5.43413 | 8.63287 | 36.49819 |
 
 ## Important
 
