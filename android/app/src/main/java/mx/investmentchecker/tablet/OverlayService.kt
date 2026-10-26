@@ -112,6 +112,29 @@ class OverlayService : Service() {
                 setPadding(4, 10, 4, 16)
             })
         }
+        val researchRaw = getSharedPreferences("research_cache", MODE_PRIVATE).getString("pc_analysis", null)
+        val research = try { researchRaw?.let { JSONObject(it) } } catch (_: Exception) { null }
+        if (research != null) {
+            val issued = try { Instant.parse(research.getString("generated_utc")) } catch (_: Exception) { Instant.EPOCH }
+            val current = System.currentTimeMillis() - issued.toEpochMilli() in 0..86_400_000L
+            val header = TextView(this).apply {
+                text = "ANÁLISIS DE LA PC · GitHub\n${if (current) "Últimas 24 h" else "HISTÓRICO / DESACTUALIZADO"}\nNO ES UNA ORDEN DE COMPRA"
+                textSize = 12f
+                setTextColor(if (current) Color.CYAN else Color.YELLOW)
+                setPadding(4, 12, 4, 6)
+            }
+            root.addView(header)
+            val ranked = research.optJSONArray("instruments")
+            if (ranked != null) for (i in 0 until minOf(5, ranked.length())) {
+                val item = ranked.optJSONObject(i) ?: continue
+                root.addView(TextView(this).apply {
+                    text = "${i + 1}. ${item.optString("symbol")} · ${item.optDouble("score")} pts · ${item.optString("risk")}"
+                    textSize = 13f
+                    setTextColor(Color.WHITE)
+                    setPadding(4, 3, 4, 3)
+                })
+            }
+        }
         root.addView(Button(this).apply {
             text = "Ocultar panel"
             setOnClickListener { stopSelf() }
