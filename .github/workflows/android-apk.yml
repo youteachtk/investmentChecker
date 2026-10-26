@@ -54,6 +54,6 @@ jobs:
         run: |
           gh release view android-test-latest > /dev/null 2>&1 || \
             gh release create android-test-latest --title 'InvestmentChecker Android - versión de prueba' \
-              --notes 'APK de prueba; todavía sin sincronización de Actinver ni propuestas vigentes.' --prerelease
+              --notes 'APK de prueba con panel flotante y propuestas calculadas con datos de GitHub. La obtención directa de cartera desde Actinver en Android sigue pendiente.' --prerelease
           cp android/app/build/outputs/apk/debug/app-debug.apk "$RUNNER_TEMP/InvestmentChecker-Android.apk"
           gh release upload android-test-latest "$RUNNER_TEMP/InvestmentChecker-Android.apk" --clobber
