@@ -1,14 +1,15 @@
-# InvestmentChecker para Android (primera base técnica)
+# InvestmentChecker para Android (captura local de cartera)
 
 Objetivo: Samsung Galaxy Tab S7+, aplicación independiente de Windows, con panel flotante movible sobre Brave. El usuario introduce y confirma cada compra manualmente.
 
 ## Estado
 
 - Implementado: pantalla de inicio, solicitud de permiso de superposición, servicio con notificación visible, panel flotante arrastrable y ajustable en ancho, persistencia de posición/tamaño, botón para cerrarlo, acceso al inicio de sesión del concurso.
-- Implementado: carga **de solo lectura** de cotizaciones públicas, ranking y cartera desde un repositorio GitHub privado configurado en la tablet; token cifrado con Android Keystore; motor idéntico al de Brave extraído en el proceso de compilación; propuestas solo si la política de vigencia y saldo se cumple; copia individual de emisora, títulos y precio límite.
-- Pendiente: capturar y sincronizar el portafolio directamente desde una sesión de Actinver abierta en la tablet. La consulta del repositorio privado **no sustituye** esa captura: si los datos están vencidos la app debe bloquear las propuestas.
+- Implementado: navegador interno de Actinver para que el usuario inicie sesión y, al pulsar **Leer cartera de esta página**, capture el texto y las tablas visibles de saldos y posiciones. No se leen los valores de contraseñas o formularios, y los datos quedan en almacenamiento privado Android.
+- Implementado: carga **de solo lectura** de cotizaciones públicas y ranking; motor idéntico al de Brave extraído en compilación; propuestas solo si la política de vigencia y saldo se cumple; copia individual de emisora, títulos y precio límite.
+- Pendiente de verificar en la Galaxy Tab S7+: el formato real de las tablas privadas después de iniciar sesión, la cobertura del parser y el comportamiento de la sesión de Actinver dentro de Android WebView. La sesión de Brave no se comparte con el navegador interno.
 - **No se muestran propuestas inventadas ni vigentes antes de una sincronización verificada.**
-- Sin APK publicado todavía: se requiere una compilación Gradle/Android SDK y prueba en la tablet.
+- El APK de prueba se publica en el release `android-test-latest` desde GitHub Actions. La compatibilidad con la cuenta real requiere comprobación en dispositivo.
 
 ## Compilación
 
@@ -16,4 +17,4 @@ Importar el directorio `android/` como proyecto en Android Studio y ejecutar `:a
 
 ## Seguridad
 
-El permiso `SYSTEM_ALERT_WINDOW` es necesario para mantener el panel sobre Brave. La app no usa servicios de accesibilidad, no lee contraseñas de Actinver ni rellena órdenes. El token de GitHub se guarda cifrado en el dispositivo, nunca en el repositorio público. El motor compartido rechaza información caducada y simulaciones históricas. No confundir el permiso de superposición con autorización para leer el DOM de Brave: son capacidades diferentes.
+El permiso `SYSTEM_ALERT_WINDOW` es necesario para mantener el panel sobre Brave. La app no usa servicios de accesibilidad, no lee contraseñas de Actinver ni rellena órdenes. No se solicitan credenciales ni tokens de GitHub. El motor compartido rechaza información caducada y simulaciones históricas. No confundir el permiso de superposición con autorización para leer el DOM de Brave: son capacidades diferentes.
