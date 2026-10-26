@@ -13,15 +13,15 @@ class ProposalBridgeContract(unittest.TestCase):
         self.assertIn('substringBefore(marker)', gradle)
         self.assertIn('async function orderLoadPrivatePortfolio()', gradle)
 
-    def test_private_token_kept_in_keystore(self):
-        token_store = (ANDROID / 'SecureTokenStore.kt').read_text()
-        self.assertIn('AndroidKeyStore', token_store)
-        self.assertIn('AES/GCM/NoPadding', token_store)
+    def test_private_portfolio_capture_does_not_need_git_token(self):
+        home = (ANDROID / 'MainActivity.kt').read_text()
+        self.assertNotIn('SecureTokenStore(', home)
+        self.assertIn('actinver_capture', home)
 
     def test_network_read_only_and_no_broker_endpoint(self):
         source = (ANDROID / 'ProposalSources.kt').read_text()
-        self.assertIn('getString("content")', source)
         self.assertIn('raw.githubusercontent.com', source)
+        self.assertNotIn('api.github.com', source)
         self.assertNotIn('requestMethod = "POST"', source)
 
     def test_copy_is_gated_by_status_and_expiration(self):
