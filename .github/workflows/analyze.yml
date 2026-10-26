@@ -2,6 +2,13 @@ name: Analyze Actinver universe
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/analyze.py"
+      - "scripts/scoring.py"
+      - "data/universe.csv"
+      - ".github/workflows/analyze.yml"
   schedule:
     # UTC, weekdays; GitHub scheduled execution can be delayed.
     - cron: "30 13 * * 1-5"
