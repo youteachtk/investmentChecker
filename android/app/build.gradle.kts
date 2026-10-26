@@ -7,8 +7,7 @@ android {
     namespace = "mx.investmentchecker.tablet"
     compileSdk = 35
     defaultConfig {
-        // Different ID avoids overwriting an existing APK signed by another CI runner.
-        applicationId = "mx.investmentchecker.tablet.v2"
+        applicationId = "mx.investmentchecker.tablet"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
