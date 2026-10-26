@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "investmentChecker · Actinver",
-  "version": "2.8.32",
-  "description": "2.8.32: propuestas por lotes orientadas al objetivo de exposición de 65%; sin operaciones automáticas.",
+  "version": "2.8.33",
+  "description": "2.8.33: historial de tres años y USD/MXN para cada propuesta; compra exclusivamente manual.",
   "permissions": [
     "storage",
     "scripting",

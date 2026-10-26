@@ -52,6 +52,39 @@ function orderCSV(text){
   const keys=rows.shift()||[];
   return rows.map(row=>Object.fromEntries(keys.map((k,i)=>[k,row[i]||''])));
 }
+function orderHistoricalReview(row,now=Date.now()){
+  const numeric=name=>{
+    const raw=String(row?.[name]??'').trim();
+    if(!raw)return null;
+    const value=Number(raw);
+    return Number.isFinite(value)?value:null;
+  };
+  const flag=name=>String(row?.[name]??'').trim()==='1';
+  const fields=['return_126d_pct','return_252d_pct','mxn_return_20d_pct',
+    'mxn_return_126d_pct','mxn_return_252d_pct','mxn_return_750d_pct',
+    'mxn_current_drawdown_252d_pct'];
+  const values=Object.fromEntries(fields.map(name=>[name,numeric(name)]));
+  const historyDays=numeric('history_days');
+  const marketDate=Date.parse(String(row?.last_market_date||'')+'T23:59:59Z');
+  const fxDate=Date.parse(String(row?.fx_validated_date||'')+'T23:59:59Z');
+  if(historyDays===null||historyDays<700||fields.some(name=>values[name]===null)||
+     !Number.isFinite(marketDate)||!Number.isFinite(fxDate)||
+     Math.abs(marketDate-fxDate)>5*86400000||
+     now-marketDate>7*86400000||now-marketDate< -86400000||
+     now-fxDate>7*86400000||now-fxDate< -86400000)
+    return {eligible:false,reason:'HISTORIAL_INCOMPLETO',...values};
+  if(!flag('mxn_above_sma_50')||!flag('mxn_above_sma_200')||
+     !flag('mxn_sma_50_rising'))
+    return {eligible:false,reason:'TENDENCIA_NO_CONFIRMADA',...values};
+  if(values.return_126d_pct<=0||values.return_252d_pct<=0||
+     values.mxn_return_126d_pct<=0||values.mxn_return_252d_pct<=0)
+    return {eligible:false,reason:'REBOTE_SIN_FORTALEZA_HISTORICA',...values};
+  if(values.mxn_current_drawdown_252d_pct>0||
+     values.mxn_current_drawdown_252d_pct< -15)
+    return {eligible:false,reason:'CAIDA_DESDE_MAXIMOS',...values};
+  return {eligible:true,reason:'HISTORIAL_3_ANOS_VERIFICADO',
+    mxn_above_sma_200:true,...values};
+}
 function orderDrafts(quotes,portfolio,ranking,now=Date.now(),options={}){
   const simulation=options.simulation_only===true;
   const fail=(status,reason)=>({ok:false,status,reason,orders:[],
@@ -77,7 +110,7 @@ function orderDrafts(quotes,portfolio,ranking,now=Date.now(),options={}){
     return fail('BALANCE_MISMATCH','Los saldos no concuerdan.');
   if(holds.length===0&&invested>Math.max(100,total*.01))
     return fail('INCOMPLETE_PORTFOLIO','Hay inversiones sin posiciones verificables.');
-  const owned=new Set(),ownedSectors=new Set();
+  const owned=new Set(),ownedSectors=new Set(),heldValues=new Map();
   let holdingsValue=0;
   for(const h of holds){
     const sym=String(h?.symbol||'').trim().toUpperCase();
@@ -89,7 +122,7 @@ function orderDrafts(quotes,portfolio,ranking,now=Date.now(),options={}){
       (orderNumber(h.price_mxn)!==null?qty*h.price_mxn:null);
     if(value===null||value<0)
       return fail('INCOMPLETE_PORTFOLIO','Faltan valores de posiciones; no se calcula una compra.');
-    holdingsValue+=value;owned.add(sym);
+    holdingsValue+=value;owned.add(sym);heldValues.set(sym,value);
     if(ORDER_SECTORS[sym])ownedSectors.add(ORDER_SECTORS[sym]);
   }
   if(Math.abs(holdingsValue-invested)>Math.max(100,invested*.025))
@@ -111,19 +144,23 @@ function orderDrafts(quotes,portfolio,ranking,now=Date.now(),options={}){
       score.set(sym,{score:n,vol:Number.isFinite(vol)?vol:null,
         rsi:Number.isFinite(rsi)?rsi:null,
         risk:String(r.risk_label||'unclassified'),
-        market_date:String(r.last_market_date||'')});
+        market_date:String(r.last_market_date||''),
+        history:orderHistoricalReview(r,now)});
     }
   }
   if(!score.size)return fail('INVALID_RANKING','Clasificación histórica no disponible.');
   const eligible=[];
-  let covered=0,unknown=0;
+  let covered=0,unknown=0,unverifiedHistory=0;
   for(const q of quotes.quotes){
     const symbol=String(q.symbol||'').trim().toUpperCase();
     const history=score.get(symbol);
     if(!history){unknown++;continue;}covered++;
-    if(!['ACCIONES','ETFs'].includes(q.category)||owned.has(symbol)||
+    if(!history.history.eligible){unverifiedHistory++;continue;}
+    if(!['ACCIONES','ETFs'].includes(q.category)||
        ORDER_EXCLUDE.has(symbol)||history.score<60||
-       (history.vol!==null&&history.vol>=60))continue;
+       (history.vol!==null&&history.vol>=60)||
+       (history.rsi!==null&&history.rsi>=75&&
+         history.history.mxn_current_drawdown_252d_pct> -2))continue;
     const historyDate=Date.parse(history.market_date+'T23:59:59Z');
     if(!Number.isFinite(historyDate)||
        now-historyDate>7*86400000||historyDate-now>86400000)continue;
@@ -140,7 +177,9 @@ function orderDrafts(quotes,portfolio,ranking,now=Date.now(),options={}){
       (history.vol!==null&&history.vol>=35?8:0)-
       (ownedSectors.has(sector)?6:0);
     eligible.push({symbol,category:q.category,sector,bid,ask,
+      already_owned:owned.has(symbol),existing_value_mxn:heldValues.get(symbol)||0,
       ask_volume:av,historical_score:history.score,
+      history_verified:true,history_review:history.history,
       comparison_score:Math.round(finalScore*100)/100,
       spread_pct:Math.round(spread*1000)/1000,
       daily_change_pct:change,annual_volatility_pct:history.vol,
@@ -160,7 +199,8 @@ function orderDrafts(quotes,portfolio,ranking,now=Date.now(),options={}){
       if(orders.length>=5)break;
       if(orders.some(y=>y.symbol===x.symbol))continue;
       if(pass===0&&sectors.has(x.sector))continue;
-      const allocation=Math.min(per,budget-spent,total*ORDER_MAX_SINGLE_SHARE);
+      const allocation=Math.min(per,budget-spent,total*ORDER_MAX_SINGLE_SHARE,
+        Math.max(0,total*.12-x.existing_value_mxn));
       const quantity=Math.min(Math.floor(allocation/(x.ask*(1+ORDER_FEE_RATE))),
         x.ask_volume);
       if(quantity<1)continue;
@@ -168,20 +208,31 @@ function orderDrafts(quotes,portfolio,ranking,now=Date.now(),options={}){
       const fee=Math.round(gross*ORDER_FEE_RATE*100)/100;
       const amount=Math.round((gross+fee)*100)/100;
       orders.push({symbol:x.symbol,side:'BUY',order_type:'LIMIT_DRAFT',
+        position_action:x.already_owned?'AMPLIAR':'NUEVA',
         quantity,limit_mxn:x.ask,estimated_fee_mxn:fee,
         estimated_total_mxn:amount,spread_pct:x.spread_pct,
         historical_score:x.historical_score,comparison_score:x.comparison_score,
+        instrument_type:x.category==='ACCIONES'?'Acción':'ETF',
+        history_verified:true,
+        mxn_return_20d_pct:x.history_review.mxn_return_20d_pct,
+        mxn_return_126d_pct:x.history_review.mxn_return_126d_pct,
+        mxn_return_252d_pct:x.history_review.mxn_return_252d_pct,
+        mxn_return_750d_pct:x.history_review.mxn_return_750d_pct,
+        mxn_above_sma_200:x.history_review.mxn_above_sma_200,
+        mxn_current_drawdown_252d_pct:x.history_review.mxn_current_drawdown_252d_pct,
         annual_volatility_pct:x.annual_volatility_pct,
         rsi_14:x.rsi_14,sector:x.sector,category:x.category});
       spent+=amount;sectors.add(x.sector);
     }
   }
   if(!orders.length)
-    return fail('NO_ELIGIBLE_NEW_BUYS','No hay compras que cumplan filtros de cotización, riesgo y diversificación.');
+    return fail(unverifiedHistory>0?'NO_VERIFIED_HISTORICAL_BUYS':'NO_ELIGIBLE_NEW_BUYS',
+      'Ninguna compra pasó la revisión histórica de tres años, tendencia de 6 y 12 meses en USD y MXN, medias móviles, máximos, cotización y riesgo.');
   return {ok:true,status:simulation?'HISTORICAL_SIMULATION':'DRAFTS_READY_FOR_REVIEW',orders,
     policy_version:3,copy_only:!simulation,simulation_only:simulation,
     universe_total:quotes.quotes.length,research_covered:covered,
     research_pending:unknown,eligible_count:eligible.length,
+    historical_rejected_count:unverifiedHistory,
     quote_age_minutes:Math.round(qa/60000),
     quotes_captured_at:quotes.captured_at,portfolio_captured_at:portfolio.captured_at,
     target_exposure_pct:ORDER_TARGET_EXPOSURE*100,

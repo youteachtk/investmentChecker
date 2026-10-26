@@ -10,6 +10,11 @@ const {orderDrafts,orderCSV,orderApprove}=vm.runInNewContext(
   code+';({orderDrafts,orderCSV,orderApprove})',
   {Date,Promise,Set,Map,Number,Math,JSON,chrome:{alarms}}
 );
+const verifiedHistory=r=>({...r,history_days:'755',return_126d_pct:'10',
+  return_252d_pct:'20',mxn_return_20d_pct:'5',mxn_return_126d_pct:'12',
+  mxn_return_252d_pct:'20',mxn_return_750d_pct:'45',
+  mxn_current_drawdown_252d_pct:'-3',mxn_above_sma_50:'1',
+  mxn_above_sma_200:'1',mxn_sma_50_rising:'1',fx_validated_date:'2026-10-23'});
 const mk=(symbol,ask)=>({
   symbol,category:'ACCIONES',
   bid:ask-.5,ask,bid_volume:500,ask_volume:700,variation:1.1
@@ -26,7 +31,7 @@ const portfolio={captured_at:new Date(now-1000).toISOString(),
   summary:{total_value:1000000,investments:250000,buying_power:750000,unsettled:0},
   holdings:[{symbol:'AAPL',quantity:3,price_mxn:50000},
     {symbol:'MSFT',quantity:2,price_mxn:50000}]};
-const ranked=orderCSV('simbolo_actinver,research_score,annual_volatility_pct,rsi_14,last_market_date\r\nV,85.44,19,62,2026-10-23\r\nUNH,61.81,24,55,2026-10-23\r\nAAPL,92,20,59,2026-10-23\r\n');
+const ranked=orderCSV('simbolo_actinver,research_score,annual_volatility_pct,rsi_14,last_market_date\r\nV,85.44,19,62,2026-10-23\r\nUNH,61.81,24,55,2026-10-23\r\nAAPL,92,20,59,2026-10-23\r\n').map(verifiedHistory);
 let result=orderDrafts(snap,portfolio,ranked,now);
 assert.equal(result.ok,true);
 assert.equal(result.status,'DRAFTS_READY_FOR_REVIEW');
@@ -60,7 +65,7 @@ assert.equal(orderDrafts(snap,{...portfolio,holdings:[
 ]},ranked,now).status,'INVALID_HOLDINGS');
 // The strongest eligible instrument wins regardless of its ticker or legacy Visa.
 const rankedNeutral=orderCSV('simbolo_actinver,research_score,annual_volatility_pct,rsi_14,last_market_date\n'.replace(/\\n/g,'\n')+
-  'V,79,19,60,2026-10-23\nUNH,91,24,55,2026-10-23\n'.replace(/\\n/g,'\n'));
+  'V,79,19,60,2026-10-23\nUNH,91,24,55,2026-10-23\n'.replace(/\\n/g,'\n')).map(verifiedHistory);
 const neutral=orderDrafts(snap,portfolio,rankedNeutral,now);
 assert.equal(neutral.ok,true);
 assert.equal(neutral.orders[0].symbol,'UNH','Visa must not receive priority');
@@ -71,7 +76,7 @@ assert.equal(badHoldings.status,'HOLDINGS_VALUE_MISMATCH');
 // ETFs are eligible for research when quotes are liquid and risk data valid.
 const mixed=[...quotes];mixed[2]={...mk('XLV',3200),category:'ETFs'};
 const broad=orderDrafts({...snap,quotes:mixed},portfolio,
-  [...ranked,...orderCSV('simbolo_actinver,research_score,annual_volatility_pct,rsi_14,last_market_date\nXLV,90,17,62,2026-10-23\n'.replace(/\\n/g,'\n'))],now);
+  [...ranked,...orderCSV('simbolo_actinver,research_score,annual_volatility_pct,rsi_14,last_market_date\nXLV,90,17,62,2026-10-23\n'.replace(/\\n/g,'\n')).map(verifiedHistory)],now);
 assert.equal(broad.ok,true);
 assert.ok(broad.orders.some(o=>o.symbol==='XLV'));
 
@@ -83,7 +88,7 @@ for(let i=0;i<8;i++){
   liquidQuotes[i]=mk('CAND'+i,1000);
   bulkRows.push('CAND'+i+','+(90-i)+',20,55,2026-10-23');
 }
-const bulkRanking=orderCSV(bulkRows.join('\n')+'\n');
+const bulkRanking=orderCSV(bulkRows.join('\n')+'\n').map(verifiedHistory);
 const bulk=orderDrafts({...snap,quotes:liquidQuotes},portfolio,bulkRanking,now);
 assert.equal(bulk.ok,true);
 assert.equal(bulk.target_exposure_pct,65);

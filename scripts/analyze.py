@@ -67,14 +67,71 @@ def indicators(close, volume):
         "trailing_drawdown_pct": numeric(drawdown * 100),
         "volume_5d_vs_20d": numeric(volratio),
         "heuristic_score": numeric(np.clip(score, 0, 100)),
+        "return_126d_pct": numeric((last / float(close.iloc[-127]) - 1) * 100)
+        if len(close) >= 127 else None,
+        "return_252d_pct": numeric((last / float(close.iloc[-253]) - 1) * 100)
+        if len(close) >= 253 else None,
         "history_days": len(close),
         "last_market_date": str(close.index[-1].date()),
+    }
+
+
+def historical_mxn_metrics(usd_close, mxn_per_usd):
+    """Use 3y daily underlying closes and matched USD/MXN closes; fail closed.
+
+    SIC quotes in MXN are not the same as an FX-derived reference price;
+    their spreads/liquidity are still evaluated separately in Brave.
+    """
+    usd = pd.to_numeric(usd_close, errors="coerce").dropna().sort_index()
+    fx_raw = pd.to_numeric(mxn_per_usd, errors="coerce").dropna().sort_index()
+    # Yahoo uses different local exchange timezones for stocks and FX;
+    # compare their *session dates*, not their midnight UTC timestamps.
+    usd.index = pd.DatetimeIndex(usd.index).tz_localize(None).normalize()
+    fx_raw.index = pd.DatetimeIndex(fx_raw.index).tz_localize(None).normalize()
+    usd = usd[~usd.index.duplicated(keep="last")]
+    fx_raw = fx_raw[~fx_raw.index.duplicated(keep="last")]
+    # On Mondays before the US stock open FX may already have a Monday quote
+    # while the most recent stock close is Friday: do not use future FX.
+    fx_raw = fx_raw.loc[:usd.index[-1]]
+    if len(usd) < 751 or len(fx_raw) < 700:
+        return None
+    delta_days = (usd.index[-1] - fx_raw.index[-1]).days
+    if not 0 <= delta_days <= 5:
+        return None
+    fx = fx_raw.reindex(usd.index).ffill(limit=3)
+    converted = (usd * fx).dropna()
+    if len(converted) < 751 or converted.index[-1] != usd.index[-1]:
+        return None
+    last = float(converted.iloc[-1])
+    tail252 = converted.tail(252)
+    sma50 = converted.tail(50).mean()
+    sma200 = converted.tail(200).mean()
+    before50 = converted.iloc[-70:-20].mean()
+    return {
+        "mxn_return_20d_pct": numeric((last / float(converted.iloc[-21]) - 1) * 100),
+        "mxn_return_126d_pct": numeric((last / float(converted.iloc[-127]) - 1) * 100),
+        "mxn_return_252d_pct": numeric((last / float(converted.iloc[-253]) - 1) * 100),
+        "mxn_return_750d_pct": numeric((last / float(converted.iloc[-751]) - 1) * 100),
+        "mxn_current_drawdown_252d_pct": numeric((last / float(tail252.max()) - 1) * 100),
+        "mxn_above_sma_50": int(last > sma50),
+        "mxn_above_sma_200": int(last > sma200),
+        "mxn_sma_50_rising": int(sma50 > before50),
+        "fx_validated_date": str(fx_raw.index[-1].date()),
     }
 
 
 def main():
     instruments = list(csv.DictReader(UNIVERSE.open(encoding="utf-8")))
     output, failures = [], []
+    fx_frame = yf.download("MXN=X", period="3y", interval="1d", auto_adjust=True,
+                           progress=False, threads=False, timeout=20)
+    if fx_frame.empty:
+        raise RuntimeError("USD/MXN three-year history unavailable: ranking not published")
+    fx_close = fx_frame["Close"]
+    if isinstance(fx_close, pd.DataFrame):
+        fx_close = fx_close.iloc[:, 0]
+    if len(fx_close.dropna()) < 700:
+        raise RuntimeError("Insufficient USD/MXN history: ranking not published")
     eligible = [i for i in instruments if i["simbolo_datos"] and i["estado_mapeo"] == "candidate" and i["riesgo_especial"] == "none"]
     # No bulk promises: fetches are individually rate-limited and failures logged.
     for idx, inst in enumerate(eligible, 1):
@@ -93,8 +150,11 @@ def main():
             stats = indicators(clean["close"], clean["volume"].fillna(0))
             if not stats:
                 raise ValueError("less than 65 price observations")
+            fx_stats = historical_mxn_metrics(clean["close"], fx_close)
+            if not fx_stats:
+                raise ValueError("insufficient aligned three-year USD/MXN historical data")
             output.append({"tipo": inst["tipo"], "simbolo_actinver": inst["simbolo_actinver"],
-                           "simbolo_datos": symbol, **stats})
+                           "simbolo_datos": symbol, **stats, **fx_stats})
         except Exception as e:
             failures.append({"simbolo_actinver": inst["simbolo_actinver"], "symbol": symbol,
                              "error": str(e)[:220]})
@@ -105,9 +165,14 @@ def main():
     output = score_universe(output)
     with (OUT / "ranking.csv").open("w", newline="", encoding="utf-8") as f:
         keys = ["tipo", "simbolo_actinver", "simbolo_datos", "last_market_date", "close", "return_20d_pct",
-                "return_60d_pct", "rsi_14", "macd", "macd_signal", "sma_20", "sma_50",
+                "return_60d_pct", "return_126d_pct", "return_252d_pct",
+                "rsi_14", "macd", "macd_signal", "sma_20", "sma_50",
                 "annual_volatility_pct", "trailing_drawdown_pct", "volume_5d_vs_20d",
-                "heuristic_score", "research_score", "risk_label", "history_days"]
+                "heuristic_score", "research_score", "risk_label", "history_days",
+                "mxn_return_20d_pct", "mxn_return_126d_pct", "mxn_return_252d_pct",
+                "mxn_return_750d_pct", "mxn_current_drawdown_252d_pct",
+                "mxn_above_sma_50", "mxn_above_sma_200", "mxn_sma_50_rising",
+                "fx_validated_date"]
         writer = csv.DictWriter(f, fieldnames=keys)
         writer.writeheader()
         writer.writerows(output)

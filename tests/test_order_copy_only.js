@@ -41,7 +41,11 @@ const proposal={ok:true,policy_version:3,copy_only:true,
   buying_power_mxn:750000,review_budget_mxn:75000,estimated_spend_mxn:30000,
   target_exposure_pct:65,current_exposure_pct:25,remaining_to_target_mxn:400000,
   universe_total:226,research_covered:135,research_pending:91,
-  orders:[{symbol:'V',quantity:4,limit_mxn:7639.99,estimated_fee_mxn:35.45,
+  orders:[{symbol:'V',category:'ACCIONES',instrument_type:'Acción',
+    history_verified:true,mxn_return_20d_pct:5,mxn_return_126d_pct:12,
+    mxn_return_252d_pct:23,mxn_return_750d_pct:45,
+    mxn_current_drawdown_252d_pct:-3,
+    quantity:4,limit_mxn:7639.99,estimated_fee_mxn:35.45,
     estimated_total_mxn:30595.41,spread_pct:.55,
     comparison_score:76,historical_score:84}]
 };
@@ -52,7 +56,7 @@ const proposal={ok:true,policy_version:3,copy_only:true,
   assert.equal(cards.length,1);
   const controls=cards[0].children[2].children;
   assert.deepEqual(Array.from(controls,x=>x.textContent),
-    ['Copiar emisora','Copiar títulos','Copiar límite']);
+    ['Copiar símbolo','Copiar títulos','Copiar límite']);
   for(const b of controls)await b.listeners.click();
   assert.deepEqual(clipboard,['V','4','7639.99']);
   assert.equal(calls.length,0,'Copy buttons may not send broker or extension messages');
@@ -60,6 +64,13 @@ const proposal={ok:true,policy_version:3,copy_only:true,
   assert.equal(get('orderCopy').children.length,0);
   assert.equal(get('orderList').children.length,1);
   assert.match(get('orderMessage').textContent,/meta de exposición 65%/i);
+  assert.match(get('orderList').children[0].children[0].children[1].children[1].textContent,
+    /6 meses.*12\.00%.*1 año.*23\.00%/);
+  get('orderCopy').replaceChildren();
+  renderApprovedOrders({...proposal,draft_id:'incomplete-history',
+    orders:[{...proposal.orders[0],history_verified:false}]});
+  assert.equal(get('orderCopy').children.length,0,
+    'Old cached draft without verified 3-year history must not be copyable');
   get('orderCopy').replaceChildren();
   renderApprovedOrders({...proposal,draft_id:'expired',
     expires_at:new Date(Date.now()-1000).toISOString()});

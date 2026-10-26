@@ -1,5 +1,13 @@
 # Estado y continuidad de InvestmentChecker
 
+## Cambio 2026-10-26 — Historial de 3 años obligatorio para cada propuesta v2.8.33
+
+- A petición expresa del usuario se impide recomendar por un repunte de 20 días sin confirmar la tendencia de seis meses, un año y aproximadamente tres años; se calcula también la distancia actual a máximos y se compara USD/MXN diario para los activos estadounidenses del SIC.
+- El ranking histórico deja de dar tanto peso a 20/60 días e incluye seis meses, un año y tres años, en USD y MXN. Si no hay historial/cotización/FX suficientes o la tendencia no se confirma, la extensión no ofrece esa orden.
+- Se analizan tanto emisoras nuevas como ampliaciones de títulos ya poseídos, con topes por lote, concentración del 12 % por instrumento y copia exclusivamente manual. La pantalla explica categoría Acción/ETF y retornos de 6/12/~36 meses.
+- El calendario de noticias, publicaciones de resultados y circunstancias macroeconómicas **no** se valida automáticamente: revisión humana antes de comprar. Un cálculo técnico no garantiza rentabilidad.
+- Verificar pruebas JavaScript/Python, actualización real de `output/ranking.csv`, empaquetado, publicación y por separado instalación en Brave antes de declararlo terminado.
+
 ## Cambio 2026-10-26 — Lotes de propuestas según exposición objetivo v2.8.32
 
 - El usuario reiteró que InvestmentChecker debe generar las siguientes propuestas para el tramo final del Reto Actinver, con el objetivo de exposición previamente acordado de 60–70 % (centro de cálculo: 65 %).
@@ -7,7 +15,6 @@
 - La diferencia hacia la meta descuenta inversiones verificadas y saldos sin liquidar; si ya alcanza 65 %, el sistema detiene nuevas propuestas de compra con estado `TARGET_REACHED`.
 - El popup explica la meta, exposición comprometida, diferencia y presupuesto por lote, y recuerda verificar órdenes realmente ejecutadas y actualizar la cartera antes de generar otro lote.
 - Se conservan por completo la copia manual, la aprobación explícita, la prohibición de autollenado/envío de órdenes y las caducidades de precios y cartera. La versión publicada y la instalada se verifican por separado.
-- Publicación validada: commit `6580bcc710c71a2a59c87d3087d5005499f4aae1`, GitHub Actions `40385311947` finalizado correctamente, paquete `browser/investmentChecker-brave-v2.8.32.zip` publicado y control remoto `latest_version=2.8.32`. Pruebas de empaquetado: 21/21 correctas; las pruebas heredadas `test_manual_sync_recovery.js` y `test_sync_fast_ack.js` siguen fallando fuera del workflow, como antes del cambio. Falta verificación de instalación y propuestas reales en Brave.
 
 ## Cambio 2026-10-26 — Restaurar popup clásico v2.8.31
 

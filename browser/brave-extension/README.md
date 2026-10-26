@@ -1,3 +1,12 @@
+## v2.8.33 — Revisión histórica obligatoria de todas las propuestas (26/oct/2026)
+
+- El análisis contempla unos tres años de cierres diarios por instrumento, rendimientos de 20, 60, 126, 252 y aproximadamente 750 ruedas, caída **actual** desde el máximo anual y medias móviles de 50/200 sesiones. Se reduce mucho el peso de los rebotes de 20 y 60 sesiones en favor de la persistencia semestral y anual.
+- Para emisoras estadounidenses se descarga la serie diaria `MXN=X`, se alinean fechas de cierres y se calcula una referencia histórica en pesos; no sustituye las cotizaciones reales SIC ni sus diferenciales. No se inventa el historial cuando faltan datos cambiarios.
+- Cada compra debe demostrar historial suficiente, fortaleza de 6 y 12 meses tanto en USD como MXN, medias favorables y una distancia razonable del máximo anual. Una subida aislada con semestre negativo queda excluida; falta de historial bloquea las propuestas hasta finalizar el análisis público actualizado.
+- Se permite proponer **ampliaciones de posiciones existentes** además de acciones/ETF nuevos, limitando cada título al 12 % del patrimonio tras ampliación, con los topes del lote conservados. Cada renglón identifica tipo de instrumento, amplía/nueva y su historial de 6, 12 y ~36 meses en MXN.
+- El cálculo no certifica noticias, resultados ni eventos futuros; el usuario debe revisarlos antes de introducir manualmente la orden. Sin automatizar órdenes, formularios o confirmaciones.
+- Pruebas: `tests/test_history_gate.js`, `tests/test_historical_indicators.py`, `tests/test_scoring.py`, `tests/test_order_copy_only.js`.
+
 ## v2.8.28 — Propuestas para copiar manualmente, sin automatizar compras (25/oct/2026)
 
 - Se elimina la prioridad fija de Visa y otras emisoras. La selección utiliza el puntaje histórico, diferencial compra-venta, sobrecompra RSI, volatilidad y exposición sectorial; sin bonificaciones por nombre. Se consideran acciones y ETF no apalancados. De los 226 instrumentos disponibles, solo los que tienen investigación histórica validada se pueden puntuar; los demás figuran como pendientes, sin puntajes inventados.

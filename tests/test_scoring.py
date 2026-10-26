@@ -16,6 +16,32 @@ def row(symbol, momentum, risk, trend=True):
 
 
 class RankingTests(unittest.TestCase):
+    def test_sustained_history_beats_short_term_bounce(self):
+        bounce=row("WMT", 20, 20)
+        bounce.update(return_60d_pct=20, return_126d_pct=-7,
+                      return_252d_pct=12, mxn_return_126d_pct=-1.6,
+                      mxn_return_252d_pct=12.5,
+                      mxn_current_drawdown_252d_pct=-10.7)
+        sustained=row("XLV", 5, 20)
+        sustained.update(return_60d_pct=9, return_126d_pct=24,
+                         return_252d_pct=23, mxn_return_126d_pct=32,
+                         mxn_return_252d_pct=23,
+                         mxn_current_drawdown_252d_pct=-1.1)
+        ranked=score_universe([bounce,sustained])
+        self.assertEqual(ranked[0]["simbolo_actinver"],"XLV")
+
+    def test_three_year_history_breaks_equal_short_term_tie(self):
+        weak=row("AWEAK", 5, 18)
+        strong=row("ZSTRONG", 5, 18)
+        weak.update(return_126d_pct=8,return_252d_pct=12,
+                    mxn_return_126d_pct=10,mxn_return_252d_pct=14,
+                    mxn_return_750d_pct=-30,mxn_current_drawdown_252d_pct=-3)
+        strong.update(return_126d_pct=8,return_252d_pct=12,
+                      mxn_return_126d_pct=10,mxn_return_252d_pct=14,
+                      mxn_return_750d_pct=45,mxn_current_drawdown_252d_pct=-3)
+        ranked=score_universe([weak,strong])
+        self.assertEqual(ranked[0]["simbolo_actinver"],"ZSTRONG")
+
     def test_empty(self):
         self.assertEqual(score_universe([]), [])
 

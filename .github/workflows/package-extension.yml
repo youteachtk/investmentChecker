@@ -13,6 +13,7 @@ on:
       - 'tests/test_isolated_market_capture.js'
       - 'tests/test_frame_lifecycle.js'
       - 'tests/test_order_preflight.js'
+      - 'tests/test_history_gate.js'
       - 'tests/test_order_copy_only.js'
       - 'tests/test_order_ui_probe.js'
       - 'tests/test_orders_history.js'
@@ -65,6 +66,8 @@ jobs:
         run: node tests/test_frame_lifecycle.js
       - name: Regression test for private buy proposal and approval safeguards
         run: node tests/test_order_preflight.js
+      - name: Require multiyear USD/MXN history for every proposed buy
+        run: node tests/test_history_gate.js
       - name: Verify manual copy-only proposals and disabled automated form access
         run: node tests/test_order_copy_only.js
       - name: Regression test for read-only Actinver order UI inspection

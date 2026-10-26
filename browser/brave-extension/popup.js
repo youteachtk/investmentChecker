@@ -195,8 +195,9 @@ function renderOrders(result){
   $('orderConsent').hidden=false;
   if(result.policy_version!==3 || result.copy_only!==true ||
      result.execution_enabled!==false || result.auto_fill_enabled!==false ||
-     !Array.isArray(result.orders)) {
-    $('orderMessage').textContent='No se pudo verificar que la ejecución esté bloqueada.';
+     !Array.isArray(result.orders)||
+     !result.orders.every(o=>o.history_verified===true)) {
+    $('orderMessage').textContent='Propuesta incompleta: falta verificar la tendencia histórica de tres años en dólares y pesos.';
     return;
   }
   orderDraft=result;
@@ -211,8 +212,11 @@ function renderOrders(result){
     '. Importe estimado: $'+fmtMX(result.estimated_spend_mxn)+'. '+
     'De '+result.universe_total+' instrumentos, '+result.research_covered+
     ' tienen historial comparable y '+result.research_pending+
-    ' siguen pendientes de investigación. Sin preferencias fijas por emisora. '+
-    'Antes de generar otro lote, comprueba las ejecuciones y actualiza la cartera.';
+    ' siguen pendientes de investigación. Todos los candidatos pasaron la revisión '+
+    'de tres años, seis meses, un año, medias móviles y caída desde máximos. '+
+    'Sin preferencias fijas por emisora. '+
+    'Antes de comprar, verifica noticias, resultados y eventos de cada empresa; '+
+    'antes de otro lote, comprueba ejecuciones y actualiza la cartera.';
   for(const o of result.orders){
     const container=document.createElement('div');container.className='order-line';
     const label=document.createElement('label');
@@ -221,13 +225,18 @@ function renderOrders(result){
     input.addEventListener('change',refreshOrderApproval);
     const text=document.createElement('span');
     const ticker=document.createElement('strong');
-    ticker.textContent=o.symbol+' · '+o.quantity+' títulos';
+    ticker.textContent=o.symbol+' · '+o.instrument_type+' · '+
+      (o.position_action==='AMPLIAR'?'Ampliar':'Nueva')+' · '+o.quantity+' títulos';
     const detail=document.createElement('span');detail.className='order-detail';
     detail.textContent='Límite $'+fmtMX(o.limit_mxn)+
       ' · máximo estimado $'+fmtMX(o.estimated_total_mxn)+
       ' · diferencial '+Number(o.spread_pct).toFixed(3)+'%'+
       ' · evaluación '+Number(o.comparison_score).toFixed(2)+
-      ' · puntuación histórica '+Number(o.historical_score).toFixed(2);
+      ' · puntuación histórica '+Number(o.historical_score).toFixed(2)+
+      ' · historial en MXN: 6 meses '+Number(o.mxn_return_126d_pct).toFixed(2)+'%'+
+      ', 1 año '+Number(o.mxn_return_252d_pct).toFixed(2)+'%'+
+      ', ≈3 años '+Number(o.mxn_return_750d_pct).toFixed(2)+'%'+
+      ' · desde máximo anual '+Number(o.mxn_current_drawdown_252d_pct).toFixed(2)+'%';
     text.append(ticker,detail);label.append(input,text);
     container.append(label);$('orderList').append(container);
   }
@@ -249,7 +258,8 @@ function copyTextButton(label,value){
 function renderApprovedOrders(draft){
   if(!draft||draft.policy_version!==3||!draft.copy_only||
      draft.execution_enabled!==false||draft.auto_fill_enabled!==false||
-     Date.parse(draft.expires_at)<=Date.now())return;
+     Date.parse(draft.expires_at)<=Date.now()||
+     !Array.isArray(draft.orders)||!draft.orders.every(o=>o.history_verified===true))return;
   if(renderedCopyId===draft.draft_id)return;
   resetOrderSelection();
   renderedCopyId=draft.draft_id;
@@ -261,14 +271,15 @@ function renderApprovedOrders(draft){
   for(const o of draft.orders.filter(order=>selected.has(order.symbol))){
     const box=document.createElement('div');box.className='order-line';
     const header=document.createElement('strong');
-    header.textContent=o.symbol+' · '+o.quantity+' títulos';
+    header.textContent=o.symbol+' · '+o.instrument_type+' · '+
+      (o.position_action==='AMPLIAR'?'Ampliar':'Nueva')+' · '+o.quantity+' títulos';
     const detail=document.createElement('div');detail.className='order-detail';
     detail.textContent='Compra con límite $'+fmtMX(o.limit_mxn)+
       ' · Comisión estimada $'+fmtMX(o.estimated_fee_mxn)+
       ' · Importe máximo estimado $'+fmtMX(o.estimated_total_mxn);
     const actions=document.createElement('div');actions.className='copy-tools';
     actions.append(
-      copyTextButton('Copiar emisora',o.symbol),
+      copyTextButton('Copiar símbolo',o.symbol),
       copyTextButton('Copiar títulos',String(o.quantity)),
       copyTextButton('Copiar límite',Number(o.limit_mxn).toFixed(2))
     );
