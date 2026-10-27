@@ -6,11 +6,11 @@ Equal-weight candidate allocation: 20% each. Total 100%; 5 different securities.
 
 | Sleeve | Instrument | Allocation (actipesos) | Relative score | Risk | Last external close |
 |---|---|---:|---:|---|---:|
-| Health care | ABBV | 200,000 | 85.25 | lower | 286.73999 |
-| Technology equity | AAPL | 200,000 | 81.06 | lower | 343.91 |
-| Technology ETF | XLK | 200,000 | 70.79 | lower | 186.32001 |
-| International | ACWI | 200,000 | 57.66 | lower | 157.57001 |
-| Broad market | IVV | 200,000 | 65.26 | lower | 768.69 |
+| Health care | ABBV | 200,000 | 84.67 | lower | 286.78 |
+| Technology equity | AAPL | 200,000 | 82.37 | lower | 345.89499 |
+| Technology ETF | XLK | 200,000 | 72.9 | lower | 189.84 |
+| International | VEA | 200,000 | 60.42 | lower | 69.92 |
+| Broad market | VOO | 200,000 | 65.43 | lower | 708.10278 |
 
 ## Required checks before trading
 
@@ -22,4 +22,4 @@ Equal-weight candidate allocation: 20% each. Total 100%; 5 different securities.
 6. Review potential market-moving news and earnings before entering.
 
 The suggested percentages are an initial experimental allocation, not optimized for a 6-week contest.
-Generated (UTC): 2026-10-27T02:18:52.039328+00:00
+Generated (UTC): 2026-10-27T16:25:08.297714+00:00
