@@ -32,7 +32,7 @@
     "ask_volume": 2.0,
     "bid_volume": 950.0,
     "spread_pct": 0.36,
-    "historical_score": 65.21,
+    "historical_score": 65.46,
     "quote_status": "thin_depth"
   },
   {
@@ -44,7 +44,7 @@
     "ask_volume": 2400.0,
     "bid_volume": 9.0,
     "spread_pct": 0.398,
-    "historical_score": 58.16,
+    "historical_score": 58.17,
     "quote_status": "thin_depth"
   },
   {
@@ -68,7 +68,7 @@
     "ask_volume": 36000.0,
     "bid_volume": 14400.0,
     "spread_pct": 0.592,
-    "historical_score": 71.51,
+    "historical_score": 71.53,
     "quote_status": "review"
   },
   {
@@ -116,7 +116,7 @@
     "ask_volume": 2.0,
     "bid_volume": 1800.0,
     "spread_pct": 1.598,
-    "historical_score": 70.9,
+    "historical_score": 70.79,
     "quote_status": "thin_depth"
   },
   {
@@ -128,7 +128,7 @@
     "ask_volume": 100.0,
     "bid_volume": 500.0,
     "spread_pct": 5.599,
-    "historical_score": 85.19,
+    "historical_score": 85.25,
     "quote_status": "wide_spread"
   }
 ]
