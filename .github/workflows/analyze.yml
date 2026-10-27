@@ -9,10 +9,6 @@ on:
       - "scripts/scoring.py"
       - "data/universe.csv"
       - ".github/workflows/analyze.yml"
-  schedule:
-    # UTC, weekdays; GitHub scheduled execution can be delayed.
-    - cron: "30 13 * * 1-5"
-    - cron: "30 23 * * 1-5"
 
 permissions:
   contents: write
