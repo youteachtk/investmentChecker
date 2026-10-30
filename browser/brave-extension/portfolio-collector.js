@@ -85,9 +85,10 @@
     if (!onPortfolioRoute()) return null;
     const out = [];
     let confirmedEmptyTable=false;
-    for (const table of document.querySelectorAll('table,[role="table"]')) {
+    for (const table of document.querySelectorAll('table,[role="table"],[role="grid"],.mat-mdc-table,.mat-table')) {
       if (!visible(table)) continue;
-      const head = [...table.querySelectorAll('thead th,[role="columnheader"]')].map(e => canon(e.innerText));
+      const headingCells=[...table.querySelectorAll('thead th,[role="columnheader"],tr:first-child th,.mat-header-cell,.mat-mdc-header-cell')];
+      const head = [...new Set(headingCells)].map(e => canon(e.innerText||e.textContent));
       const sym = head.findIndex(h => /emisora|simbolo|instrumento|accion|ticker|fondo|serie/.test(h));
       const qty = head.findIndex(h => /titulos|cantidad|posicion|unidades|participaciones|numero de/.test(h));
       if (sym < 0 || qty < 0 || head.some(h => /volumen de compra|volumen de venta|postura de compra|postura de venta/.test(h))) continue;
@@ -96,14 +97,14 @@
       const cost = head.findIndex(h => /costo promedio|precio promedio|precio de compra/.test(h));
       const val = head.findIndex(h => /valor actual|valor de mercado|valuacion|importe actual/.test(h));
       const price = head.findIndex(h => /ultimo precio|precio actual|cotizacion/.test(h));
-      const records = [...table.querySelectorAll('tbody tr,[role="rowgroup"] [role="row"]')];
+      const records = [...table.querySelectorAll('tbody tr,[role="rowgroup"] [role="row"],tr.mat-row,tr.mat-mdc-row,[role="row"]')].filter(tr=>tr.querySelector('td,[role="cell"],.mat-cell,.mat-mdc-cell'));
       if(records.length===0)confirmedEmptyTable=true;
       for (const tr of records) {
         if (!visible(tr)) continue;
         const txt=canon(tr.innerText);
         if (/sin posiciones|sin inversiones|sin tenencias|no tienes posiciones|no hay posiciones|no tienes inversiones/.test(txt))
           confirmedEmptyTable=true;
-        const cols = [...tr.querySelectorAll('td,[role="cell"]')].map(e => norm(e.innerText));
+        const cols = [...tr.querySelectorAll('td,[role="cell"],.mat-cell,.mat-mdc-cell')].map(e => norm(e.innerText||e.textContent));
         if (cols.length <= Math.max(sym,qty)) continue;
         const symbol = cols[sym].toUpperCase().replace(/[ⓘℹ*]/g,'').trim().slice(0,48);
         const quantity = amount(cols[qty]);
@@ -142,7 +143,7 @@
     };
     const pageInfo=()=>{
       const text=canon(document.body?.innerText||'');
-      const section=text.match(/seccion\s*:\s*(\d{1,2})\s+de\s+(\d{1,2})/);
+      const section=text.match(/(?:seccion|pagina|página)\s*:?\s*(\d{1,2})\s+de\s+(\d{1,2})/);
       return section?{page:Number(section[1]),pages:Number(section[2])}:null;
     };
     const scanPages=async()=>{
@@ -171,7 +172,7 @@
     // Category tabs, not trading controls. If Actinver exposes categories
     // through buttons/menus rather than tabs, stop and report incompleteness.
     const tabs=[...document.querySelectorAll(
-      '[role="tab"],mat-tab-label,.mat-tab-label,.mat-mdc-tab'
+      '[role="tab"],mat-tab-label,.mat-tab-label,.mat-mdc-tab,button.mat-button-toggle-button'
     )].filter(e=>visible(e)&&typeof e.click==='function'&&
       /^(acciones|etfs?|etf's|fondos|fibras)$/.test(canon(e.innerText||e.textContent)));
     const scanned=new Set();
