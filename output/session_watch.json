@@ -1,7 +1,7 @@
 {
-  "captured_at": "2026-11-05T15:57:32.487Z",
-  "generated_at": "2026-11-05T15:57:42.166876+00:00",
-  "snapshot_age_minutes_at_generation": 0.2,
+  "captured_at": "2026-11-06T12:37:47.814Z",
+  "generated_at": "2026-11-06T12:37:56.292383+00:00",
+  "snapshot_age_minutes_at_generation": 0.1,
   "snapshot_is_recent_at_generation": true,
   "eligible_for_order_execution": false,
   "message": "Research watchlist only: no private holdings, cash balance, current live depth, or automatic trades.",
@@ -14,47 +14,23 @@
     "exclude_leveraged_and_inverse": true
   },
   "skipped": {
-    "invalid_quote": 5,
-    "illiquid": 60,
-    "wide_spread": 62,
+    "invalid_quote": 9,
+    "illiquid": 53,
+    "wide_spread": 69,
     "high_momentum": 0,
-    "excluded_or_unranked": 96
+    "excluded_or_unranked": 94
   },
   "candidates": [
     {
-      "symbol": "AAPL",
-      "category": "ACCIONES",
-      "change_pct": 0.25,
-      "historical_score": 82.37,
-      "bid_mxn": 6469.72,
-      "ask_mxn": 6528.07,
-      "spread_pct": 0.898,
-      "bid_volume": 1200,
-      "ask_volume": 1200,
-      "decision": "REVIEW_ONLY"
-    },
-    {
-      "symbol": "XLK",
+      "symbol": "VEA",
       "category": "ETFs",
-      "change_pct": -6.14,
-      "historical_score": 72.9,
-      "bid_mxn": 3058.7,
-      "ask_mxn": 3084.98,
-      "spread_pct": 0.856,
-      "bid_volume": 7400,
-      "ask_volume": 8500,
-      "decision": "REVIEW_ONLY"
-    },
-    {
-      "symbol": "MSFT",
-      "category": "ACCIONES",
-      "change_pct": -3.09,
-      "historical_score": 65.16,
-      "bid_mxn": 9950.01,
-      "ask_mxn": 10033.0,
-      "spread_pct": 0.831,
-      "bid_volume": 1867,
-      "ask_volume": 249,
+      "change_pct": -2.86,
+      "historical_score": 60.42,
+      "bid_mxn": 1278.01,
+      "ask_mxn": 1286.24,
+      "spread_pct": 0.642,
+      "bid_volume": 5600,
+      "ask_volume": 11218,
       "decision": "REVIEW_ONLY"
     }
   ]
